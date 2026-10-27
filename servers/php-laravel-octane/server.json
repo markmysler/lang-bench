@@ -1,0 +1,10 @@
+{
+  "id": "php-laravel-octane",
+  "language": "PHP",
+  "languageVersion": "8.5.12",
+  "framework": "Laravel",
+  "frameworkVersion": "13.39.0",
+  "runtime": "Octane + FrankenPHP (OPcache, no JIT)",
+  "concurrency": "One request at a time per Octane worker thread, app kept in memory; CPUS workers in FrankenPHP",
+  "tuning": "Octane 2.22.0 on FrankenPHP 1.13.4 with --workers = CPUS (max-requests 500, Octane's default); one persistent database connection per worker (DB_POOL unused)"
+}

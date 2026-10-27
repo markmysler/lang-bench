@@ -1,0 +1,10 @@
+{
+  "id": "zig-zap",
+  "language": "Zig",
+  "languageVersion": "0.15.2",
+  "framework": "Zap",
+  "frameworkVersion": "0.11.0",
+  "runtime": "Native binary",
+  "concurrency": "facil.io event loop with CPUS worker threads in one process; handlers block their thread",
+  "tuning": "zap.start(threads = CPUS, workers = 1); pg.zig pool of DB_POOL connections"
+}

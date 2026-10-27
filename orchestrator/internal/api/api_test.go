@@ -193,6 +193,21 @@ func TestCancel(t *testing.T) {
 	}
 }
 
+func TestThePageIsNeverCached(t *testing.T) {
+	// A rebuilt dashboard must not run the previous build's scripts from the browser's cache.
+	srv, _ := newServer(t, nil)
+	for _, path := range []string{"/", "/index.html", "/results/abc"} {
+		res, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		if got := res.Header.Get("Cache-Control"); got != "no-cache" {
+			t.Fatalf("%s: Cache-Control = %q", path, got)
+		}
+	}
+}
+
 func TestServesTheDashboard(t *testing.T) {
 	srv, _ := newServer(t, nil)
 	for _, path := range []string{"/", "/results/abc"} { // client-side routes fall back to index.html

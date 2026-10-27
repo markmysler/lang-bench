@@ -335,6 +335,12 @@ func (s *Server) web(w http.ResponseWriter, r *http.Request) {
 	if f, err := fs.Stat(s.Web, p); err != nil || f.IsDir() {
 		r = r.Clone(r.Context())
 		r.URL.Path = "/"
+		p = "index.html"
+	}
+	// The page names the current build's scripts, so it is checked on every load. The scripts
+	// themselves have content hashes in their names and can be cached.
+	if p == "index.html" {
+		w.Header().Set("Cache-Control", "no-cache")
 	}
 	http.FileServerFS(s.Web).ServeHTTP(w, r)
 }

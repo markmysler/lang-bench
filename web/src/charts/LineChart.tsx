@@ -26,6 +26,10 @@ interface Props {
   /** A shaded stretch of x, such as the warm-up. */
   band?: { from: number; to: number; label: string };
   height?: number;
+  /** Top of the y axis, when several charts must share one scale. */
+  yMax?: number;
+  /** Whether to offer the table view under the chart. */
+  table?: boolean;
 }
 
 const M = { top: 8, right: 12, bottom: 24, left: 52 };
@@ -40,19 +44,22 @@ export function LineChart({
   xLabel,
   band,
   height = 200,
+  yMax,
+  table = true,
 }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hoverX, setHoverX] = useState<number | null>(null);
   const titleId = useId();
-  const direct = series.length <= 4;
+  // Lines are labelled at their ends when there are a few; a single line is named by the title.
+  const direct = series.length >= 2 && series.length <= 4;
   const right = M.right + (direct ? 88 : 0);
 
   const { xs, x0, x1, ticks } = useMemo(() => {
     const all = series.flatMap((s) => s.points);
     const xs = [...new Set(all.map((p) => p.x))].sort((a, b) => a - b);
-    const yMax = Math.max(0, ...all.map((p) => p.y));
-    return { xs, x0: xs[0] ?? 0, x1: xs.at(-1) ?? 1, ticks: niceTicks(yMax) };
-  }, [series]);
+    const top = yMax ?? Math.max(0, ...all.map((p) => p.y));
+    return { xs, x0: xs[0] ?? 0, x1: xs.at(-1) ?? 1, ticks: niceTicks(top) };
+  }, [series, yMax]);
 
   const plotW = Math.max(40, width - M.left - right);
   const plotH = height - M.top - M.bottom;
@@ -233,32 +240,39 @@ export function LineChart({
           </dl>
         </div>
       )}
-      <details className={css.tableToggle}>
-        <summary>Show as table</summary>
-        <div className="table-scroll" role="region" aria-label={`${title} as a table`} tabIndex={0}>
-          <table className="data">
-            <thead>
-              <tr>
-                <th>{xLabel}</th>
-                {series.map((s) => (
-                  <th key={s.id}>{s.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {xs.map((v) => (
-                <tr key={v}>
-                  <td>{xFormat(v)}</td>
-                  {series.map((s) => {
-                    const p = at(s, v);
-                    return <td key={s.id}>{p ? yFormat(p.y) : '–'}</td>;
-                  })}
+      {table && (
+        <details className={css.tableToggle}>
+          <summary>Show as table</summary>
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label={`${title} as a table`}
+            tabIndex={0}
+          >
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>{xLabel}</th>
+                  {series.map((s) => (
+                    <th key={s.id}>{s.label}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
+              </thead>
+              <tbody>
+                {xs.map((v) => (
+                  <tr key={v}>
+                    <td>{xFormat(v)}</td>
+                    {series.map((s) => {
+                      const p = at(s, v);
+                      return <td key={s.id}>{p ? yFormat(p.y) : '–'}</td>;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </figure>
   );
 }

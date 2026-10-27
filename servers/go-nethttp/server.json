@@ -1,0 +1,10 @@
+{
+  "id": "go-nethttp",
+  "language": "Go",
+  "languageVersion": "1.26",
+  "framework": "net/http",
+  "frameworkVersion": "1.26",
+  "runtime": "Native binary",
+  "concurrency": "Goroutine per request, scheduled on all CPUs",
+  "tuning": "GOMAXPROCS = CPUS; pgx pool of DB_POOL connections"
+}

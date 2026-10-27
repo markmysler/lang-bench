@@ -14,6 +14,8 @@ server.
   official image uses another distribution.
 - Every version is pinned: base images by tag, dependencies by lock file.
 - No logging per request. Errors go to stderr.
+- Responses are not compressed. The load generator sends no `Accept-Encoding`, so a server whose
+  defaults compress when asked still does the same work as the others.
 
 ### Environment
 

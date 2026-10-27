@@ -1,0 +1,10 @@
+{
+  "id": "python-flask-gthread",
+  "language": "Python",
+  "languageVersion": "3.14",
+  "framework": "Flask",
+  "frameworkVersion": "3.1.3",
+  "runtime": "CPython 3.14 (interpreter), gunicorn 26.2.0 gthread workers",
+  "concurrency": "4 OS threads per process; CPUS gunicorn gthread worker processes",
+  "tuning": "gunicorn gthread workers = CPUS, threads = 4; psycopg pool of max(1, floor(DB_POOL / CPUS)) connections per worker"
+}

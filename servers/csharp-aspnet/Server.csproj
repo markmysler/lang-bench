@@ -1,0 +1,15 @@
+<!-- C# + ASP.NET Core server for lang-bench (docs/SPEC.md). packages.lock.json pins every package. -->
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Server</AssemblyName>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- Restore must match packages.lock.json exactly (the Dockerfile restores in locked mode). -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+</Project>

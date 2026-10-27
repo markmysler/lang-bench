@@ -1,0 +1,10 @@
+{
+  "id": "kotlin-ktor",
+  "language": "Kotlin",
+  "languageVersion": "2.4.21",
+  "framework": "Ktor",
+  "frameworkVersion": "3.6.0",
+  "runtime": "HotSpot JVM 25 (JIT)",
+  "concurrency": "Coroutines on Netty event loops; blocking JDBC on Dispatchers.IO",
+  "tuning": "Ktor Netty defaults sized from the CPU limit (= CPUS); HikariCP pool of DB_POOL connections; -XX:MaxRAMPercentage=60"
+}

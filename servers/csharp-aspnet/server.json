@@ -1,0 +1,10 @@
+{
+  "id": "csharp-aspnet",
+  "language": "C#",
+  "languageVersion": "14",
+  "framework": "ASP.NET Core",
+  "frameworkVersion": "10.0.14",
+  "runtime": ".NET 10 CoreCLR (tiered JIT)",
+  "concurrency": "Async handlers on the .NET thread pool, sized from the CPU limit",
+  "tuning": "Runtime defaults: Server GC, processor count = CPUS from the container limit; Npgsql pool of DB_POOL connections"
+}

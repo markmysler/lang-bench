@@ -1,0 +1,10 @@
+{
+  "id": "python-flask",
+  "language": "Python",
+  "languageVersion": "3.14",
+  "framework": "Flask",
+  "frameworkVersion": "3.1.3",
+  "runtime": "CPython 3.14 (interpreter), gunicorn 26.2.0 sync workers",
+  "concurrency": "One request at a time per process; 2 x CPUS + 1 gunicorn sync worker processes",
+  "tuning": "gunicorn sync workers = 2 x CPUS + 1; psycopg pool of max(1, floor(DB_POOL / workers)) connections per worker"
+}

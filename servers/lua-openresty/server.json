@@ -1,0 +1,10 @@
+{
+  "id": "lua-openresty",
+  "language": "Lua",
+  "languageVersion": "5.1 (LuaJIT 2.1)",
+  "framework": "OpenResty",
+  "frameworkVersion": "1.31.8.1",
+  "runtime": "LuaJIT 2.1 in nginx (OpenResty)",
+  "concurrency": "nginx event loop per worker process; each request runs in a Lua coroutine; CPUS worker processes",
+  "tuning": "worker_processes = CPUS, worker_connections 4096, listen reuseport; pgmoon cosocket pool of max(1, floor(DB_POOL / CPUS)) connections per worker, capped by a semaphore"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "node-fastify",
+  "language": "JavaScript",
+  "languageVersion": "24.22.1",
+  "framework": "Fastify",
+  "frameworkVersion": "5.12.7",
+  "runtime": "Node.js 24 (V8 JIT)",
+  "concurrency": "Single-threaded event loop per process; CPUS processes via node:cluster",
+  "tuning": "node:cluster forks CPUS workers sharing port 8080; pg pool of max(1, floor(DB_POOL / CPUS)) connections per worker"
+}

@@ -1,0 +1,13 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Exact versions are pinned in Cargo.lock; the Dockerfile builds with --locked.
+# rand, serde and sqlx match rust-axum, so only the framework differs.
+[dependencies]
+actix-web = "4.18.1"
+rand = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }
+sqlx = { version = "0.9.0", default-features = false, features = ["postgres", "runtime-tokio"] }

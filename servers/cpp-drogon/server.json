@@ -1,0 +1,10 @@
+{
+  "id": "cpp-drogon",
+  "language": "C++",
+  "languageVersion": "C++20 (GCC 14)",
+  "framework": "Drogon",
+  "frameworkVersion": "1.9.14",
+  "runtime": "Native binary",
+  "concurrency": "Non-blocking event loop per thread; CPUS I/O threads",
+  "tuning": "app().setThreadNum(CPUS); async PostgreSQL DbClient of DB_POOL connections"
+}
