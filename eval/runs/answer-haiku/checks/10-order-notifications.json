@@ -1,0 +1,49 @@
+{
+  "scenario": "10-order-notifications",
+  "claims": [
+    {
+      "claim": ".NET is slower to cold-start than Node or Go",
+      "about": "C# / ASP.NET Core vs Node (Express, Fastify) and Go (Gin, net/http)",
+      "measured": "Start-up: csharp-aspnet 785 ms; node-express 706 ms, node-fastify 593 ms; go-gin 293 ms, go-nethttp 238 ms",
+      "verdict": "consistent",
+      "why": "The measured container start-up times point the same way: .NET is slowest of the three, slightly slower than Node and about 2.7–3.3x slower than Go, though Azure Functions host cold start itself is not measured."
+    },
+    {
+      "claim": "Node (TypeScript): cold starts are usually lower [than .NET]",
+      "about": "Node vs C# / ASP.NET Core",
+      "measured": "Start-up: node-express 706 ms, node-fastify 593 ms vs csharp-aspnet 785 ms",
+      "verdict": "consistent",
+      "why": "Both Node servers started faster than ASP.NET Core, by about 10–25%."
+    },
+    {
+      "claim": "Go (custom handler): fastest cold start",
+      "about": "Go vs Node and .NET",
+      "measured": "Start-up: go-nethttp 238 ms, go-gin 293 ms vs node 593–706 ms, csharp-aspnet 785 ms",
+      "verdict": "consistent",
+      "why": "Go had the lowest start-up of the three options considered, tied with Rust for the lowest in the whole benchmark."
+    },
+    {
+      "claim": "Most of the cold-start time is in the team's own startup code (DI container, Cosmos/Service Bus clients, Key Vault secrets), not in the runtime",
+      "about": ".NET on Azure Functions",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark measures only bare server start-up; it doesn't measure app initialisation code or how Azure Functions cold starts break down."
+    },
+    {
+      "claim": "ReadyToRun compilation, trimming dependencies and lazy client initialisation reduce startup cost",
+      "about": ".NET",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements don't compare .NET builds with and without ReadyToRun or other startup optimisations."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1348796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.562
+  }
+}

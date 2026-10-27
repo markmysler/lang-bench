@@ -1,0 +1,42 @@
+{
+  "scenario": "09-partner-callbacks",
+  "claims": [
+    {
+      "claim": "The few hundred confirmations per second aren't the problem; the threads sitting idle are.",
+      "about": "Spring Boot (Tomcat), with and without virtual threads",
+      "measured": "java-spring 15,611 req/s and java-spring-vt 14,571 req/s in the 10 ms I/O-wait test at 256 connections on 1 CPU; at least 13,653 req/s in plaintext",
+      "verdict": "consistent",
+      "why": "Spring Boot handled tens of times more than a few hundred requests per second on one CPU, so throughput is not the bottleneck at that rate."
+    },
+    {
+      "claim": "Tomcat's default thread pool is 200, so each pod filled up at about 200 waiting requests.",
+      "about": "Spring Boot on Tomcat with platform threads",
+      "measured": "java-spring served 256 connections at 15,611 req/s with 10 ms waits (p50 15.01 ms); no test held requests open long enough to hit a thread limit",
+      "verdict": "not_covered",
+      "why": "The 10 ms waits at 256 connections never come close to the point where a 200-thread pool would cap concurrency, so the measurements cannot confirm or refute a ceiling at about 200 waiting requests."
+    },
+    {
+      "claim": "With virtual threads, a waiting request costs a few KB instead of a whole platform thread.",
+      "about": "Spring Boot with virtual threads on Java 21",
+      "measured": "java-spring-vt peaked at 444 MB vs 491 MB for java-spring in the I/O-wait test at 256 connections",
+      "verdict": "not_covered",
+      "why": "Only total peak memory at 256 connections was measured, which cannot be broken down into a cost per waiting request."
+    },
+    {
+      "claim": "Enabling virtual threads makes the 200-thread limit go away, so the connection limit (12,000) becomes the real ceiling and one pod can hold all 10,000 partners.",
+      "about": "Spring Boot with virtual threads on Java 21",
+      "measured": "java-spring-vt reached 14,571 req/s at 256 connections in the I/O-wait test (p50 16.75 ms), slightly below java-spring at 15,611 req/s; nothing was measured above 256 connections",
+      "verdict": "not_covered",
+      "why": "The benchmark tops out at 256 concurrent connections with 10 ms waits, so it says nothing about whether one pod can hold 10,000 requests open for 30 seconds each."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1442896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 20.27
+  }
+}

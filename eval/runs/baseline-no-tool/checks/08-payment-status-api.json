@@ -1,0 +1,119 @@
+{
+  "scenario": "08-payment-status-api",
+  "claims": [
+    {
+      "claim": "800 requests a second of simple indexed reads is well within what a few Spring Boot pods can handle",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Single-row Postgres read on 1 CPU: java-spring-vt 12,731 req/s, java-spring 7,668 req/s",
+      "verdict": "consistent",
+      "why": "A single 1-CPU container handled about 10–16 times the 800 req/s target, so a few pods have plenty of headroom."
+    },
+    {
+      "claim": "Java and Spring Boot will meet the target (800 req/s, p99 under 150 ms) easily",
+      "about": "java-spring-vt",
+      "measured": "Single-row query: 12,731 req/s with p99 12.39 ms (java-spring: 7,668 req/s, p99 77.87 ms)",
+      "verdict": "consistent",
+      "why": "At saturation on 1 CPU, both Spring variants exceed 800 req/s with p99 under 150 ms, and the virtual-thread variant has a wide margin."
+    },
+    {
+      "claim": "Your p99 will depend on Postgres, the network and connection pool waits, not on the language",
+      "about": "Spring Boot vs Go",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The tests ran each server at saturation, where p99 did differ by stack (java-spring 77.87 ms vs go-gin 6.00 ms); latency at a light 800 req/s load was not measured."
+    },
+    {
+      "claim": "With virtual threads you get high concurrency from straightforward blocking code",
+      "about": "java-spring-vt",
+      "measured": "Single-row DB: 12,731 req/s, p99 12.39 ms vs 7,668 req/s, p99 77.87 ms without virtual threads; 10 ms I/O wait at 256 connections: 14,571 req/s",
+      "verdict": "consistent",
+      "why": "Virtual threads raised database throughput by about 1.7 times and cut p99 by about 6 times, and the server held 256 concurrent waiting connections at a rate close to other stacks."
+    },
+    {
+      "claim": "Memory per pod for Go is ~50–150 MB",
+      "about": "go-gin / go-nethttp",
+      "measured": "Peak 7–16 MB across all tests; idle 2 MB",
+      "verdict": "off",
+      "why": "Even the low end of the claim (50 MB) is about 3 times the highest measured Go peak, and the claim is more than 10 times the measured figures at the top of its range."
+    },
+    {
+      "claim": "Memory per pod for tuned Spring Boot is ~300–700 MB",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Peak 209–500 MB across tests (idle 131–134 MB)",
+      "verdict": "consistent",
+      "why": "Under load, the claimed range is within a factor of 2 of the measured peaks."
+    },
+    {
+      "claim": "Across 3–4 pods per data centre, the memory difference between Go and Spring is a few GB of RAM",
+      "about": "Spring Boot vs Go",
+      "measured": "Per-pod peak difference about 200–490 MB (Spring 209–500 MB vs Go 7–16 MB); over 6–8 pods that is about 1.2–3.9 GB",
+      "verdict": "consistent",
+      "why": "Multiplying the measured per-pod gap by 6–8 pods gives roughly 1–4 GB, which matches 'a few GB'."
+    },
+    {
+      "claim": "Go startup time is under 1 s",
+      "about": "go-gin / go-nethttp",
+      "measured": "238–293 ms",
+      "verdict": "consistent",
+      "why": "Measured start-up is well under the 1 s bound."
+    },
+    {
+      "claim": "Spring Boot (tuned) startup time is ~3–10 s",
+      "about": "java-spring / java-spring-vt",
+      "measured": "5,939–6,224 ms",
+      "verdict": "consistent",
+      "why": "Measured start-up of about 6 s falls inside the claimed range."
+    },
+    {
+      "claim": "Container image size: Go is small, Spring Boot is larger",
+      "about": "Go vs Spring Boot",
+      "measured": "Go 85–92 MB vs Spring 287 MB",
+      "verdict": "consistent",
+      "why": "The direction is right: Spring images are about 3 times larger."
+    },
+    {
+      "claim": "Raw request speed of Go and Spring Boot is similar",
+      "about": "Go vs Spring Boot",
+      "measured": "Plaintext: go-gin 53,941 vs java-spring 13,653 / java-spring-vt 20,006 req/s; JSON: 46,183 vs 27,264 / 22,146; single-row DB: 22,138 vs 7,668 / 12,731",
+      "verdict": "off",
+      "why": "In raw request handling, Go measured about 2.7–4 times faster on plaintext and up to 2.9 times faster on the database test, so 'similar' understates the gap."
+    },
+    {
+      "claim": "Spring AOT or class data sharing (CDS) cut startup time",
+      "about": "Spring Boot with AOT/CDS",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No AOT or CDS variant was benchmarked."
+    },
+    {
+      "claim": "Quarkus or Micronaut use less memory and start faster",
+      "about": "Quarkus / Micronaut",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither framework was benchmarked."
+    },
+    {
+      "claim": "GraalVM native image narrows the memory and startup gap with Go",
+      "about": "GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image build was benchmarked."
+    },
+    {
+      "claim": "Virtual threads give you the same benefit as Spring WebFlux at this load",
+      "about": "Spring WebFlux vs java-spring-vt",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "WebFlux was not benchmarked, so there is nothing to compare against."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1871546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 34.73
+  }
+}

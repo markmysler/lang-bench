@@ -1,0 +1,21 @@
+{
+  "scenario": "10-order-notifications",
+  "claims": [
+    {
+      "claim": "Cold starts could also push some notifications past 2 seconds.",
+      "about": ".NET (C#) Azure Functions isolated worker on the consumption plan",
+      "measured": "csharp-aspnet start-up 785 ms (in a Docker container, 1 CPU)",
+      "verdict": "not_covered",
+      "why": "The 785 ms figure is how long an ASP.NET Core server takes to start in a container that already exists, but an Azure Functions consumption-plan cold start also includes the platform allocating an instance and loading the Functions host and worker, which the measurements don't cover."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1266246,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 10.259
+  }
+}

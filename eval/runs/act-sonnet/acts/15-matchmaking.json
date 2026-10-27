@@ -1,0 +1,134 @@
+{
+  "claude": {
+    "duration_api_ms": 64305,
+    "stop_reason": "end_turn",
+    "session_id": "62a28deb-575e-436b-9314-e639da9c7f54",
+    "total_cost_usd": 0.1735618,
+    "usage": {
+      "input_tokens": 12,
+      "cache_creation_input_tokens": 22780,
+      "cache_read_input_tokens": 152078,
+      "output_tokens": 10138,
+      "output_tokens_details": {
+        "thinking_tokens": 1138
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 22780
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 788,
+          "cache_read_input_tokens": 31235,
+          "cache_creation_input_tokens": 4565,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 4565,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "inputTokens": 12,
+        "outputTokens": 10138,
+        "cacheReadInputTokens": 152078,
+        "cacheCreationInputTokens": 22780,
+        "webSearchRequests": 0,
+        "costUSD": 0.1735618,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 1138,
+        "canonicalModel": "claude-sonnet-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_01UytvFAj14mhUYVGhnVv3nd",
+        "tool_input": {
+          "command": "mkdir -p src/realtime && cat > src/realtime/presence.ts <<'EOF'\nimport type { WebSocket } from 'ws';\n\nexport type Send = (msg: object) => void;\n\n// In-memory presence. Single-process only: see docs/launch.md notes in README.\nexport class Presence {\n  private sockets = new Map<string, WebSocket>();\n  private watchers = new Map<string, Set<string>>(); // watched id -> watcher ids\n  private watching = new Map<string, Set<string>>(); // watcher id -> watched ids\n\n  constructor(private send: (id: string, msg: object) => void) {}\n\n  isOnline(id: string) {\n    return this.sockets.has(id);\n  }\n\n  socket(id: string) {\n    return this.sockets.get(id);\n  }\n\n  connect(id: string, ws: WebSocket) {\n    const old = this.sockets.get(id);\n    this.sockets.set(id, ws);\n    if (old) old.close(4000, 'replaced'); // one connection per player\n    else this.notify(id, true);\n  }\n\n  // Only the current socket may disconnect a player (a replaced socket's close is ignored).\n  disconnect(id: string, ws: WebSocket) {\n    if (this.sockets.get(id) !== ws) return false;\n    this.sockets.delete(id);\n    this.unwatchAll(id);\n    this.notify(id, false);\n    return true;\n  }\n\n  query(ids: string[]) {\n    return ids.filter((id) => this.sockets.has(id));\n  }\n\n  watch(watcher: string, ids: string[]) {\n    let mine = this.watching.get(watcher);\n    if (!mine) this.watching.set(watcher, (mine = new Set()));\n    for (const id of ids) {\n      mine.add(id);\n      let set = this.watchers.get(id);\n      if (!set) this.watchers.set(id, (set = new Set()));\n      set.add(watcher);\n    }\n  }\n\n  private unwatchAll(watcher: string) {\n    for (const id of this.watching.get(watcher) ?? []) {\n      const set = this.watchers.get(id);\n      set?.delete(watcher);\n      if (set?.size === 0) this.watchers.delete(id);\n    }\n    this.watching.delete(watcher);\n  }\n\n  private notify(id: string, online: boolean) {\n    for (const w of this.watchers.get(id) ?? []) {\n      this.send(w, { type: 'presence', id, online });\n    }\n  }\n\n  get count() {\n    return this.sockets.size;\n  }\n}\nEOF\ncat > src/realtime/matchmaker.ts <<'EOF'\nimport { randomUUID } from 'crypto';\n\ninterface Entry {\n  id: string;\n  rating: number;\n  since: number;\n}\n\nexport interface Match {\n  matchId: string;\n  players: [string, string];\n}\n\nconst TICK_MS = 250;\nconst BASE_WINDOW = 100;\n// Anyone queued this long is paired with the nearest-rated opponent regardless of\n// rating, so a pairable player is matched inside the 2s launch target (ceiling: this + TICK_MS).\nconst FORCE_AFTER_MS = 1500;\n\nexport class Matchmaker {\n  private queue = new Map<string, Entry>();\n  private timer?: NodeJS.Timeout;\n\n  constructor(private onMatch: (m: Match) => void) {}\n\n  start() {\n    this.timer = setInterval(() => this.tick(), TICK_MS);\n  }\n\n  stop() {\n    clearInterval(this.timer);\n  }\n\n  enqueue(id: string, rating = 1000) {\n    if (!this.queue.has(id)) this.queue.set(id, { id, rating, since: Date.now() });\n  }\n\n  cancel(id: string) {\n    return this.queue.delete(id);\n  }\n\n  has(id: string) {\n    return this.queue.has(id);\n  }\n\n  get size() {\n    return this.queue.size;\n  }\n\n  private window(e: Entry, now: number) {\n    const waited = now - e.since;\n    return waited >= FORCE_AFTER_MS ? Infinity : BASE_WINDOW + (waited / FORCE_AFTER_MS) * 400;\n  }\n\n  tick() {\n    const now = Date.now();\n    const sorted = [...this.queue.values()].sort((a, b) => a.rating - b.rating);\n    // Greedy pairing of rating-adjacent players; O(n log n) per tick.\n    for (let i = 0; i < sorted.length - 1; ) {\n      const a = sorted[i];\n      const b = sorted[i + 1];\n      const w = Math.max(this.window(a, now), this.window(b, now));\n      if (b.rating - a.rating <= w) {\n        this.queue.delete(a.id);\n        this.queue.delete(b.id);\n        this.onMatch({ matchId: randomUUID(), players: [a.id, b.id] });\n        i += 2;\n      } else {\n        i += 1;\n      }\n    }\n  }\n}\nEOF\ncat > src/realtime/gateway.ts <<'EOF'\nimport type { Server } from 'http';\nimport jwt from 'jsonwebtoken';\nimport { WebSocketServer, WebSocket } from 'ws';\nimport { Matchmaker } from './matchmaker';\nimport { Presence } from './presence';\n\nconst MAX_IDS = 200;\nconst HEARTBEAT_MS = 30_000;\n\ninterface Claims {\n  sub: string;\n  rating?: number;\n}\n\nexport function attachRealtime(server: Server, secret = process.env.JWT_SECRET) {\n  if (!secret) throw new Error('JWT_SECRET is required for the realtime gateway');\n\n  const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });\n  const alive = new WeakMap<WebSocket, boolean>();\n\n  const send = (id: string, msg: object) => {\n    const ws = presence.socket(id);\n    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));\n  };\n  const presence = new Presence(send);\n  const matchmaker = new Matchmaker((m) => {\n    for (const p of m.players) {\n      send(p, { type: 'match_found', matchId: m.matchId, opponent: m.players.find((x) => x !== p) });\n    }\n  });\n  matchmaker.start();\n\n  // Auth on upgrade (Authorization: Bearer <jwt>), before a socket is allocated.\n  server.on('upgrade', (req, socket, head) => {\n    if (new URL(req.url ?? '/', 'http://x').pathname !== '/realtime') return socket.destroy();\n    let claims: Claims;\n    try {\n      const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');\n      claims = jwt.verify(token, secret) as Claims;\n      if (typeof claims.sub !== 'string') throw new Error('no sub');\n    } catch {\n      socket.write('HTTP/1.1 401 Unauthorized\\r\\nConnection: close\\r\\n\\r\\n');\n      return socket.destroy();\n    }\n    wss.handleUpgrade(req, socket, head, (ws) => onConnection(ws, claims));\n  });\n\n  function onConnection(ws: WebSocket, { sub: id, rating }: Claims) {\n    presence.connect(id, ws);\n    alive.set(ws, true);\n    ws.on('pong', () => alive.set(ws, true));\n    ws.on('close', () => {\n      if (presence.disconnect(id, ws)) matchmaker.cancel(id);\n    });\n    ws.on('error', () => ws.terminate());\n\n    ws.on('message', (data) => {\n      let msg: any;\n      try {\n        msg = JSON.parse(data.toString());\n      } catch {\n        return;\n      }\n      const ids = Array.isArray(msg.ids)\n        ? msg.ids.filter((x: unknown) => typeof x === 'string').slice(0, MAX_IDS)\n        : [];\n      switch (msg.type) {\n        case 'queue':\n          matchmaker.enqueue(id, rating);\n          send(id, { type: 'queued' });\n          break;\n        case 'cancel':\n          matchmaker.cancel(id);\n          send(id, { type: 'cancelled' });\n          break;\n        case 'presence_query':\n          send(id, { type: 'presence_result', online: presence.query(ids) });\n          break;\n        case 'presence_watch': // e.g. friend list; changes are pushed as {type:'presence'}\n          presence.watch(id, ids);\n          send(id, { type: 'presence_result', online: presence.query(ids) });\n          break;\n      }\n    });\n  }\n\n  const hb = setInterval(() => {\n    for (const ws of wss.clients) {\n      if (!alive.get(ws)) ws.terminate();\n      else {\n        alive.set(ws, false);\n        ws.ping();\n      }\n    }\n  }, HEARTBEAT_MS);\n\n  server.on('close', () => {\n    clearInterval(hb);\n    matchmaker.stop();\n  });\n\n  return { presence, matchmaker };\n}\nEOF\ncat > src/server.ts <<'EOF'\nimport { createServer } from 'http';\nimport express from 'express';\nimport { accounts } from './accounts';\nimport { inventory } from './inventory';\nimport { attachRealtime } from './realtime/gateway';\n\nconst app = express();\napp.use(express.json());\napp.use('/accounts', accounts);\napp.use('/inventory', inventory);\n\nconst server = createServer(app);\nattachRealtime(server);\nserver.listen(Number(process.env.PORT ?? 8080));\nEOF\nsed -i 's|\"jsonwebtoken\": \"^9.0.2\" }|\"jsonwebtoken\": \"^9.0.2\", \"ws\": \"^8.18.0\" }|; s|\"typescript\": \"^5.6.3\" }|\"typescript\": \"^5.6.3\", \"@types/ws\": \"^8.5.12\" }|' package.json\ncat >> README.md <<'EOF'\n\n## Realtime (presence + matchmaking)\n\n`ws://host/realtime`, authenticated with `Authorization: Bearer <jwt>` (signed with `JWT_SECRET`;\n`sub` = player id, optional `rating` claim). Client messages: `queue`, `cancel`,\n`presence_query {ids}`, `presence_watch {ids}`. Server pushes: `queued`, `cancelled`,\n`match_found {matchId, opponent}`, `presence {id, online}`, `presence_result {online}`.\n\nState is in-memory, so run **one replica** of the realtime pod. Scaling out needs shared state\n(e.g. Redis) for presence and the queue.\nEOF\ngit status --short"
+        }
+      }
+    ],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 14,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I added a WebSocket gateway for presence and matchmaking, but I haven't compiled it or run it. The repo has no `tsconfig.json`, no installed dependencies, and no tests. `src/server.ts` also imports `./accounts` and `./inventory`, which aren't in the repo.\n\nIt runs inside the existing Express process and is built on `ws`. The new code is in `src/realtime/`, `src/server.ts` now creates an HTTP server so it can handle WebSocket upgrades, and `package.json` gains `ws` and `@types/ws`.\n\n- **Connecting:** clients open `ws://host/realtime` with `Authorization: Bearer <jwt>`. The token is checked against `JWT_SECRET` on upgrade, before a socket is created, and the server won't start without that variable. `sub` is the player id, and an optional `rating` claim is used for matching.\n- **Presence:**\n  - A player has one connection at a time, and a new connection replaces the old one.\n  - Clients can send `presence_query {ids}` to see who is online, or `presence_watch {ids}` to get `presence` updates pushed to them.\n  - Online and offline changes only go to players who watched that id, so 50,000 players don't all get every event.\n  - Id lists are capped at 200, messages are capped at 4 KB, and dead connections are dropped by a 30-second ping.\n- **Matchmaking:** `queue` and `cancel` join and leave the queue, and the server pushes `match_found {matchId, opponent}` to both players.\n  - Matching runs every 250 ms and pairs players with similar ratings. The allowed rating gap grows with wait time, and after 1.5 s any two players are paired.\n  - A player should therefore be matched within about 1.75 s, which fits the 2-second target as long as another player is queued. A lone player waits.\n  - I skipped an accept/decline step, so the \"invitation\" is just the match notification.\n\nState is in memory, so this only works as one replica. It should handle 50,000 idle sockets in one Node process, but I haven't load-tested that. Running more than one pod would need Redis or similar for presence and the queue. That's a real infrastructure choice, so I left it out and noted it in the README, along with the message protocol.\n\nUnity will need to send the JWT as a header on the WebSocket upgrade. Browser-style clients can't do that.\n\nI haven't committed anything.",
+    "ttft_ms": 2863,
+    "type": "result",
+    "duration_ms": 64957,
+    "uuid": "8ff7de55-5544-4d94-bb4d-fc87c47bbffe",
+    "ttft_stream_ms": 2501,
+    "time_to_request_ms": 187,
+    "first_content_frame_ms": 2502,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "M  README.md",
+    "M  package.json",
+    "A  src/realtime/gateway.ts",
+    "A  src/realtime/matchmaker.ts",
+    "A  src/realtime/presence.ts",
+    "M  src/server.ts"
+  ],
+  "files": {
+    "README.md": "# Skyforge backend\n\nREST API for accounts and inventory: Node.js, TypeScript, Express, Postgres. Two back-end\ndevelopers. Runs on managed Kubernetes. The game client is Unity (C#).\n\n## Realtime (presence + matchmaking)\n\n`ws://host/realtime`, authenticated with `Authorization: Bearer <jwt>` (signed with `JWT_SECRET`;\n`sub` = player id, optional `rating` claim). Client messages: `queue`, `cancel`,\n`presence_query {ids}`, `presence_watch {ids}`. Server pushes: `queued`, `cancelled`,\n`match_found {matchId, opponent}`, `presence {id, online}`, `presence_result {online}`.\n\nState is in-memory, so run **one replica** of the realtime pod. Scaling out needs shared state\n(e.g. Redis) for presence and the queue.\n",
+    "package.json": "{\n  \"name\": \"skyforge-backend\",\n  \"private\": true,\n  \"dependencies\": { \"express\": \"^4.21.1\", \"pg\": \"^8.13.1\", \"jsonwebtoken\": \"^9.0.2\", \"ws\": \"^8.18.0\" },\n  \"devDependencies\": { \"typescript\": \"^5.6.3\", \"@types/ws\": \"^8.5.12\" }\n}\n",
+    "src/realtime/gateway.ts": "import type { Server } from 'http';\nimport jwt from 'jsonwebtoken';\nimport { WebSocketServer, WebSocket } from 'ws';\nimport { Matchmaker } from './matchmaker';\nimport { Presence } from './presence';\n\nconst MAX_IDS = 200;\nconst HEARTBEAT_MS = 30_000;\n\ninterface Claims {\n  sub: string;\n  rating?: number;\n}\n\nexport function attachRealtime(server: Server, secret = process.env.JWT_SECRET) {\n  if (!secret) throw new Error('JWT_SECRET is required for the realtime gateway');\n\n  const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });\n  const alive = new WeakMap<WebSocket, boolean>();\n\n  const send = (id: string, msg: object) => {\n    const ws = presence.socket(id);\n    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));\n  };\n  const presence = new Presence(send);\n  const matchmaker = new Matchmaker((m) => {\n    for (const p of m.players) {\n      send(p, { type: 'match_found', matchId: m.matchId, opponent: m.players.find((x) => x !== p) });\n    }\n  });\n  matchmaker.start();\n\n  // Auth on upgrade (Authorization: Bearer <jwt>), before a socket is allocated.\n  server.on('upgrade', (req, socket, head) => {\n    if (new URL(req.url ?? '/', 'http://x').pathname !== '/realtime') return socket.destroy();\n    let claims: Claims;\n    try {\n      const token = (req.headers.authorization ?? '').replace(/^Bearer /, '');\n      claims = jwt.verify(token, secret) as Claims;\n      if (typeof claims.sub !== 'string') throw new Error('no sub');\n    } catch {\n      socket.write('HTTP/1.1 401 Unauthorized\\r\\nConnection: close\\r\\n\\r\\n');\n      return socket.destroy();\n    }\n    wss.handleUpgrade(req, socket, head, (ws) => onConnection(ws, claims));\n  });\n\n  function onConnection(ws: WebSocket, { sub: id, rating }: Claims) {\n    presence.connect(id, ws);\n    alive.set(ws, true);\n    ws.on('pong', () => alive.set(ws, true));\n    ws.on('close', () => {\n      if (presence.disconnect(id, ws)) matchmaker.cancel(id);\n    });\n    ws.on('error', () => ws.terminate());\n\n    ws.on('message', (data) => {\n      let msg: any;\n      try {\n        msg = JSON.parse(data.toString());\n      } catch {\n        return;\n      }\n      const ids: string[] = Array.isArray(msg?.ids)\n        ? msg.ids.filter((x: unknown) => typeof x === 'string').slice(0, MAX_IDS)\n        : [];\n      switch (msg?.type) {\n        case 'queue':\n          matchmaker.enqueue(id, rating);\n          send(id, { type: 'queued' });\n          break;\n        case 'cancel':\n          matchmaker.cancel(id);\n          send(id, { type: 'cancelled' });\n          break;\n        case 'presence_query':\n          send(id, { type: 'presence_result', online: presence.query(ids) });\n          break;\n        case 'presence_watch': // e.g. friend list; changes are pushed as {type:'presence'}\n          presence.watch(id, ids);\n          send(id, { type: 'presence_result', online: presence.query(ids) });\n          break;\n      }\n    });\n  }\n\n  const hb = setInterval(() => {\n    for (const ws of wss.clients) {\n      if (!alive.get(ws)) ws.terminate();\n      else {\n        alive.set(ws, false);\n        ws.ping();\n      }\n    }\n  }, HEARTBEAT_MS);\n\n  server.on('close', () => {\n    clearInterval(hb);\n    matchmaker.stop();\n  });\n\n  return { presence, matchmaker };\n}\n",
+    "src/realtime/matchmaker.ts": "import { randomUUID } from 'crypto';\n\ninterface Entry {\n  id: string;\n  rating: number;\n  since: number;\n}\n\nexport interface Match {\n  matchId: string;\n  players: [string, string];\n}\n\nconst TICK_MS = 250;\nconst BASE_WINDOW = 100;\n// Anyone queued this long is paired with the nearest-rated opponent regardless of\n// rating, so a pairable player is matched inside the 2s launch target (ceiling: this + TICK_MS).\nconst FORCE_AFTER_MS = 1500;\n\nexport class Matchmaker {\n  private queue = new Map<string, Entry>();\n  private timer?: NodeJS.Timeout;\n\n  constructor(private onMatch: (m: Match) => void) {}\n\n  start() {\n    this.timer = setInterval(() => this.tick(), TICK_MS);\n  }\n\n  stop() {\n    clearInterval(this.timer);\n  }\n\n  enqueue(id: string, rating = 1000) {\n    if (!this.queue.has(id)) this.queue.set(id, { id, rating, since: Date.now() });\n  }\n\n  cancel(id: string) {\n    return this.queue.delete(id);\n  }\n\n  get size() {\n    return this.queue.size;\n  }\n\n  private window(e: Entry, now: number) {\n    const waited = now - e.since;\n    return waited >= FORCE_AFTER_MS ? Infinity : BASE_WINDOW + (waited / FORCE_AFTER_MS) * 400;\n  }\n\n  tick() {\n    const now = Date.now();\n    const sorted = [...this.queue.values()].sort((a, b) => a.rating - b.rating);\n    // Greedy pairing of rating-adjacent players; O(n log n) per tick.\n    for (let i = 0; i < sorted.length - 1; ) {\n      const a = sorted[i];\n      const b = sorted[i + 1];\n      const w = Math.max(this.window(a, now), this.window(b, now));\n      if (b.rating - a.rating <= w) {\n        this.queue.delete(a.id);\n        this.queue.delete(b.id);\n        this.onMatch({ matchId: randomUUID(), players: [a.id, b.id] });\n        i += 2;\n      } else {\n        i += 1;\n      }\n    }\n  }\n}\n",
+    "src/realtime/presence.ts": "import type { WebSocket } from 'ws';\n\n// In-memory presence. Single-process only: see README.\nexport class Presence {\n  private sockets = new Map<string, WebSocket>();\n  private watchers = new Map<string, Set<string>>(); // watched id -> watcher ids\n  private watching = new Map<string, Set<string>>(); // watcher id -> watched ids\n\n  constructor(private send: (id: string, msg: object) => void) {}\n\n  socket(id: string) {\n    return this.sockets.get(id);\n  }\n\n  connect(id: string, ws: WebSocket) {\n    const old = this.sockets.get(id);\n    this.sockets.set(id, ws);\n    if (old) old.close(4000, 'replaced'); // one connection per player\n    else this.notify(id, true);\n  }\n\n  // Only the current socket may disconnect a player (a replaced socket's close is ignored).\n  disconnect(id: string, ws: WebSocket) {\n    if (this.sockets.get(id) !== ws) return false;\n    this.sockets.delete(id);\n    this.unwatchAll(id);\n    this.notify(id, false);\n    return true;\n  }\n\n  query(ids: string[]) {\n    return ids.filter((id) => this.sockets.has(id));\n  }\n\n  watch(watcher: string, ids: string[]) {\n    let mine = this.watching.get(watcher);\n    if (!mine) this.watching.set(watcher, (mine = new Set()));\n    for (const id of ids) {\n      mine.add(id);\n      let set = this.watchers.get(id);\n      if (!set) this.watchers.set(id, (set = new Set()));\n      set.add(watcher);\n    }\n  }\n\n  private unwatchAll(watcher: string) {\n    for (const id of this.watching.get(watcher) ?? []) {\n      const set = this.watchers.get(id);\n      set?.delete(watcher);\n      if (set?.size === 0) this.watchers.delete(id);\n    }\n    this.watching.delete(watcher);\n  }\n\n  private notify(id: string, online: boolean) {\n    for (const w of this.watchers.get(id) ?? []) {\n      this.send(w, { type: 'presence', id, online });\n    }\n  }\n\n  get count() {\n    return this.sockets.size;\n  }\n}\n",
+    "src/server.ts": "import { createServer } from 'http';\nimport express from 'express';\nimport { accounts } from './accounts';\nimport { inventory } from './inventory';\nimport { attachRealtime } from './realtime/gateway';\n\nconst app = express();\napp.use(express.json());\napp.use('/accounts', accounts);\napp.use('/inventory', inventory);\n\nconst server = createServer(app);\nattachRealtime(server);\nserver.listen(Number(process.env.PORT ?? 8080));\n"
+  },
+  "meta": {
+    "costUSD": 0.1735618,
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "turns": 14,
+    "billing": "api-key",
+    "seconds": 66.949
+  }
+}

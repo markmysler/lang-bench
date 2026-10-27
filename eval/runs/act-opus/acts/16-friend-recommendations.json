@@ -1,0 +1,137 @@
+{
+  "claude": {
+    "duration_api_ms": 172769,
+    "stop_reason": "end_turn",
+    "session_id": "2dd3ade8-1014-4c0d-b545-0cd1f98d69bc",
+    "total_cost_usd": 0.5537728000000001,
+    "usage": {
+      "input_tokens": 18,
+      "cache_creation_input_tokens": 29293,
+      "cache_read_input_tokens": 267079,
+      "output_tokens": 17691,
+      "output_tokens_details": {
+        "thinking_tokens": 11230
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 29293
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1279,
+          "cache_read_input_tokens": 40589,
+          "cache_creation_input_tokens": 1724,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 1724,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-opus-5-5": {
+        "inputTokens": 18,
+        "outputTokens": 17691,
+        "cacheReadInputTokens": 267079,
+        "cacheCreationInputTokens": 29293,
+        "webSearchRequests": 0,
+        "costUSD": 0.5537728000000001,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 11230,
+        "canonicalModel": "claude-opus-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_013eHh6Fp4C9Jg1X6axxerYK",
+        "tool_input": {
+          "command": "node -v; npm -v; ls -a; ls node_modules 2>/dev/null | head; which psql pg_ctl postgres docker 2>/dev/null",
+          "description": "Check toolchain availability"
+        }
+      },
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_0117RcHwGtQxyi2ahWAgpsDT",
+        "tool_input": {
+          "command": "node -v && npm -v",
+          "description": "Check Node and npm versions"
+        }
+      }
+    ],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 13,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I've added the feature in `src/pymk/` with a schema change. I haven't run any of it: dependencies aren't installed, there's no database here, and the repo has no Express app or TypeScript setup to compile against. Check it against a staging copy of your data before relying on it.\n\n**Main design decision: suggestions are computed ahead of time, not when the page loads.** At your scale (about 20 memberships per user), even a two-hop search reaches millions of rows, and three hops reaches most of the graph. No query against the live tables will answer in under 300 ms. So:\n\n- **Reading (`GET /users/:userId/people-you-may-know?limit=20`):** looks up the user's stored suggestions in a new `Suggestion` table. That's a small indexed lookup and should stay well under 300 ms however big the graph gets. Each result has the user, `hops` and `sharedConnections`.\n- **Computing (`refreshSuggestions` in `src/pymk/compute.ts`):** one SQL query rebuilds one user's top 100 suggestions. A rebuild starts in the background when a user's suggestions are missing or more than 24 hours old. At most 2 run at once per process, with a 15-second timeout. You can also call it directly, for example after someone joins a team.\n- It all stays in Postgres and Prisma, so there's no graph database or other new service to run.\n\n**Ranking rules I chose:**\n- People who already share a team with the user are never suggested.\n- Two hops away (friend of a friend): scored by the number of mutual connections.\n- Three hops away: scored by the number of two-hop people leading to them.\n- Two-hop people always rank above three-hop people, so the query only searches three hops out when two hops gives fewer than 100 results.\n\n**Limits that keep each rebuild affordable, so scores are approximate:**\n- **Big teams are skipped:** teams with more than 500 members are left out of the search, because an all-company team would make everyone a \"friend\" of everyone.\n- **Fan-out cap:** at each hop, only the 200 strongest connections are followed. So mutual-connection counts only include those 200 people.\n\nBoth numbers are constants at the top of `compute.ts`. Tune them against real data.\n\n**Things you should know:**\n- **The first request returns nothing:** it comes back with `pending: true` and an empty list while the rebuild runs. Suggestions can also be up to a day out of date.\n- **No full nightly refresh:** a rebuild probably takes hundreds of milliseconds to a few seconds per user. Doing all 2 million every night isn't realistic, so only users who actually load the feature are kept fresh.\n- **No access control:** there's no auth in the repo, so anyone can read any user's suggestions. Add a check that the caller is that user.\n\n**What's left for you:**\n1. Run `npx prisma migrate dev --name pymk`. It adds a nullable `User.pymkComputedAt` column and the `Suggestion` table.\n2. Mount the endpoint in your app with `app.use(pymkRouter(prisma))`.\n3. Optionally, replace the `Membership(teamId)` index with `(teamId, userId)`. Rebuilds could then read memberships from the index alone. On 40M rows, build it with `CREATE INDEX CONCURRENTLY`.",
+    "ttft_ms": 3753,
+    "type": "result",
+    "duration_ms": 174034,
+    "uuid": "77a04fba-e9db-41bf-b367-1a4a8e8a8973",
+    "ttft_stream_ms": 2445,
+    "time_to_request_ms": 184,
+    "first_content_frame_ms": 2445,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "M  prisma/schema.prisma",
+    "A  src/pymk/compute.ts",
+    "A  src/pymk/index.ts"
+  ],
+  "files": {
+    "prisma/schema.prisma": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\nmodel User {\n  id             String       @id @default(cuid())\n  name           String\n  memberships    Membership[]\n  /// When `suggestions` was last recomputed; null means never.\n  pymkComputedAt DateTime?\n  suggestions    Suggestion[] @relation(\"SuggestionsFor\")\n  suggestedTo    Suggestion[] @relation(\"SuggestedUser\")\n}\n\nmodel Team {\n  id          String       @id @default(cuid())\n  name        String\n  memberships Membership[]\n}\n\n/// Users belong to teams and projects; two users are connected when they share one.\nmodel Membership {\n  userId String\n  teamId String\n  user   User   @relation(fields: [userId], references: [id])\n  team   Team   @relation(fields: [teamId], references: [id])\n\n  @@id([userId, teamId])\n  @@index([teamId])\n}\n\n/// Precomputed \"people you may know\" results (see src/pymk). Rebuilt per user, never edited in place.\nmodel Suggestion {\n  userId          String\n  suggestedUserId String\n  /// 2 = friend of a friend, 3 = one step further.\n  hops            Int\n  /// Number of distinct connections linking the two users at that distance.\n  score           Int\n  user            User   @relation(\"SuggestionsFor\", fields: [userId], references: [id], onDelete: Cascade)\n  suggestedUser   User   @relation(\"SuggestedUser\", fields: [suggestedUserId], references: [id], onDelete: Cascade)\n\n  @@id([userId, suggestedUserId])\n  @@index([suggestedUserId])\n}\n",
+    "src/pymk/compute.ts": "import { Prisma, PrismaClient } from \"@prisma/client\";\n\n/**\n * Teams larger than this are ignored when walking the graph. An all-company\n * team \"connects\" everyone and would make every query touch the whole table.\n * Members of big teams are still excluded from a user's own suggestions.\n */\nexport const MAX_TEAM_SIZE = 500;\n\n/** How many of the strongest ties are expanded at each hop. */\nexport const FANOUT = 200;\n\n/** How many suggestions are stored per user. */\nexport const KEEP = 100;\n\nconst COMPUTE_TIMEOUT = \"15s\";\n\n/**\n * True when the team has at most MAX_TEAM_SIZE members. Stops counting at\n * MAX_TEAM_SIZE + 1 so a huge team costs no more than a small one.\n */\nconst isSmallTeam = (teamId: Prisma.Sql) => Prisma.sql`\n  (SELECT count(*) FROM (\n     SELECT 1 FROM \"Membership\" s WHERE s.\"teamId\" = ${teamId} LIMIT ${MAX_TEAM_SIZE + 1}\n   ) bounded) <= ${MAX_TEAM_SIZE}`;\n\n/**\n * Rebuilds the stored suggestions for one user.\n *\n * Two users are directly connected when they share a team; those people are\n * never suggested. Candidates two hops away are scored by mutual connections,\n * three hops away by the number of distinct two-hop people leading to them.\n * Closer people always rank first, so hop 3 is only walked when hop 2 can't\n * fill the list.\n *\n * Too slow for the request path (hundreds of thousands of rows per user), so\n * results are stored in \"Suggestion\" and served from there.\n */\nexport async function refreshSuggestions(prisma: PrismaClient, userId: string): Promise<void> {\n  const t = Prisma.raw('t.\"teamId\"');\n\n  await prisma.$transaction(async (tx) => {\n    await tx.$executeRawUnsafe(`SET LOCAL statement_timeout = '${COMPUTE_TIMEOUT}'`);\n    await tx.$executeRaw`DELETE FROM \"Suggestion\" WHERE \"userId\" = ${userId}`;\n    await tx.$executeRaw`\n      WITH\n      my_teams AS (\n        SELECT \"teamId\" FROM \"Membership\" WHERE \"userId\" = ${userId}\n      ),\n      -- Everyone already sharing a team with the user, including the user.\n      direct AS (\n        SELECT DISTINCT m.\"userId\"\n        FROM my_teams t JOIN \"Membership\" m ON m.\"teamId\" = t.\"teamId\"\n      ),\n      my_small_teams AS (\n        SELECT \"teamId\" FROM my_teams t WHERE ${isSmallTeam(t)}\n      ),\n      hop1 AS (\n        SELECT m.\"userId\", count(*) AS shared\n        FROM my_small_teams t JOIN \"Membership\" m ON m.\"teamId\" = t.\"teamId\"\n        WHERE m.\"userId\" <> ${userId}\n        GROUP BY m.\"userId\"\n        ORDER BY shared DESC\n        LIMIT ${FANOUT}\n      ),\n      hop1_small_teams AS (\n        SELECT \"teamId\" FROM (\n          SELECT DISTINCT m.\"teamId\" FROM hop1 h JOIN \"Membership\" m ON m.\"userId\" = h.\"userId\"\n        ) t\n        WHERE ${isSmallTeam(t)}\n      ),\n      hop2 AS (\n        SELECT m2.\"userId\", count(DISTINCT m1.\"userId\") AS score\n        FROM hop1 h\n        JOIN \"Membership\" m1 ON m1.\"userId\" = h.\"userId\"\n        JOIN hop1_small_teams st ON st.\"teamId\" = m1.\"teamId\"\n        JOIN \"Membership\" m2 ON m2.\"teamId\" = m1.\"teamId\"\n        WHERE NOT EXISTS (SELECT 1 FROM direct d WHERE d.\"userId\" = m2.\"userId\")\n        GROUP BY m2.\"userId\"\n      ),\n      -- Empty (and hop 3 skipped) when hop 2 already fills the list.\n      hop2_seed AS (\n        SELECT \"userId\" FROM hop2\n        WHERE (SELECT count(*) FROM hop2) < ${KEEP}\n        ORDER BY score DESC\n        LIMIT ${FANOUT}\n      ),\n      hop2_small_teams AS (\n        SELECT \"teamId\" FROM (\n          SELECT DISTINCT m.\"teamId\" FROM hop2_seed h JOIN \"Membership\" m ON m.\"userId\" = h.\"userId\"\n        ) t\n        WHERE ${isSmallTeam(t)}\n      ),\n      hop3 AS (\n        SELECT m2.\"userId\", count(DISTINCT m1.\"userId\") AS score\n        FROM hop2_seed h\n        JOIN \"Membership\" m1 ON m1.\"userId\" = h.\"userId\"\n        JOIN hop2_small_teams st ON st.\"teamId\" = m1.\"teamId\"\n        JOIN \"Membership\" m2 ON m2.\"teamId\" = m1.\"teamId\"\n        WHERE NOT EXISTS (SELECT 1 FROM direct d WHERE d.\"userId\" = m2.\"userId\")\n          AND NOT EXISTS (SELECT 1 FROM hop2 x WHERE x.\"userId\" = m2.\"userId\")\n        GROUP BY m2.\"userId\"\n      )\n      INSERT INTO \"Suggestion\" (\"userId\", \"suggestedUserId\", \"hops\", \"score\")\n      SELECT ${userId}, c.\"userId\", c.hops, c.score\n      FROM (\n        SELECT \"userId\", 2 AS hops, score FROM hop2\n        UNION ALL\n        SELECT \"userId\", 3 AS hops, score FROM hop3\n      ) c\n      ORDER BY c.hops, c.score DESC\n      LIMIT ${KEEP}`;\n    await tx.user.update({ where: { id: userId }, data: { pymkComputedAt: new Date() } });\n  }, { timeout: 20_000 }); // Prisma's 5 s default would cut off before the statement timeout\n}\n",
+    "src/pymk/index.ts": "import { PrismaClient } from \"@prisma/client\";\nimport { Router } from \"express\";\nimport { refreshSuggestions } from \"./compute\";\n\nexport { refreshSuggestions };\n\n/** Stored suggestions older than this are rebuilt in the background on the next read. */\nconst STALE_AFTER_MS = 24 * 60 * 60 * 1000;\n\n/** Cap on rebuilds running at once from this process, to protect the database. */\nconst MAX_CONCURRENT_REFRESHES = 2;\n\nconst DEFAULT_LIMIT = 20;\nconst MAX_LIMIT = 100;\n\nconst refreshing = new Set<string>();\n\n/**\n * Starts a background rebuild unless one is already running for this user or\n * the process is at capacity. A skipped rebuild is retried on the next read.\n */\nfunction scheduleRefresh(prisma: PrismaClient, userId: string): void {\n  if (refreshing.has(userId) || refreshing.size >= MAX_CONCURRENT_REFRESHES) return;\n  refreshing.add(userId);\n  refreshSuggestions(prisma, userId)\n    .catch((err) => console.error(`pymk: refresh failed for user ${userId}`, err))\n    .finally(() => refreshing.delete(userId));\n}\n\n/**\n * Reads stored suggestions only (a single indexed lookup), so it stays fast\n * however large the graph is. Missing or stale results are rebuilt in the\n * background; until the first rebuild finishes `pending` is true.\n */\nexport async function getPeopleYouMayKnow(prisma: PrismaClient, userId: string, limit = DEFAULT_LIMIT) {\n  const user = await prisma.user.findUnique({\n    where: { id: userId },\n    select: {\n      pymkComputedAt: true,\n      suggestions: {\n        orderBy: [{ hops: \"asc\" }, { score: \"desc\" }],\n        take: limit,\n        select: { hops: true, score: true, suggestedUser: { select: { id: true, name: true } } },\n      },\n    },\n  });\n  if (!user) return null;\n\n  const computedAt = user.pymkComputedAt;\n  if (!computedAt || Date.now() - computedAt.getTime() > STALE_AFTER_MS) {\n    scheduleRefresh(prisma, userId);\n  }\n\n  return {\n    pending: computedAt === null,\n    computedAt,\n    suggestions: user.suggestions.map((s) => ({\n      user: s.suggestedUser,\n      hops: s.hops,\n      sharedConnections: s.score,\n    })),\n  };\n}\n\nexport function pymkRouter(prisma: PrismaClient): Router {\n  const router = Router();\n\n  router.get(\"/users/:userId/people-you-may-know\", async (req, res, next) => {\n    try {\n      const requested = Number(req.query.limit ?? DEFAULT_LIMIT);\n      const limit = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), MAX_LIMIT) : DEFAULT_LIMIT;\n\n      const result = await getPeopleYouMayKnow(prisma, req.params.userId, limit);\n      if (!result) {\n        res.status(404).json({ error: \"User not found\" });\n        return;\n      }\n      res.json(result);\n    } catch (err) {\n      next(err);\n    }\n  });\n\n  return router;\n}\n"
+  },
+  "meta": {
+    "costUSD": 0.5537728000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 13,
+    "billing": "api-key",
+    "seconds": 176.143
+  }
+}

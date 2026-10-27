@@ -1,0 +1,163 @@
+{
+  "claude": {
+    "duration_api_ms": 88877,
+    "stop_reason": "end_turn",
+    "session_id": "48cd0fc7-69d0-47ce-ab56-75de5303b033",
+    "total_cost_usd": 0.017770255000000002,
+    "usage": {
+      "input_tokens": 26,
+      "cache_creation_input_tokens": 33395,
+      "cache_read_input_tokens": 429828,
+      "output_tokens": 18590,
+      "output_tokens_details": {
+        "thinking_tokens": 10802
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 33395
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1271,
+          "cache_read_input_tokens": 44452,
+          "cache_creation_input_tokens": 1963,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 1963,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-haiku-5-5": {
+        "inputTokens": 26,
+        "outputTokens": 18590,
+        "cacheReadInputTokens": 429828,
+        "cacheCreationInputTokens": 33395,
+        "webSearchRequests": 0,
+        "costUSD": 0.017770255000000002,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 10802,
+        "canonicalModel": "claude-haiku-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_018ZAdWmJNpJRpV7CMc9s4pH",
+        "tool_input": {
+          "command": "(java -version 2>&1; mvn -v 2>&1 | head -3; ls ~/.m2 2>&1 | head; timeout 20 curl -sI https://repo.maven.apache.org/maven2/ | head -1) ; echo done",
+          "description": "Check Java, Maven, and Maven Central reachability"
+        }
+      },
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_01JxP5uvfFH4eY3n1DSsGijy",
+        "tool_input": {
+          "command": "java -version 2>&1; mvn -v 2>&1 | head -3; ls ~/.m2 2>&1 | head -3",
+          "description": "Check Java and Maven versions"
+        }
+      },
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_01EyfhVo6KW6A4E99BesHYDX",
+        "tool_input": {
+          "command": "java -version",
+          "description": "Print Java version"
+        }
+      },
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_014xPF9K43DpZPPa22NESqRc",
+        "tool_input": {
+          "command": "mvn -v",
+          "description": "Print Maven version"
+        }
+      }
+    ],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 21,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I made the changes, but I could not compile or run anything. Java and Maven commands were blocked by the approval prompt in this session, so the build and tests are unverified.\n\n**Cause of the ceiling:** the prototype blocks a Tomcat request thread on `future.get()` for up to 30 seconds. Tomcat's default pool is 200 threads, which matches the ~200 waiting requests per pod in the load test.\n\n**What changed**\n- **`CallbackController`** returns a `CompletableFuture`, so the servlet thread is released while the partner waits. Timeouts still return 204.\n- **`Confirmations`** (new) keeps waiting requests in a map keyed by partner and payment ID. It also keeps confirmations that arrive before their request for 60 seconds, which covers the race where Kafka delivers first. It exposes a `gateway.confirmations.waiting` gauge.\n- **`ConfirmationListener`** (new) consumes the Kafka topic. Each pod uses its own consumer group, so every pod sees every confirmation and can complete the request it holds.\n- **`PartnerGatewayApplication`** (new): the prototype had no `@SpringBootApplication` class.\n- **`Confirmation`** (new): the record the prototype referenced but never defined.\n- **`application.yml`**: Tomcat `max-connections` is 12000 (default 8192), and `accept-count` is 1024. The MVC async timeout is 35s, above the 30s confirmation timeout. Kafka settings are added.\n- **`pom.xml`** and **`ConfirmationsTest`**: `spring-boot-starter-test` is added at test scope, and there are tests for the race, timeout, and key handling. This is the only dependency added, and it is part of the approved Spring Boot stack.\n\n**Assumptions to check**\n- The message schema `{partner, paymentId, status}` and the topic name `payment-confirmations` are guesses. Replace them with the real contract.\n- `group-id` uses `${HOSTNAME}`, which is set in Kubernetes and OpenShift pods.\n- Waiting requests are in memory, so a pod restart or rolling deploy drops its waiting partners.\n- Holding 10,000 open connections needs enough file descriptors and pod memory. Check these in the OpenShift resource limits.\n\n**Next steps**\n1. Run `mvn test`.\n2. Re-run the load test from `docs/partner-gateway.md` against two pods. It is the only evidence that the 10,000-connection target is met.\n\nI did not commit anything.",
+    "ttft_ms": 1794,
+    "type": "result",
+    "duration_ms": 90790,
+    "uuid": "7fc61142-c6c9-462e-9ad3-13ea4cf67042",
+    "ttft_stream_ms": 1736,
+    "time_to_request_ms": 287,
+    "first_content_frame_ms": 1736,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "M  pom.xml",
+    "M  src/main/java/bank/payments/gateway/CallbackController.java",
+    "A  src/main/java/bank/payments/gateway/Confirmation.java",
+    "A  src/main/java/bank/payments/gateway/ConfirmationListener.java",
+    "A  src/main/java/bank/payments/gateway/Confirmations.java",
+    "A  src/main/java/bank/payments/gateway/PartnerGatewayApplication.java",
+    "M  src/main/resources/application.yml",
+    "A  src/test/java/bank/payments/gateway/ConfirmationsTest.java"
+  ],
+  "files": {
+    "pom.xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\">\n  <modelVersion>4.0.0</modelVersion>\n  <parent>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-parent</artifactId>\n    <version>3.3.5</version>\n  </parent>\n  <groupId>bank.payments</groupId>\n  <artifactId>partner-gateway</artifactId>\n  <version>0.1.0</version>\n  <properties><java.version>21</java.version></properties>\n  <dependencies>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>\n    <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka</artifactId></dependency>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>\n  </dependencies>\n</project>\n",
+    "src/main/java/bank/payments/gateway/CallbackController.java": "package bank.payments.gateway;\n\nimport java.util.concurrent.CompletableFuture;\nimport java.util.concurrent.CompletionException;\nimport java.util.concurrent.TimeoutException;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.*;\n\n@RestController\nclass CallbackController {\n    private final Confirmations confirmations;\n\n    CallbackController(Confirmations confirmations) {\n        this.confirmations = confirmations;\n    }\n\n    /**\n     * A partner waits here until the payment is confirmed (from Kafka) or the wait times out.\n     * Returns a future so the servlet thread is released while the partner waits.\n     */\n    @GetMapping(\"/partners/{partner}/payments/{id}/confirmation\")\n    CompletableFuture<ResponseEntity<Confirmation>> await(@PathVariable String partner, @PathVariable String id) {\n        return confirmations.waitFor(partner, id)\n                .handle((confirmation, error) -> {\n                    if (error == null) {\n                        return ResponseEntity.ok(confirmation);\n                    }\n                    if (unwrap(error) instanceof TimeoutException) {\n                        return ResponseEntity.<Confirmation>noContent().build();\n                    }\n                    throw new CompletionException(error);\n                });\n    }\n\n    private static Throwable unwrap(Throwable error) {\n        return error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;\n    }\n}\n",
+    "src/main/java/bank/payments/gateway/Confirmation.java": "package bank.payments.gateway;\n\n/** Payment confirmation message from Kafka, and the body returned to the partner. */\nrecord Confirmation(String partner, String paymentId, String status) {}\n",
+    "src/main/java/bank/payments/gateway/ConfirmationListener.java": "package bank.payments.gateway;\n\nimport org.springframework.kafka.annotation.KafkaListener;\nimport org.springframework.stereotype.Component;\n\n/**\n * Each pod uses its own consumer group (see gateway.confirmations.group-id), so every pod receives every confirmation.\n */\n@Component\nclass ConfirmationListener {\n    private final Confirmations confirmations;\n\n    ConfirmationListener(Confirmations confirmations) {\n        this.confirmations = confirmations;\n    }\n\n    @KafkaListener(topics = \"${gateway.confirmations.topic}\", groupId = \"${gateway.confirmations.group-id}\")\n    void onConfirmation(Confirmation confirmation) {\n        confirmations.onConfirmed(confirmation);\n    }\n}\n",
+    "src/main/java/bank/payments/gateway/Confirmations.java": "package bank.payments.gateway;\n\nimport io.micrometer.core.instrument.Gauge;\nimport io.micrometer.core.instrument.MeterRegistry;\nimport java.time.Duration;\nimport java.time.Instant;\nimport java.util.Map;\nimport java.util.concurrent.CompletableFuture;\nimport java.util.concurrent.ConcurrentHashMap;\nimport java.util.concurrent.TimeUnit;\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.scheduling.annotation.Scheduled;\nimport org.springframework.stereotype.Service;\n\n/**\n * Partner requests waiting for a confirmation, and confirmations that arrived before their request.\n * Every pod receives every confirmation (see ConfirmationListener), so the pod holding the request can complete it.\n */\n@Service\nclass Confirmations {\n    /** How long a confirmation that arrived with no waiting request is kept for a late request. */\n    static final Duration EARLY_TTL = Duration.ofSeconds(60);\n\n    private record Key(String partner, String paymentId) {}\n\n    private record Early(Confirmation confirmation, Instant expiresAt) {}\n\n    private final Map<Key, CompletableFuture<Confirmation>> waiting = new ConcurrentHashMap<>();\n    private final Map<Key, Early> early = new ConcurrentHashMap<>();\n    private final Duration timeout;\n\n    Confirmations(MeterRegistry registry, @Value(\"${gateway.confirmations.timeout:30s}\") Duration timeout) {\n        this.timeout = timeout;\n        Gauge.builder(\"gateway.confirmations.waiting\", waiting, Map::size).register(registry);\n    }\n\n    /** Completes with the confirmation, or exceptionally with TimeoutException after the configured timeout. */\n    CompletableFuture<Confirmation> waitFor(String partner, String paymentId) {\n        Key key = new Key(partner, paymentId);\n        Early arrived = early.remove(key);\n        if (arrived != null) {\n            return CompletableFuture.completedFuture(arrived.confirmation());\n        }\n        CompletableFuture<Confirmation> future = new CompletableFuture<>();\n        waiting.put(key, future);\n        future.whenComplete((confirmation, error) -> waiting.remove(key, future));\n        // A confirmation may have been recorded between the check above and the put.\n        Early lateArrival = early.remove(key);\n        if (lateArrival != null) {\n            future.complete(lateArrival.confirmation());\n        }\n        return future.orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS);\n    }\n\n    /** Called for each confirmation consumed from Kafka. */\n    void onConfirmed(Confirmation confirmation) {\n        Key key = new Key(confirmation.partner(), confirmation.paymentId());\n        // Record first, then look for a waiter: a request that registers after our lookup will find the record.\n        early.put(key, new Early(confirmation, Instant.now().plus(EARLY_TTL)));\n        CompletableFuture<Confirmation> future = waiting.remove(key);\n        // complete() is false if the waiter has already timed out; keep the record for a later request then.\n        if (future != null && future.complete(confirmation)) {\n            early.remove(key);\n        }\n    }\n\n    @Scheduled(fixedDelay = 10_000)\n    void sweepEarly() {\n        sweepEarly(Instant.now());\n    }\n\n    void sweepEarly(Instant now) {\n        early.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));\n    }\n}\n",
+    "src/main/java/bank/payments/gateway/PartnerGatewayApplication.java": "package bank.payments.gateway;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\nimport org.springframework.scheduling.annotation.EnableScheduling;\n\n@SpringBootApplication\n@EnableScheduling\npublic class PartnerGatewayApplication {\n    public static void main(String[] args) {\n        SpringApplication.run(PartnerGatewayApplication.class, args);\n    }\n}\n",
+    "src/main/resources/application.yml": "spring:\n  application:\n    name: partner-gateway\n  mvc:\n    async:\n      # Above the 30s confirmation timeout, so the servlet container never times out first.\n      request-timeout: 35s\n  kafka:\n    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}\n    consumer:\n      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer\n      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer\n      # Only confirmations that arrive after this pod starts are useful to it.\n      auto-offset-reset: latest\n      properties:\n        spring.json.value.default.type: bank.payments.gateway.Confirmation\n        spring.json.trusted.packages: bank.payments.gateway\nserver:\n  tomcat:\n    # Open connections held by waiting partners. Tomcat's default is 8192.\n    max-connections: 12000\n    accept-count: 1024\ngateway:\n  confirmations:\n    timeout: 30s\n    topic: payment-confirmations\n    # Unique per pod, so each pod receives every confirmation.\n    group-id: partner-gateway-${HOSTNAME}\nmanagement:\n  endpoints.web.exposure.include: health,metrics\n",
+    "src/test/java/bank/payments/gateway/ConfirmationsTest.java": "package bank.payments.gateway;\n\nimport static org.assertj.core.api.Assertions.assertThat;\nimport static org.junit.jupiter.api.Assertions.assertThrows;\n\nimport io.micrometer.core.instrument.simple.SimpleMeterRegistry;\nimport java.time.Duration;\nimport java.time.Instant;\nimport java.util.concurrent.CompletableFuture;\nimport java.util.concurrent.ExecutionException;\nimport java.util.concurrent.TimeoutException;\nimport org.junit.jupiter.api.Test;\n\nclass ConfirmationsTest {\n    private final Confirmations confirmations = new Confirmations(new SimpleMeterRegistry(), Duration.ofSeconds(30));\n\n    private static Confirmation confirmation(String paymentId) {\n        return new Confirmation(\"acme\", paymentId, \"CONFIRMED\");\n    }\n\n    @Test\n    void completesWaiterWhenConfirmationArrivesLater() {\n        CompletableFuture<Confirmation> wait = confirmations.waitFor(\"acme\", \"p1\");\n\n        confirmations.onConfirmed(confirmation(\"p1\"));\n\n        assertThat(wait.join()).isEqualTo(confirmation(\"p1\"));\n    }\n\n    @Test\n    void returnsEarlyConfirmationToLateRequest() {\n        confirmations.onConfirmed(confirmation(\"p1\"));\n\n        assertThat(confirmations.waitFor(\"acme\", \"p1\").join()).isEqualTo(confirmation(\"p1\"));\n    }\n\n    @Test\n    void keysByPartnerAndPaymentId() {\n        CompletableFuture<Confirmation> wait = confirmations.waitFor(\"acme\", \"p1\");\n\n        confirmations.onConfirmed(new Confirmation(\"other\", \"p1\", \"CONFIRMED\"));\n\n        assertThat(wait).isNotDone();\n    }\n\n    @Test\n    void timesOutAndRemovesWaiter() throws Exception {\n        Confirmations shortWait = new Confirmations(new SimpleMeterRegistry(), Duration.ofMillis(20));\n        CompletableFuture<Confirmation> wait = shortWait.waitFor(\"acme\", \"p1\");\n\n        ExecutionException e = assertThrows(ExecutionException.class, wait::get);\n        assertThat(e.getCause()).isInstanceOf(TimeoutException.class);\n\n        // The timed-out waiter is gone, so a confirmation is recorded for a future request, not handed to the dead one.\n        shortWait.onConfirmed(confirmation(\"p1\"));\n        assertThat(shortWait.waitFor(\"acme\", \"p1\").join()).isEqualTo(confirmation(\"p1\"));\n    }\n\n    @Test\n    void sweepDropsExpiredEarlyConfirmations() {\n        confirmations.onConfirmed(confirmation(\"p1\"));\n\n        confirmations.sweepEarly(Instant.now().plus(Confirmations.EARLY_TTL).plusSeconds(1));\n\n        assertThat(confirmations.waitFor(\"acme\", \"p1\")).isNotDone();\n    }\n}\n"
+  },
+  "meta": {
+    "costUSD": 0.017770255000000002,
+    "models": [
+      "claude-haiku-5-5"
+    ],
+    "turns": 21,
+    "billing": "api-key",
+    "seconds": 92.923
+  }
+}

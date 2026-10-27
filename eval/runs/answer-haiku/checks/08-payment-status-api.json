@@ -1,0 +1,70 @@
+{
+  "scenario": "08-payment-status-api",
+  "claims": [
+    {
+      "claim": "800 req/s at peak is a small load for a service doing one indexed lookup; well within one Spring Boot pod's capacity, a few pods per data centre give headroom",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Single-row Postgres query on 1 CPU: java-spring 7,668 req/s (p99 77.87 ms); java-spring-vt 12,731 req/s (p99 12.39 ms)",
+      "verdict": "consistent",
+      "why": "One CPU of Spring Boot handled roughly 10–16 times the 800 req/s peak in the single-query DB test, so one pod covering it is in line with the measurements."
+    },
+    {
+      "claim": "The 150 ms p99 budget isn't set by the language",
+      "about": "java-spring vs go (and other stacks)",
+      "measured": "Single-query p99 at 64 connections, fully loaded: java-spring 77.87 ms, java-spring-vt 12.39 ms, go-gin 6.00 ms, go-nethttp 7.10 ms; php-laravel 486.58 ms",
+      "verdict": "consistent",
+      "why": "Java and Go both stayed under 150 ms p99 even at saturation, far above 800 req/s, though the claim does not hold for every language (Laravel went over)."
+    },
+    {
+      "claim": "Go will use less memory and start faster than Spring Boot",
+      "about": "go-gin / go-nethttp vs java-spring",
+      "measured": "Peak memory in single-query DB test: Go 11–12 MB vs Spring 307–499 MB; start-up: Go 238–293 ms vs Spring 5,939–6,224 ms",
+      "verdict": "consistent",
+      "why": "The measurements point the same way, and by a wide margin."
+    },
+    {
+      "claim": "Spring Boot pods typically need a few hundred MB",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Idle 131–134 MB; peak 307–499 MB in the DB tests",
+      "verdict": "consistent",
+      "why": "Measured peak memory under load was 300–500 MB, which matches \"a few hundred MB\"."
+    },
+    {
+      "claim": "The memory difference between Go and Spring Boot is maybe a gigabyte across the fleet",
+      "about": "go vs java-spring",
+      "measured": "Per-pod peak difference about 295 MB (spring-vt 307 MB vs Go 12 MB) to about 490 MB (spring 499 MB vs Go 11 MB)",
+      "verdict": "not_covered",
+      "why": "The total depends on a pod count the answer never fixes; with \"a few pods\" in each of several data centres it could be 2–3 GB, not 1."
+    },
+    {
+      "claim": "Java 21 virtual threads let blocking JDBC calls scale without a reactive rewrite",
+      "about": "java-spring-vt vs java-spring",
+      "measured": "Single query: vt 12,731 req/s, p99 12.39 ms vs platform threads 7,668 req/s, p99 77.87 ms; 20 queries: 1,699 vs 1,254 req/s",
+      "verdict": "consistent",
+      "why": "Virtual threads gave higher throughput and much lower p99 on the blocking-DB tests."
+    },
+    {
+      "claim": "Go is technically fine but buys little (in performance) for this service",
+      "about": "go-gin / go-nethttp vs java-spring-vt",
+      "measured": "Single query: go-gin 22,138 req/s, p99 6.00 ms vs spring-vt 12,731 req/s, p99 12.39 ms; memory 12 MB vs 307 MB",
+      "verdict": "consistent",
+      "why": "Go's throughput lead is under 2x and both run far above 800 req/s within the latency budget; the memory gap is large, but the answer admits that separately."
+    },
+    {
+      "claim": "Quarkus or Micronaut give faster start-up and lower memory than Spring Boot",
+      "about": "Quarkus / Micronaut vs Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor Micronaut was measured."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1770096,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 31.365
+  }
+}

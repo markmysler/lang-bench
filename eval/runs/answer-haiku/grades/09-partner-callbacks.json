@@ -1,0 +1,28 @@
+{
+  "scenario": "09-partner-callbacks",
+  "grade": {
+    "primary_choice": "Stay on Java 21 + Spring Boot 3.2+ with virtual threads, fix Tomcat/infra limits, and pursue an async partner contract longer term",
+    "choice": "acceptable",
+    "ruled_out_recommended": [
+      "Vert.x (only as a conditional last-resort fallback, flagged for approved-list check)"
+    ],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "Strong answer that covers almost every must-mention point: the Tomcat 200 default, virtual threads, max-connections/accept-count/FDs, the 30s OpenShift router timeout, DB pool, pinning, cross-pod Kafka correlation, Little's law and load testing. Small gaps: it doesn't mention JFR or JEP 491 for pinning, doesn't name the router annotation, and it lists Vert.x as a fallback next to WebFlux, though it does flag the approval check."
+  },
+  "meta": {
+    "costUSD": 0.1149196,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.878
+  }
+}

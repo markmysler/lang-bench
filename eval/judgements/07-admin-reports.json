@@ -1,0 +1,114 @@
+{
+  "scenario": "07-admin-reports",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Build it inside the existing Rails monolith as a namespaced admin area (e.g. Admin:: controllers, a separate layout, and its own routes constraint)",
+        "why": "The data is already in the app's Postgres, the team knows Rails well, and this is the fastest route with no new service to deploy or be on call for."
+      },
+      {
+        "choice": "Hand-rolled Rails views with Hotwire/Turbo, plus Chartkick and groupdate for the usage-over-time charts",
+        "why": "Uses tools the team already knows, gives full control over the customer-success workflow, and adds only small, well-known gems."
+      },
+      {
+        "choice": "An admin framework gem inside the monolith (ActiveAdmin, Administrate, Avo, or whichever one is already in the app)",
+        "why": "Gives search, filtering, and CSV export for internal users with little code; best if one is already installed, but heavy customization can make it fight back."
+      },
+      {
+        "choice": "CSV export as a Sidekiq job that streams rows (find_each or Postgres COPY) to S3 and returns a presigned URL or an in-app or emailed link",
+        "why": "Keeps long exports out of Puma request threads and away from ALB timeouts, using job infrastructure they already run."
+      },
+      {
+        "choice": "Streaming small CSVs straight from the controller (send_data or an Enumerator response) with a hard row cap",
+        "why": "Fine for small, bounded exports, as long as anything large goes through the background job path."
+      },
+      {
+        "choice": "Account search with Postgres: indexed ILIKE, pg_trgm trigram indexes, or tsvector full-text search (e.g. the pg_search gem)",
+        "why": "Easily enough for 40 internal users and adds no new datastore."
+      },
+      {
+        "choice": "Point the reporting queries at a Postgres read replica through Rails multi-database (connects_to / connected_to role: :reading)",
+        "why": "Keeps heavy aggregate and export queries off the primary that customers depend on, with little code and a small Terraform change if a replica doesn't exist yet."
+      },
+      {
+        "choice": "Pre-aggregated usage rollup tables, or materialized views refreshed on a schedule by Sidekiq",
+        "why": "Keeps 'usage over time' queries cheap and predictable if the raw usage or event tables are large."
+      },
+      {
+        "choice": "Run admin traffic as a separate ECS service from the same monolith image (its own target group or host rule)",
+        "why": "Optional isolation: admin load can't starve customer-facing web tasks, and there's still only one codebase and deploy pipeline."
+      },
+      {
+        "choice": "An off-the-shelf internal BI or admin tool (Metabase, Retool) pointed at a read replica",
+        "why": "A reasonable alternative if CS mostly needs ad-hoc reporting, but it adds a service to run and a separate auth/PII surface, and it works around the app's domain logic rather than reusing it."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "A new standalone service (Go or Ruby) for admin reporting",
+        "why": "Adds deploy, monitoring, and on-call load for a 40-user internal feature. It breaks their priorities of velocity and quiet on-call, and either duplicates domain logic or shares the database."
+      },
+      {
+        "choice": "Writing it in Go because the platform team knows Go",
+        "why": "Only three people know Go and they use it for internal tooling. Product engineers are Rails people, so this creates a knowledge silo and pulls the platform team off platform work."
+      },
+      {
+        "choice": "A separate SPA (React/Next.js) with a new JSON API for the admin area",
+        "why": "A second frontend stack and build/deploy pipeline is far more than server-rendered internal pages need, and it slows the Rails team down."
+      },
+      {
+        "choice": "Elasticsearch or OpenSearch for account search",
+        "why": "A new stateful datastore plus sync logic and on-call burden, to solve a search problem Postgres handles at this scale."
+      },
+      {
+        "choice": "A data warehouse or CDC pipeline (Redshift, Snowflake, Kafka/Debezium) as the starting point",
+        "why": "Heavy infrastructure and operations cost with no demonstrated need. Revisit only if reporting needs grow well beyond this feature."
+      },
+      {
+        "choice": "A separate app that connects directly to the monolith's Postgres schema",
+        "why": "Shared-database coupling: schema migrations in the monolith can silently break it, and it skips the model-layer logic and authorization."
+      },
+      {
+        "choice": "Generating large CSVs synchronously in the web request with no limits",
+        "why": "Ties up Puma threads, risks ALB/Fargate timeouts and memory spikes, and can hurt customer traffic. That's bad for a quiet on-call."
+      }
+    ],
+    "must_mention": [
+      "The direct answer: no strong reason against it. Build it in the monolith, because the data, skills, deploy pipeline, and auth are already there and the audience is small and internal.",
+      "Exports must not run as long synchronous requests: use a background job (Sidekiq) to write the file to S3 or similar, then hand back a link, or cap the export size.",
+      "Protect the primary database: check query plans and add indexes, and consider a read replica and/or pre-aggregated rollups for usage-over-time queries, so reporting can't slow customer traffic.",
+      "Authentication and authorization for the admin area: staff-only access (ideally SSO), role checks (e.g. Pundit policies or an admin-only constraint), kept separate from customer auth.",
+      "Treat export as a sensitive action: audit-log who exported what, scope the data to what customer success needs, and consider rate limits, because CSVs of customer usage data are a common PII leak path.",
+      "Keep the code modular inside the monolith (namespace, or a Rails engine / packwerk package if they already use one) so the admin area doesn't tangle with core product code.",
+      "Postgres is enough for account search at this scale; no search engine is needed."
+    ],
+    "red_flags": [
+      "Recommending microservices, a new Go service, or a separate deployable as the default for a 40-user internal admin feature.",
+      "Adding new infrastructure (Elasticsearch, a warehouse, Kafka, a separate SPA stack) with no measured need.",
+      "Suggesting synchronous, unbounded CSV generation in the web request, or loading whole result sets into memory (e.g. .all.to_csv on large tables).",
+      "Ignoring the risk of heavy reporting queries against the production primary database.",
+      "Leaving out authorization, audit logging, or PII handling for an area that can search and export all customers' data.",
+      "Telling them to grant customer-success staff raw SQL or database console access as the 'reporting' solution.",
+      "Framing the monolith itself as the problem (e.g. 'this is a good chance to start breaking up the monolith') when the stated goal is keeping it healthy and moving fast.",
+      "Missing CSV/formula injection when exporting customer-controlled strings that will be opened in Excel (escape leading =, +, -, @)."
+    ],
+    "unknowns": [
+      "How big the usage data is (row counts, raw events vs. already aggregated) and how expensive the over-time queries are on current data. This decides whether rollups or a replica are needed.",
+      "Typical and maximum export size (hundreds of rows vs. millions), which decides between streaming inline and a background job to S3.",
+      "Whether a Postgres read replica already exists, and whether its replication lag is acceptable for CS reporting.",
+      "Whether the app already has an admin framework, staff-auth/SSO setup, or modularity tooling (engines, packwerk) to reuse.",
+      "Compliance requirements (SOC 2, GDPR, customer contracts) for who can export customer data and what must be audited.",
+      "How fresh the usage data must be (real-time vs. daily), which affects whether materialized views or rollups are acceptable.",
+      "Whether customer success's needs are stable and well defined (favoring a purpose-built in-app page) or exploratory and ad hoc (where Metabase or Retool might fit better)."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1353396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 42.464
+  }
+}

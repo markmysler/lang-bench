@@ -1,0 +1,21 @@
+{
+  "scenario": "13-gateway-api",
+  "claims": [
+    {
+      "claim": "Standard library plus `serde_json`, one connection at a time, no async runtime, so it starts fast and stays small.",
+      "about": "the custom std-only Rust technician-api server (no framework, no async runtime)",
+      "measured": "Nearest are the Rust framework servers, which both use an async runtime: rust-actix starts in 239 ms with 1 MB idle and 3 MB peak memory; rust-axum starts in 238 ms with 1 MB idle and 3 MB peak memory",
+      "verdict": "not_covered",
+      "why": "No std-only Rust server without an async runtime was measured, so the claim that leaving out the async runtime is what makes it start fast and stay small can't be checked, though the measured Rust framework servers are already well inside the 1 s start-up and 20 MB memory limits."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.16989459999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 10.579
+  }
+}

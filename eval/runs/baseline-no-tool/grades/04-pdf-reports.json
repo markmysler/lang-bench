@@ -1,0 +1,29 @@
+{
+  "scenario": "04-pdf-reports",
+  "grade": {
+    "primary_choice": "Separate TypeScript BullMQ worker on Fly with pre-generated PDFs in object storage",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Month end is this Friday (Oct 31)': 31 October 2026 is a Saturday, and the team never gave a date",
+      "'A faster language would shrink 20 CPU-minutes to maybe 5–10' is a guessed speed-up with no measurement behind it, though it is hedged and only used to argue against a rewrite"
+    ],
+    "overall": 5,
+    "notes": "Excellent answer: it names event-loop blocking as the root cause, does the maths, reuses Redis/BullMQ, runs a separate Fly process group, pre-generates into object storage with signed URLs, stays in TypeScript, and lists the right unknowns to measure. The only slips are a wrong weekday for Oct 31 and a speculative speed-up figure for another language."
+  },
+  "meta": {
+    "costUSD": 0.1096246,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.515
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario": "15-matchmaking",
+  "claims": [],
+  "meta": {
+    "costUSD": 0.1456546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 6.177
+  }
+}

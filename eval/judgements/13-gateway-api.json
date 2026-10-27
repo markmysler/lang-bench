@@ -1,0 +1,109 @@
+{
+  "scenario": "13-gateway-api",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Rust with axum on hyper, using a single-threaded tokio runtime (best default)",
+        "why": "The team already writes Rust, a memory-safe language suits code that parses untrusted network input, and a stripped native binary starts in milliseconds and typically uses only a few MB of RSS (resident memory), well under the 20 MB budget."
+      },
+      {
+        "choice": "Rust with a minimal synchronous server (tiny_http, or hyper used directly)",
+        "why": "Fewer crates means less to audit and patch over ten years, and a technician API with one or two concurrent users does not need an async framework."
+      },
+      {
+        "choice": "Rust with actix-web",
+        "why": "It is mature and fits the memory and startup limits, though it pulls in more dependencies than axum or tiny_http without any benefit here."
+      },
+      {
+        "choice": "C with libmicrohttpd or CivetWeb",
+        "why": "Both fit the team's C skills and the resource limits easily, both are packaged in Yocto/OpenEmbedded, and both have long track records, but every request handler written in C is memory-unsafe code facing the network."
+      },
+      {
+        "choice": "C++ with cpp-httplib or Boost.Beast",
+        "why": "These fit the team's C++ skills and the resource budget, with the same memory-safety caveat as C and the need to watch cpp-httplib's thread-per-connection model."
+      },
+      {
+        "choice": "lighttpd (or uhttpd) packaged in Yocto, handling TLS and static files, in front of a small Rust or C backend over FastCGI or a Unix socket",
+        "why": "The distribution maintains and patches the web server, and the team only writes the small application logic."
+      },
+      {
+        "choice": "Go with net/http (workable, second-tier)",
+        "why": "It meets the startup and memory limits, but it adds a fourth language and a garbage collector, and its larger binaries make updates over cellular more expensive, with no advantage over Rust for this team."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Python (FastAPI/uvicorn, Flask, Django)",
+        "why": "The interpreter plus framework usually exceeds 20 MB RSS, startup on an A53 is close to or over one second, and it adds a full runtime that must get security patches for ten years, while the team uses Python only for test tooling."
+      },
+      {
+        "choice": "Node.js (Express, Fastify, NestJS)",
+        "why": "V8 alone typically uses 30–50 MB RSS, the runtime adds tens of MB to the image, and npm dependency churn conflicts with ten years of patching and small updates."
+      },
+      {
+        "choice": "JVM (Spring Boot, Quarkus in JVM mode, Micronaut)",
+        "why": "Memory and startup time both far exceed the 20 MB and one-second limits on this hardware."
+      },
+      {
+        "choice": ".NET / ASP.NET Core",
+        "why": "The runtime's memory, startup time and image size break the limits, and the team has no .NET skills."
+      },
+      {
+        "choice": "Hand-rolling an HTTP/1.1 parser and server in C",
+        "why": "It creates needless memory-safety and protocol-correctness risk on a network-exposed surface that must be maintained for a decade."
+      },
+      {
+        "choice": "Containers (Docker/Podman) or a heavy stack like nginx + PHP or a full CMS for the API",
+        "why": "These add memory, image size and patch burden on a 256 MB device updated over slow cellular links."
+      },
+      {
+        "choice": "A JavaScript SPA framework (React/Angular) with an npm build chain for any technician UI",
+        "why": "The team has little web experience, the dependency churn conflicts with ten-year maintenance, and the bundles bloat the firmware image; static HTML or a technician-side tool is enough."
+      },
+      {
+        "choice": "Mongoose embedded web server, without a licensing decision",
+        "why": "It is dual-licensed GPLv2 or commercial, which is a legal problem for proprietary firmware unless they buy a license."
+      }
+    ],
+    "must_mention": [
+      "Recommend Rust as the primary choice and justify it with this team's facts: existing Rust skill, memory safety for a network-facing parser, and a native binary that meets the one-second start and 20 MB limit with plenty of room. Framework speed should not be the deciding factor.",
+      "Over a ten-year field life, the number of dependencies matters more than benchmarks: choose a small, widely used crate set, pin the Rust toolchain and vendor crates in the Yocto build (meta-rust or the cargo bbclass), run cargo-audit/cargo-deny, and produce an SBOM.",
+      "Stream the firmware upload to storage in chunks with a hard size limit and never buffer the whole image in RAM; check the signature and integrity before installing; hand the image to the existing A/B or atomic update mechanism (RAUC, SWUpdate, Mender or in-house) rather than writing flash directly from the HTTP handler.",
+      "The local API is attack surface and needs authentication and authorization for technicians: no default or shared passwords, per-device credentials or certificates, and a TLS decision (rustls, or the Yocto-patched OpenSSL). Bind it to the maintenance interface only and add rate limits and request size limits.",
+      "Run it as a separate, unprivileged systemd service talking to the existing firmware over IPC (Unix socket or D-Bus), with systemd hardening and MemoryMax, so a crash or exploit in the API cannot take down the sensor firmware.",
+      "Check RSS/PSS (actual memory use) and cold-start time on the real Cortex-A53 target under a concurrent upload, including TLS buffers and allocator overhead; e.g. use tokio's current_thread runtime and consider capping glibc malloc arenas.",
+      "Keep update size small: strip the binary, build with LTO and opt-level 's', and rely on delta or block-based updates, since a statically linked Rust binary is re-shipped whenever any crate it links is patched.",
+      "Any technician UI should be minimal static HTML/JS served by the same binary, or a separate technician-side tool, because the team lacks web experience."
+    ],
+    "red_flags": [
+      "Recommending Python, Node.js, a JVM framework or .NET for the on-device server despite the 20 MB / one-second limits and the ten-year patching burden.",
+      "Treating the API as safe because it is local: no authentication, default credentials, plain HTTP with secrets, or listening on every interface, including the cellular WAN.",
+      "Accepting the firmware image into memory or a tmpfs whole, skipping signature checks, or flashing directly without an A/B or rollback mechanism.",
+      "Proposing a memory-unsafe hand-written C HTTP parser, or dismissing memory safety for code that faces the network.",
+      "Ignoring long-term maintenance: choosing niche or unmaintained frameworks, deep dependency trees, unpinned toolchains, or no plan for patching vulnerabilities and producing SBOMs for ten years (relevant to obligations such as the EU Cyber Resilience Act).",
+      "Recommending a modern SPA plus npm toolchain, containers, or an extra language/runtime the team doesn't know without weighing the cost.",
+      "Recommending Mongoose without flagging its GPL/commercial licensing.",
+      "Choosing by benchmark throughput, which is irrelevant for a handful of technicians, or giving resource figures as guarantees without saying they must be measured on the target.",
+      "Running the HTTP server inside the existing firmware process or as root, so an API bug can crash or compromise the sensor firmware."
+    ],
+    "unknowns": [
+      "Actual RSS/PSS, binary size and cold-start time of the chosen stack on their A53 image, with TLS enabled and a firmware upload in progress.",
+      "How technicians connect and authenticate (local Ethernet port, Wi-Fi access point, USB networking; passwords, certificates, a vendor app) and whether TLS is mandatory and with what certificate provisioning.",
+      "Which update mechanism already exists (RAUC, SWUpdate, Mender, custom), whether it supports delta updates, and how the uploaded image should be handed to it.",
+      "Whether a browser UI is needed or only a machine API used by a technician tool.",
+      "How the API gets status and configuration from the existing C/C++ firmware (existing IPC, D-Bus, shared files) and whether that interface already exists.",
+      "The Yocto release and LTS plan, the Rust toolchain version available in their layers, and how they will pin and backport it over ten years.",
+      "Free flash space, the cellular data budget for updates, and whether the binary should link the system OpenSSL dynamically or use rustls statically.",
+      "Regulatory and customer security requirements (e.g. IEC 62443-4-2, EU CRA, EN 18031) that dictate authentication, logging and vulnerability handling."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1725346,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 60.852
+  }
+}

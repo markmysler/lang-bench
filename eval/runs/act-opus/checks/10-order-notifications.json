@@ -1,0 +1,28 @@
+{
+  "scenario": "10-order-notifications",
+  "claims": [
+    {
+      "claim": "A consumption-plan instance starting from cold often takes several seconds before any code runs",
+      "about": ".NET Azure Functions on the consumption plan",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The only related figure is csharp-aspnet's 785 ms container start-up. That measures ASP.NET Core in Docker, not an Azure Functions worker, and it leaves out the time Azure takes to allocate an instance on the consumption plan."
+    },
+    {
+      "claim": "Switching language wouldn't solve the deadline anyway, because Node also has cold starts on the consumption plan",
+      "about": "Node.js (and by implication Go) on Azure Functions consumption plan",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Container start-up times of 593–706 ms for Node and 238–293 ms for Go were measured, but nothing on Azure Functions consumption-plan cold starts, so the claim can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1348696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.143
+  }
+}

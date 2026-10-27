@@ -1,0 +1,89 @@
+{
+  "scenario": "06-webhook-delivery-rails",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep delivery in Ruby/Sidekiq, but move webhooks to their own queue and their own ECS service, autoscaled on queue latency",
+        "why": "The work is I/O-bound waiting on slow customer servers, so the fix is more concurrent requests in flight, which Ruby threads handle well because the GVL is released during network I/O, and the team already knows how to run this."
+      },
+      {
+        "choice": "Per-endpoint isolation in Ruby: per-customer concurrency limits, circuit breakers, and a separate slow/retry lane for failing or slow endpoints (Sidekiq Enterprise limiters or Redis-based limits)",
+        "why": "The hours-long backlog is mostly head-of-line blocking: a few slow customers tie up every worker for 5 s each, and isolating them frees capacity for everyone else."
+      },
+      {
+        "choice": "Split payload building from delivery: a Rails job renders and stores the payload, and a thin delivery job only does the HTTP POST using a persistent-connection client and no DB connection",
+        "why": "This keeps the Postgres connection pool and the monolith safe as delivery concurrency grows into the hundreds or thousands."
+      },
+      {
+        "choice": "Fiber-based concurrent delivery in Ruby (async / async-http) inside a dedicated webhook worker",
+        "why": "One process can hold hundreds to thousands of in-flight POSTs, which covers the peak concurrency without a new language."
+      },
+      {
+        "choice": "Managed webhook service (e.g. Svix, Hookdeck)",
+        "why": "It takes over retries, per-endpoint backoff, signing and a customer-facing delivery log, which helps both product velocity and quiet on-call, provided cost and data-handling terms are acceptable."
+      },
+      {
+        "choice": "A small Go delivery service later, owned by the platform team, but only if measured Ruby fixes still fall short",
+        "why": "It is a reasonable escalation path because the team already writes Go, but it should follow the cheap fixes, not replace them."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "An immediate Go rewrite as the main fix",
+        "why": "It does not touch the real bottleneck (concurrency and slow endpoints, not CPU speed), it moves a customer-facing system onto a 3-person team that would then carry its on-call, and it is slower to ship than the Ruby fixes."
+      },
+      {
+        "choice": "Just adding more Sidekiq threads or processes to the shared queue",
+        "why": "Without endpoint isolation, slow customers still take over the extra capacity, the extra threads can exhaust Postgres connections, and other Sidekiq jobs keep competing with webhooks."
+      },
+      {
+        "choice": "Kafka, Kubernetes, or a new event-streaming platform",
+        "why": "At ~23/s on average (a few hundred per second at peak) this is heavy operational overhead that works against quiet on-call and against their ECS/Terraform setup."
+      },
+      {
+        "choice": "Raising the timeout or dropping retries to clear the queue",
+        "why": "A longer timeout makes worker starvation worse, and dropping retries breaks the delivery guarantee B2B customers rely on."
+      },
+      {
+        "choice": "Self-hosting a webhook gateway such as Convoy as a first step",
+        "why": "It adds a new stateful system to operate, which costs more than fixing the existing Sidekiq path."
+      }
+    ],
+    "must_mention": [
+      "Recommend fixing it in Ruby first; the language is not the bottleneck, time spent waiting on network I/O is.",
+      "Back-of-envelope with Little's law: ~2M/day is ~23/s on average and maybe 100–300/s at peak; with responses taking up to 5 s, that means hundreds to ~1,000+ requests in flight, a concurrency and isolation problem rather than a CPU one.",
+      "Slow or dead customer endpoints cause head-of-line blocking; add per-endpoint concurrency caps, circuit breakers and a separate retry/slow queue.",
+      "Give webhooks a dedicated queue and worker service so they cannot starve or be starved by other monolith jobs, and autoscale it on queue latency in ECS.",
+      "Keep DB connections out of the hot delivery path (pre-render payloads) so higher concurrency does not overwhelm Postgres.",
+      "Measure before deciding: per-endpoint latency distribution, timeout and error rates, peak rate, and current worker concurrency.",
+      "A Go service is a valid later option if the metrics justify it, but weigh the ownership and on-call cost for a 3-person platform team."
+    ],
+    "red_flags": [
+      "Claiming Ruby is too slow or that the GVL makes concurrent HTTP impossible.",
+      "Recommending a rewrite without any capacity math or measurement.",
+      "Recommending more workers without isolating slow endpoints or checking the Postgres connection pool.",
+      "Proposing heavy infrastructure (Kafka, Kubernetes, service mesh) for a few hundred requests per second.",
+      "Weakening delivery guarantees (no retries, silently dropping events) or raising timeouts as the fix.",
+      "Ignoring who carries on-call and maintenance for a new Go service.",
+      "Recommending a third-party webhook SaaS without mentioning cost, data-handling or compliance review."
+    ],
+    "unknowns": [
+      "Peak per-second rate and how bursty traffic is.",
+      "Response-time and failure distribution per customer endpoint (are a few endpoints causing most of the delay?).",
+      "Current Sidekiq concurrency, process count, and whether webhooks share a queue with other jobs.",
+      "Whether delivery jobs currently do DB queries or CPU-heavy payload rendering.",
+      "Delivery SLA, ordering requirements, and retry policy promised to customers.",
+      "Whether they have a Sidekiq Pro/Enterprise license, or budget and compliance clearance for a managed webhook service.",
+      "Postgres connection headroom and Redis memory under a large backlog."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.12938460000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 37.968
+  }
+}

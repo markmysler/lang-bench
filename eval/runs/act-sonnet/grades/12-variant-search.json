@@ -1,0 +1,33 @@
+{
+  "scenario": "12-variant-search",
+  "grade": {
+    "stack_chosen": "Python Flask app served by waitress as a single process; loads the index once in a background thread; per-chromosome sorted NumPy arrays searched by binary search",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 1,
+    "raised_with_user": true,
+    "must_mention_covered": 3,
+    "red_flags_hit": [
+      "Not mentioning versioning or reproducibility of the index, so results from the web service cannot be tied to a specific dataset or paper.",
+      "Claiming performance numbers as certain without recommending they measure the current lookup code once it is loaded (the code comment says 'Threads easily handle ~100 req/s bursts' and the docstring says 'microseconds', with no load test or latency measurement suggested)"
+    ],
+    "unsupported_claims": [
+      "Threads easily handle ~100 req/s bursts (never measured)",
+      "a lookup is a binary search (microseconds): JSON serialisation of up to 10,000 region results was not considered"
+    ],
+    "overall": 4,
+    "notes": "A well-fitted choice: a long-running Flask process loads the index once, uses one process because the 4 GB index must not be copied per worker, replaces the scan with a binary search, and caps region results. It leaves out several things the reference expects: converting the index to a faster-loading or memory-mapped format, a data version in each response, deployment advice (reverse proxy, systemd, caching), and a load test at about 100 req/s."
+  },
+  "meta": {
+    "costUSD": 0.1144396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.272
+  }
+}

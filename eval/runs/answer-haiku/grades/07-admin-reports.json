@@ -1,0 +1,32 @@
+{
+  "scenario": "07-admin-reports",
+  "grade": {
+    "primary_choice": "Build it in the Rails monolith as a namespaced admin area, with heavy reads on a replica",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "7",
+    "red_flags_hit": [
+      "Missing CSV/formula injection when exporting customer-controlled strings that will be opened in Excel"
+    ],
+    "unsupported_claims": [
+      "Refers to a 'web dyno' (Heroku term) when the team runs on ECS Fargate",
+      "Assumes a 'checkout' customer path that the situation never mentions",
+      "'an hour of work' for the query prototype is an unbacked estimate"
+    ],
+    "overall": 4,
+    "notes": "A strong, well-grounded answer: it builds in the monolith, uses a read replica, rollups, pg_trgm, Sidekiq exports to S3, audit logging and namespacing, and gives a solid list of things to check first; auth/SSO and rate limits get only light coverage. Its only clear miss is CSV formula injection, plus a couple of small factual slips (dyno, checkout)."
+  },
+  "meta": {
+    "costUSD": 0.1056896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.098
+  }
+}

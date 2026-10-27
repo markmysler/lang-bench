@@ -1,0 +1,56 @@
+{
+  "scenario": "10-order-notifications",
+  "claims": [
+    {
+      "claim": "Changing language won't reliably get you under 2 seconds; the hosting plan and scaling decide latency, not the language",
+      "about": ".NET vs Node vs Go on Azure Functions Consumption",
+      "measured": "Container start-up: csharp-aspnet 785 ms, node-express 706 ms, node-fastify 593 ms, go-gin 293 ms, go-nethttp 238 ms",
+      "verdict": "not_covered",
+      "why": "The benchmark measured process start-up in Docker, not Azure Functions host, worker or scale-controller delays, so it can't show how much of the cold start the language accounts for."
+    },
+    {
+      "claim": "With modern .NET on the isolated model, language worker start and startup code are a smaller share of cold start than people expect",
+      "about": ".NET isolated worker on Azure Functions",
+      "measured": "csharp-aspnet start-up 785 ms vs go-nethttp 238 ms and node-express 706 ms",
+      "verdict": "not_covered",
+      "why": "There is no figure for the total Functions cold start, so the share can't be checked, even though .NET's measured start-up is under a second."
+    },
+    {
+      "claim": "Older .NET setups did start slowly",
+      "about": "older .NET / in-process Functions",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Only one modern ASP.NET Core configuration was measured."
+    },
+    {
+      "claim": "A Node or Go function waits just as long for the scale controller to allocate an instance",
+      "about": "Node and Go on Azure Functions Consumption",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Platform scale-out delay isn't part of the measurements."
+    },
+    {
+      "claim": "Turning on ReadyToRun and keeping startup code light improves .NET cold start",
+      "about": ".NET isolated worker",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No ReadyToRun or startup-variant builds were measured."
+    },
+    {
+      "claim": "Native AOT .NET would cut startup time",
+      "about": ".NET Native AOT",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No Native AOT .NET server was benchmarked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.13823459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.833
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario": "01-studio-booking",
+  "claims": [],
+  "meta": {
+    "costUSD": 0.1139046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 5.327
+  }
+}

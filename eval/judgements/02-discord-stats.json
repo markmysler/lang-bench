@@ -1,0 +1,105 @@
+{
+  "scenario": "02-discord-stats",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Python + FastAPI, with discord.py running in the same asyncio process, SQLite for storage, and plain HTML/JS for the web page",
+        "why": "It builds on the Python they already know, uses async like discord.py does, teaches type hints, request validation and the auto-generated OpenAPI docs that are widely used in industry, and fits easily in 512 MB."
+      },
+      {
+        "choice": "Python + Flask with SQLite (the bot can be a separate discord.py script writing to the same database, or one process if care is taken)",
+        "why": "It is the fastest path to something working this weekend because they have already done a Flask tutorial, and Flask is still a useful skill."
+      },
+      {
+        "choice": "Python + aiohttp or Quart alongside discord.py in one process",
+        "why": "This fits naturally into discord.py's event loop, so one small process can both record voice events and serve the stats."
+      },
+      {
+        "choice": "Node.js (TypeScript or JavaScript) + discord.js + Express, Fastify or Hono with SQLite",
+        "why": "It is a reasonable second choice if they want to build on their bit of JavaScript, since discord.js is mature and the whole thing fits in 512 MB, but it means learning a new runtime in a weekend."
+      },
+      {
+        "choice": "SQLite via the built-in sqlite3 module or SQLAlchemy/SQLModel (or a free hosted Postgres such as Neon or Supabase if the host's disk is wiped on restart)",
+        "why": "A few hundred rows a week needs no database server, and writing the weekly statistics queries is a valuable way to learn SQL."
+      },
+      {
+        "choice": "Running it on the Raspberry Pi, reached through a tunnel such as Cloudflare Tunnel or Tailscale Funnel",
+        "why": "The Pi is always on and has persistent disk, so it avoids free hosts that sleep or wipe their storage, and it teaches real self-hosting."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Java/Kotlin with Spring Boot",
+        "why": "JVM memory use is tight in 512 MB and the learning curve is steep, so it puts the 'working this weekend' goal at risk."
+      },
+      {
+        "choice": "Rust (Axum or Actix) or Go as the main choice for this project",
+        "why": "Learning a new compiled language, the Discord gateway and deployment all in one weekend breaks the time constraint; Go is a fine later project, not this weekend's."
+      },
+      {
+        "choice": "Django or Django REST Framework",
+        "why": "It runs in 512 MB, but its project, app, settings and migrations machinery is a lot of overhead for three endpoints and works against the weekend deadline."
+      },
+      {
+        "choice": "Serverless functions (AWS Lambda, Vercel or Netlify functions, Cloudflare Workers) for the recording part",
+        "why": "Voice joins arrive as events over a long-lived Discord gateway WebSocket, which short-lived functions cannot hold open."
+      },
+      {
+        "choice": "Microservices, Kubernetes, message queues (Kafka, RabbitMQ) or Redis",
+        "why": "This is far more than 50 users and a few requests a minute need, it adds memory and moving parts, and it teaches the wrong lesson for this scale."
+      },
+      {
+        "choice": "Running a self-hosted Postgres or MySQL server in the same 512 MB container",
+        "why": "It wastes memory and adds operations work that SQLite or a free hosted database avoids."
+      },
+      {
+        "choice": "A React, Next.js or other SPA framework for the 'tiny web page'",
+        "why": "It is overkill for one stats page, Next.js builds can run out of memory on small hosts, and it eats the weekend."
+      },
+      {
+        "choice": "Any paid managed service or paid hosting tier",
+        "why": "It breaks the free-only constraint."
+      }
+    ],
+    "must_mention": [
+      "Recommend staying in Python (FastAPI or Flask), because it builds on what they know and still teaches useful, employable skills; a new language can be a later project.",
+      "Recording voice joins needs a Discord bot that stays connected to the gateway and listens for voice-state-update events (on_voice_state_update in discord.py), so something has to run 24/7. That is a separate concern from the stats API, though both can live in one process.",
+      "Free container hosts often sleep when idle and/or wipe local disk on restart or redeploy. A sleeping bot misses join events, and SQLite on a wiped disk loses its data. Check the host for an always-on option and a persistent volume, or use a free hosted database or the Raspberry Pi.",
+      "Performance and framework speed do not matter at this scale. Any of the acceptable options uses well under 512 MB, so choose for learning and speed of delivery.",
+      "SQLite is enough. Store join and leave events with timestamps and compute the weekly stats with SQL queries.",
+      "Keep the Discord bot token and other secrets in environment variables, never commit them to Git, and enable the bot's voice-state permissions and intents in the Discord developer portal.",
+      "Keep it to one small app, and serve the tiny web page as static HTML/JS from that same app.",
+      "Give a concrete minimal plan for the weekend, for example: bot event handler → events table → 2–3 JSON endpoints → simple page → deploy with a Dockerfile or the host's Python buildpack."
+    ],
+    "red_flags": [
+      "Recommending a JVM stack, Rust or a brand-new language as the weekend project without acknowledging the time and memory constraints.",
+      "Ignoring that the host may sleep or have a temporary filesystem, and suggesting SQLite on a free host with no warning about losing data or missing events.",
+      "Suggesting serverless or request-only hosting for the part that has to listen to Discord events.",
+      "Proposing microservices, Kubernetes, queues, caches or separate frontend and backend deployments for 50 users.",
+      "Recommending anything that needs a credit card or paid tier, or stating that a particular free tier exists or behaves a certain way without telling them to check, since free tiers change often.",
+      "Choosing the framework on benchmark performance.",
+      "Advice that leads to the bot token being hardcoded or committed to Git.",
+      "Telling them to expose the Raspberry Pi with plain router port forwarding and no HTTPS or other precautions, instead of a tunnel.",
+      "Polling the Discord REST API to detect voice joins instead of using gateway events.",
+      "Setting up the Discord bot and the API as two separate deployments when one process would do, which doubles the hosting and memory problems.",
+      "Ignoring that they are tracking server members' activity; at minimum they should tell the server they are doing it."
+    ],
+    "unknowns": [
+      "Which free host they will use, and whether its free tier sleeps on idle, restarts daily or has persistent disk.",
+      "Whether a Discord bot already exists, and if so what language it is written in (which could argue for Node/discord.js).",
+      "Whether 'learn something useful' means getting deeper in Python and web/deployment basics, or deliberately trying a new language; this is worth asking.",
+      "Whether the Raspberry Pi is reliably powered and online, and whether their home network allows a tunnel or outbound connections.",
+      "How much history to keep and what the 'weekly statistics' are exactly (total time in voice versus join counts), which affects whether they record join events only or join and leave pairs.",
+      "Whether the bot and the web page need authentication, or whether the stats can be public."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1456746,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 48.448
+  }
+}

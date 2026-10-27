@@ -1,0 +1,28 @@
+{
+  "scenario": "04-pdf-reports",
+  "claims": [
+    {
+      "claim": "A Go rewrite might cut 400 ms to 100 ms (about 4x less CPU per render than Node)",
+      "about": "Go vs Node.js (Express) for CPU-bound request work",
+      "measured": "CPU fib(20): go-gin 18,218 req/s and go-nethttp 15,093 req/s vs node-express 7,213 req/s (fastify 8,308), so Go is about 2.1–2.5x faster",
+      "verdict": "consistent",
+      "why": "The claimed 4x speedup is higher than the measured 2.1–2.5x, but it is within a factor of 2 of it and points the right way."
+    },
+    {
+      "claim": "If rendering is headless Chromium, the language barely matters; the cost is the browser",
+      "about": "Headless Chromium rendering driven from any language",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks include no browser-based rendering workload, so there is nothing to compare language overhead against the cost of Chromium."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.13673960000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.728
+  }
+}

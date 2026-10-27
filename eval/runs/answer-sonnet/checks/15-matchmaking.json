@@ -1,0 +1,42 @@
+{
+  "scenario": "15-matchmaking",
+  "claims": [
+    {
+      "claim": "A Node process using a lean WebSocket library such as ws or uWebSockets.js can hold tens of thousands of mostly idle connections",
+      "about": "Node.js (ws / uWebSockets.js)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks don't test WebSockets or ws/uWebSockets.js, and the largest connection count measured is 256, nowhere near tens of thousands."
+    },
+    {
+      "claim": "50k clients heartbeating every 30 seconds is about 1,700 messages a second, which is trivial for Node",
+      "about": "Node.js",
+      "measured": "node-express 17,601 req/s and node-fastify 40,730 req/s plaintext on 1 CPU; node-express 14,188 req/s in the 10 ms I/O-wait test",
+      "verdict": "consistent",
+      "why": "One Node core measured 10–24 times that rate in HTTP requests, which cost more than heartbeat messages, so calling 1,700/s trivial fits the data."
+    },
+    {
+      "claim": "Go is solid and memory-efficient",
+      "about": "Go (gin / net/http)",
+      "measured": "go-gin 8–16 MB and go-nethttp 7–15 MB peak memory, against node-express 55–75 MB and node-fastify 57–77 MB; idle 2 MB against 38–43 MB",
+      "verdict": "consistent",
+      "why": "Go used about 4–7 times less memory than Node in every test, so 'memory-efficient' is supported."
+    },
+    {
+      "claim": "At 50k connections Go gains little over Node",
+      "about": "Go vs Node.js",
+      "measured": "I/O wait at 256 connections: go-gin 20,235 req/s and 16 MB against node-fastify 17,462 req/s and 69 MB, and node-express 14,188 req/s and 68 MB; plaintext: go-gin 53,941 against fastify 40,730 and express 17,601",
+      "verdict": "not_covered",
+      "why": "Nothing was measured with 50k WebSocket connections; the closest test shows Go only 1.2–1.4 times Node's throughput, but with about 4 times less memory, so the data can't settle the claim at that scale."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1474596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.457
+  }
+}

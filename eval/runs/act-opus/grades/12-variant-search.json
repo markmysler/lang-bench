@@ -1,0 +1,32 @@
+{
+  "scenario": "12-variant-search",
+  "grade": {
+    "stack_chosen": "Python Flask served by waitress as one process with 8 threads. It loads the index once in the background, answers lookups by binary search over per-chromosome sorted NumPy arrays, and runs under systemd on 127.0.0.1, with nginx or Caddy suggested in front.",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 1,
+    "raised_with_user": true,
+    "must_mention_covered": 4,
+    "red_flags_hit": [
+      "Not mentioning versioning or reproducibility of the index, so results from the web service cannot be tied to a specific dataset or paper."
+    ],
+    "unsupported_claims": [
+      "The README states as fact that lookups 'take well under a millisecond' and that 'one process is plenty for 100 requests a second', though nothing was measured. The final message hedges this, but the README does not.",
+      "The app.py docstring says one process 'handles hundreds of requests a second', but the code converts up to 1000 annotation dicts to JSON per request in Python under the GIL, and that cost was never measured."
+    ],
+    "overall": 4,
+    "notes": "A sound, team-appropriate choice: Flask (which the RSE knows), a single process so the 4 GB index is not duplicated, the load paid once at startup, region results capped at 1000, and systemd plus a reverse proxy for low upkeep. It misses a faster-loading binary or memory-mapped format, any index version in API responses, downloadable files for collaborators, response caching for the publication spike, and a real load test at 100 req/s."
+  },
+  "meta": {
+    "costUSD": 0.1379046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 16.605
+  }
+}

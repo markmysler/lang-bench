@@ -1,0 +1,42 @@
+{
+  "scenario": "04-pdf-reports",
+  "claims": [
+    {
+      "claim": "A faster language would shrink 20 CPU-minutes to maybe 5–10 (i.e. Go, Rust or a JVM language would do the CPU work about 2–4x faster than Node)",
+      "about": "Node (Express) vs Go, Rust, JVM for CPU-bound work",
+      "measured": "CPU fib(20): node-express 7,213 req/s, node-fastify 8,308; go-gin 18,218 (~2.5x Express), rust-actix 26,886 and rust-axum 29,499 (~3.7–4x), java-spring 14,258 (~2x), kotlin-ktor 18,350 (~2.5x), cpp-drogon 35,839 (~5x)",
+      "verdict": "consistent",
+      "why": "The measured CPU-bound speedups over Node for Go, Rust and the JVM are about 2–4x, which matches the claimed reduction to 5–10 of 20 minutes."
+    },
+    {
+      "claim": "If the prototype uses headless Chromium, most of the 400 ms is spent inside Chromium, so a rewrite wouldn't touch that",
+      "about": "Headless Chromium (Puppeteer/Playwright) PDF rendering",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't measure Chromium or PDF rendering."
+    },
+    {
+      "claim": "Budget roughly 100–300 MB per concurrent Chromium page",
+      "about": "Headless Chromium",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark has no memory figures for Chromium."
+    },
+    {
+      "claim": "Fly's shared-CPU machines have little headroom, so renders in worker threads would still squeeze the API",
+      "about": "Node worker threads on Fly shared-CPU machines",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements use dedicated 1-CPU containers and don't cover Fly shared-CPU throttling or worker threads."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1438846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.416
+  }
+}

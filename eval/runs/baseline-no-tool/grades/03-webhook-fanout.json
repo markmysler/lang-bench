@@ -1,0 +1,29 @@
+{
+  "scenario": "03-webhook-fanout",
+  "grade": {
+    "primary_choice": "A separate Node/TypeScript worker service on Fly.io fed by a durable queue, after pricing a buy option",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "10",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Cloud bill difference is maybe tens of dollars a month' and '4–6 developer-weeks' to build are unmeasured estimates, though the answer frames them as rough and plausible",
+      "The low end of average in-flight requests (~50) is a little high; 40/s × 0.3 s gives about 12"
+    ],
+    "overall": 5,
+    "notes": "This is a strong answer: Node follows from its sizing arithmetic and from the team and hiring constraints, it treats buying as a real option, and it covers SSRF, the outbox, per-endpoint isolation, timeouts and the DNS threadpool issue with checks the team can carry out. The only gap is that it never explicitly names exponential backoff with jitter or a dead-letter queue, and it does not state that each (event, endpoint) delivery should be its own job."
+  },
+  "meta": {
+    "costUSD": 0.1174346,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 16.048
+  }
+}

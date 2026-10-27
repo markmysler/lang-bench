@@ -1,0 +1,29 @@
+{
+  "scenario": "01-studio-booking",
+  "grade": {
+    "primary_choice": "Off-the-shelf class booking service (Bookwhen, Acuity, SimplyBook.me) set up by the agent",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Momence is grouped with Mindbody and Glofox as costing $50–150+ a month, but it has entry or per-booking-fee plans that the reference counts as acceptable",
+      "The Acuity price of 'around $16–30 a month' for middle plans is roughly right but loose, and it is caveated"
+    ],
+    "overall": 4,
+    "notes": "This is a strong answer that fits the owner well. It avoids building software, explains how capacity limits stop double bookings, counts card fees, warns that prices may be out of date, and gives a good trial and switch-over plan. Its main gap is that it never says the owner should open and own the account in their own name. It also only partly says what the agent can and cannot do, and it wrongly rules out Momence as too expensive."
+  },
+  "meta": {
+    "costUSD": 0.10831960000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 17.729
+  }
+}

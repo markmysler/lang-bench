@@ -1,0 +1,49 @@
+{
+  "scenario": "04-pdf-reports",
+  "claims": [
+    {
+      "claim": "Rewriting in Go might make 400 ms into 100 ms (about 4x faster than the current Node/Express renderer)",
+      "about": "Go (go-gin, go-nethttp) vs Node (node-express)",
+      "measured": "CPU fib(20): go-gin 18,218 req/s, go-nethttp 15,093 vs node-express 7,213 (2.1–2.5x)",
+      "verdict": "consistent",
+      "why": "The claimed 4x speedup is within a factor of 2 of the measured 2.1–2.5x advantage on the CPU-bound test."
+    },
+    {
+      "claim": "Rewriting in Rust might make 400 ms into 100 ms (about 4x faster than Node)",
+      "about": "Rust (rust-actix, rust-axum) vs Node (node-express)",
+      "measured": "CPU fib(20): rust-axum 29,499 req/s, rust-actix 26,886 vs node-express 7,213 (3.7–4.1x)",
+      "verdict": "consistent",
+      "why": "The measured CPU-bound speedup over Express is about 4x, which matches the claim."
+    },
+    {
+      "claim": "Rewriting in Java might make 400 ms into 100 ms (about 4x faster than Node)",
+      "about": "Java (java-spring, java-spring-vt) vs Node (node-express)",
+      "measured": "CPU fib(20): java-spring 14,258 req/s, java-spring-vt 13,457 vs node-express 7,213 (1.9–2.0x)",
+      "verdict": "consistent",
+      "why": "Java measured about 2x Express on CPU work, so the claimed 4x is too high but still only about 2x off, which is within the tolerance."
+    },
+    {
+      "claim": "A 400 ms synchronous render inside the Express event loop blocks every other request on that process",
+      "about": "node-express",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks measure throughput for each workload on its own and never mix a long synchronous task with other requests, so they can't show the blocking effect."
+    },
+    {
+      "claim": "Headless Chromium instances may need 300–500 MB of RAM each",
+      "about": "headless Chromium PDF rendering",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No Chromium or PDF-rendering server was benchmarked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1466496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.505
+  }
+}

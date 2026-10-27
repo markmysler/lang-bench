@@ -1,0 +1,21 @@
+{
+  "scenario": "15-matchmaking",
+  "claims": [
+    {
+      "claim": "At roughly 10k sockets per Node process, plan for 5 or more pods.",
+      "about": "Node.js (ws library) realtime service",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks only measure HTTP request throughput and latency with at most 256 connections, and say nothing about how many long-lived WebSocket connections one Node process can hold or how much memory they take."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.16670959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 8.777
+  }
+}

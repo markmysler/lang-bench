@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: partner-gateway
+management:
+  endpoints.web.exposure.include: health,metrics

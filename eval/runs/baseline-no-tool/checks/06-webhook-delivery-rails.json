@@ -1,0 +1,49 @@
+{
+  "scenario": "06-webhook-delivery-rails",
+  "claims": [
+    {
+      "claim": "Ruby isn't what's slowing you down: Ruby releases the GVL while waiting, so threads handle network-wait-bound work like webhook sending well",
+      "about": "Ruby (Sidekiq threads)",
+      "measured": "ruby-rails I/O-wait (10 ms, 256 conns): 279 req/s, p50 903 ms, CPU 17%",
+      "verdict": "not_covered",
+      "why": "The benchmark tests an inbound Rails server with a fixed thread pool. It doesn't test outbound HTTP calls from Sidekiq threads. The low CPU shows Rails was limited by its thread count, not by Ruby speed, but that doesn't show how well Ruby threads handle outbound I/O."
+    },
+    {
+      "claim": "Go would handle the webhook load with fewer tasks than Ruby/Sidekiq",
+      "about": "Go vs Ruby",
+      "measured": "I/O wait: go-gin 20,235 req/s at 47% CPU vs ruby-rails 279 req/s at 17% CPU; go-nethttp 18,905 req/s",
+      "verdict": "consistent",
+      "why": "Go handled I/O-wait-bound work far better than Ruby per container, so it would need fewer tasks, which is the direction the claim gives."
+    },
+    {
+      "claim": "A Sidekiq service with a few hundred threads over several Fargate tasks can handle a peak of 100–250 webhooks/s",
+      "about": "Ruby / Sidekiq",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Sidekiq and outbound-request throughput with hundreds of threads were not measured."
+    },
+    {
+      "claim": "For webhook workers, CPU will stay low while the backlog grows (so autoscale on queue latency, not CPU)",
+      "about": "Ruby / Sidekiq under I/O wait",
+      "measured": "ruby-rails I/O-wait: CPU 17% while throughput was limited to 279 req/s (p50 903 ms)",
+      "verdict": "consistent",
+      "why": "In the measurements, a Ruby process blocked on I/O with limited threads ran at low CPU while requests queued, which is the pattern the claim describes."
+    },
+    {
+      "claim": "Go would only be worth reconsidering at 10–50× today's volume; at this volume the cost difference is small",
+      "about": "Go vs Ruby",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements give no cost figures and nothing about Sidekiq or outbound webhook throughput at these volumes."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1607396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 22.758
+  }
+}

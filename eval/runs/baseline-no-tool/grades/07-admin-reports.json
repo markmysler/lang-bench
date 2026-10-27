@@ -1,0 +1,30 @@
+{
+  "scenario": "07-admin-reports",
+  "grade": {
+    "primary_choice": "Build it inside the Rails monolith as a namespaced admin area",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [
+      "Missing CSV/formula injection when exporting customer-controlled strings that will be opened in Excel"
+    ],
+    "unsupported_claims": [
+      "Retool necessarily means a SaaS holds production database credentials (self-hosted Retool and agent-based setups exist)"
+    ],
+    "overall": 5,
+    "notes": "A thorough, well-grounded answer: it says to build in the monolith and covers read replicas, rollups, async S3 exports, SSO with roles, audit logging and Postgres search, all tied to the team's skills and on-call priorities. Its only real gap is that it never mentions CSV formula injection; it also doesn't explicitly cover rate limits or narrowing exported data to what CS needs."
+  },
+  "meta": {
+    "costUSD": 0.1035946,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 10.617
+  }
+}

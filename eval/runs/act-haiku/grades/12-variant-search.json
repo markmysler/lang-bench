@@ -1,0 +1,29 @@
+{
+  "scenario": "12-variant-search",
+  "grade": {
+    "stack_chosen": "Python Flask app run by gunicorn as one worker with 8 threads. It loads the NumPy index once at startup and answers each lookup with binary searches inside a chromosome's block of rows.",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": 3,
+    "red_flags_hit": [
+      "Not mentioning versioning or reproducibility of the index, so results from the web service cannot be tied to a specific dataset or paper."
+    ],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "A sound low-upkeep choice that fits the team: the index loads once, one process avoids four copies of a 4 GB index, region results are capped, and the agent says plainly that the targets are unmeasured and the layout is assumed. It left out index or data versioning in responses, converting the index to a format that loads faster or can be memory-mapped, a reverse proxy with caching and systemd, and downloadable files for collaborators."
+  },
+  "meta": {
+    "costUSD": 0.1124896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.468
+  }
+}

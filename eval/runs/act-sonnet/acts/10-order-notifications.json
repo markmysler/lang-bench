@@ -1,0 +1,120 @@
+{
+  "claude": {
+    "duration_api_ms": 21606,
+    "stop_reason": "end_turn",
+    "session_id": "3f545fc2-fefd-4893-a251-c332c5e72aad",
+    "total_cost_usd": 0.07766769999999999,
+    "usage": {
+      "input_tokens": 8,
+      "cache_creation_input_tokens": 15962,
+      "cache_read_input_tokens": 90567,
+      "output_tokens": 2869,
+      "output_tokens_details": {
+        "thinking_tokens": 303
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 15962
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 592,
+          "cache_read_input_tokens": 27002,
+          "cache_creation_input_tokens": 1980,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 1980,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "inputTokens": 8,
+        "outputTokens": 2869,
+        "cacheReadInputTokens": 90567,
+        "cacheCreationInputTokens": 15962,
+        "webSearchRequests": 0,
+        "costUSD": 0.07766769999999999,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 303,
+        "canonicalModel": "claude-sonnet-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 11,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I added the `OrderShipped` function, but I haven't built or run it, so it's untested.\n\n- **`OrderShipped.cs`** (new): a Service Bus trigger on the `orders-shipped` queue. It sends the SendGrid email and the Notification Hubs push in parallel, to fit the 2-second limit. If either send fails, the exception propagates and Service Bus retries the message.\n- **`Program.cs`**: registers the SendGrid and Notification Hubs clients as singletons. Warm instances reuse their connections, which helps on the cold-start-heavy consumption plan.\n- **`Orders.Functions.csproj`**: adds the `SendGrid` and `Microsoft.Azure.NotificationHubs` packages.\n\nI stayed with .NET to match the rest of the repo. The 14 Oct note in `docs/team-notes.md` about moving new functions to Node or Go is marked \"Not decided\", so I didn't act on it.\n\nThe doc doesn't specify these, so I assumed them. Please check them:\n- **Message shape:** JSON with `OrderId`, `CustomerEmail` and `CustomerId`.\n- **Push targeting:** a template notification sent to the tag `customer:{CustomerId}`, with a `message` property.\n- **App settings:** `SendGridApiKey`, `NotificationFromEmail`, `NotificationHubConnection` and `NotificationHubName`.\n- **Email copy:** the subject and body are placeholder text.\n\nAt 200 per second on sale days, you may hit SendGrid rate limits or the consumption plan's scale-out limits. Cold starts could also push some notifications past 2 seconds. Setting a minimum instance count on a Premium plan would remove the cold-start risk, but that's a deployment decision for you.",
+    "ttft_ms": 3431,
+    "type": "result",
+    "duration_ms": 22321,
+    "uuid": "c306e003-877f-4bf8-b3cc-fd4860605a0c",
+    "ttft_stream_ms": 3082,
+    "time_to_request_ms": 497,
+    "first_content_frame_ms": 3082,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "A  OrderShipped.cs",
+    "M  Orders.Functions.csproj",
+    "M  Program.cs"
+  ],
+  "files": {
+    "OrderShipped.cs": "using System.Text.Json;\nusing Microsoft.Azure.Functions.Worker;\nusing Microsoft.Azure.NotificationHubs;\nusing SendGrid;\nusing SendGrid.Helpers.Mail;\n\npublic record OrderShippedMessage(string OrderId, string CustomerEmail, string CustomerId);\n\npublic class OrderShipped\n{\n    private readonly ISendGridClient _sendGrid;\n    private readonly INotificationHubClient _hub;\n\n    public OrderShipped(ISendGridClient sendGrid, INotificationHubClient hub)\n    {\n        _sendGrid = sendGrid;\n        _hub = hub;\n    }\n\n    [Function(nameof(OrderShipped))]\n    public async Task Run([ServiceBusTrigger(\"orders-shipped\", Connection = \"ServiceBus\")] string message)\n    {\n        var order = JsonSerializer.Deserialize<OrderShippedMessage>(message, JsonSerializerOptions.Web)\n            ?? throw new InvalidOperationException(\"Empty order-shipped message.\");\n\n        var text = $\"Your order {order.OrderId} has shipped.\";\n\n        var email = MailHelper.CreateSingleEmail(\n            new EmailAddress(Environment.GetEnvironmentVariable(\"NotificationFromEmail\")),\n            new EmailAddress(order.CustomerEmail),\n            \"Your order has shipped\",\n            text,\n            text);\n\n        // Send both in parallel to stay inside the 2s budget. If either fails the exception\n        // propagates, so Service Bus retries the message.\n        await Task.WhenAll(\n            _sendGrid.SendEmailAsync(email),\n            _hub.SendTemplateNotificationAsync(\n                new Dictionary<string, string> { [\"message\"] = text },\n                $\"customer:{order.CustomerId}\"));\n    }\n}\n",
+    "Orders.Functions.csproj": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n    <AzureFunctionsVersion>v4</AzureFunctionsVersion>\n    <OutputType>Exe</OutputType>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.Azure.Functions.Worker\" Version=\"1.23.0\" />\n    <PackageReference Include=\"Microsoft.Azure.Functions.Worker.Extensions.ServiceBus\" Version=\"5.22.0\" />\n    <PackageReference Include=\"Microsoft.Azure.Functions.Worker.Sdk\" Version=\"1.18.1\" />\n    <PackageReference Include=\"Microsoft.Azure.NotificationHubs\" Version=\"4.2.0\" />\n    <PackageReference Include=\"SendGrid\" Version=\"9.29.3\" />\n  </ItemGroup>\n</Project>\n",
+    "Program.cs": "using Microsoft.Azure.NotificationHubs;\nusing Microsoft.Extensions.DependencyInjection;\nusing Microsoft.Extensions.Hosting;\nusing SendGrid;\n\nvar host = new HostBuilder()\n    .ConfigureFunctionsWorkerDefaults()\n    .ConfigureServices(services =>\n    {\n        // Singletons so the HTTP connections are reused across invocations on a warm instance.\n        services.AddSingleton<ISendGridClient>(_ =>\n            new SendGridClient(Environment.GetEnvironmentVariable(\"SendGridApiKey\")));\n        services.AddSingleton<INotificationHubClient>(_ =>\n            NotificationHubClient.CreateClientFromConnectionString(\n                Environment.GetEnvironmentVariable(\"NotificationHubConnection\"),\n                Environment.GetEnvironmentVariable(\"NotificationHubName\")));\n    })\n    .Build();\nhost.Run();\n"
+  },
+  "meta": {
+    "costUSD": 0.07766769999999999,
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "turns": 11,
+    "billing": "api-key",
+    "seconds": 24.466
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@acme/api",
+  "private": true,
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bullmq": "^5.25.0",
+    "chartjs-node-canvas": "^4.1.6",
+    "express": "^4.21.1",
+    "pdfkit": "^0.15.0"
+  }
+}

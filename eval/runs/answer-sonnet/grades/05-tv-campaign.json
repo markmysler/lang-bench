@@ -1,0 +1,29 @@
+{
+  "scenario": "05-tv-campaign",
+  "grade": {
+    "primary_choice": "Keep Laravel; put a CDN in front of public reads, with app-level tuning and temporary extra capacity",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Says the CDN step 'uses Laravel features your developers already know'. A CDN is mostly DNS and edge setup, not a Laravel feature, so this overstates it slightly.",
+      "pm.max_children of 30–40 on 4 GB may be too high if MySQL runs on the same VPS. The answer does tell them to check memory per worker."
+    ],
+    "overall": 5,
+    "notes": "A strong, well-ordered answer. It gives a capacity estimate, separates public endpoints from per-user ones, and covers safe caching, load testing, a kill switch, a runbook, and the team-fit reasons against a rewrite or Octane. It falls short on the rate limiter: it moves the limiter to Redis but never warns that the default throttle combined with carrier NAT can return 429s to real users. It also doesn't say explicitly that the CDN and temporary server costs should be capped and billed to the client."
+  },
+  "meta": {
+    "costUSD": 0.11240460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.376
+  }
+}

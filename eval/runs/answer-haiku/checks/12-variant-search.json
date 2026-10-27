@@ -1,0 +1,70 @@
+{
+  "scenario": "12-variant-search",
+  "claims": [
+    {
+      "claim": "The 3-minute load is a storage-format problem, not a language problem, and C++ would not fix it.",
+      "about": "Python vs C++ for loading a 4 GB index",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The start-up figures are for empty servers (python-flask 996 ms, cpp-drogon 295 ms), not for parsing or loading a multi-GB data structure."
+    },
+    {
+      "claim": "Startup becomes effectively instant (opening a read-only file instead of loading the index into Python objects)",
+      "about": "Flask app under gunicorn",
+      "measured": "python-flask start-up 996 ms, python-flask-gthread 606 ms",
+      "verdict": "consistent",
+      "why": "A Flask server that loads no data starts in about 0.6–1 s, which is effectively instant next to the current 3 minutes."
+    },
+    {
+      "claim": "Full C++ service: the lookup would be fast",
+      "about": "C++ (Drogon/Crow/cpp-httplib) with a custom index",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The lookup speed of a custom in-memory index isn't measured; only the HTTP framework overhead is."
+    },
+    {
+      "claim": "Python's per-request overhead is small compared with the 50 ms budget, so C++ doesn't buy you much here.",
+      "about": "Python/Flask vs C++ (Drogon)",
+      "measured": "python-flask plaintext 1,732 req/s per core (~0.6 ms CPU per request), gthread 4,031 req/s (~0.25 ms); cpp-drogon 85,540 req/s",
+      "verdict": "consistent",
+      "why": "Flask spends about 0.25–0.6 ms of CPU per request, far below 50 ms, so Drogon being about 20–50x faster per request matters little at 100 req/s."
+    },
+    {
+      "claim": "Flask under gunicorn with about 4 workers can serve the 100 lookups/second target, which is easy if most lookups are small",
+      "about": "python-flask (gunicorn)",
+      "measured": "python-flask 1,732 req/s plaintext and 1,529 req/s for a single-row DB lookup on 1 CPU; gthread 4,031 / 2,119 req/s",
+      "verdict": "consistent",
+      "why": "Even the slowest Flask setup measured more than 10x the 100 req/s target on a single core."
+    },
+    {
+      "claim": "Python object overhead can make a 4 GB file take well over 10 GB in RAM; four workers each holding a copy would exhaust a 16 GB VM",
+      "about": "Python in-process dict/object index",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Peak memory was measured only for trivial handlers (about 41–123 MB for Python), not for large in-memory data structures."
+    },
+    {
+      "claim": "A NumPy memory-mapped array with binary search gets close to C speed without any server-side C++",
+      "about": "Python + NumPy vs C/C++",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No benchmark covers NumPy or memory-mapped array lookups."
+    },
+    {
+      "claim": "Serverless functions: each cold start would reload the index",
+      "about": "Serverless Python",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Serverless platforms and their cold starts weren't measured."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1578096,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 22.747
+  }
+}
