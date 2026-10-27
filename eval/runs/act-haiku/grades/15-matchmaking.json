@@ -1,0 +1,36 @@
+{
+  "scenario": "15-matchmaking",
+  "grade": {
+    "stack_chosen": "Node.js/TypeScript with ws, mounted inside the existing Express REST process; presence, invites and the FIFO match queue kept in process memory",
+    "choice": "ruled_out",
+    "ruled_out_recommended": [
+      "Running the WebSocket gateway inside the existing REST API process",
+      "Presence and matchmaking state in each pod's memory with no shared bus",
+      "One big Node process holding all 50k connections"
+    ],
+    "needless_rewrite": false,
+    "constraints_cited": 1,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": 3,
+    "red_flags_hit": [
+      "Ignoring deploys and pod restarts that drop sockets, and the reconnect storm that follows",
+      "Running the matchmaking loop on every gateway pod with no coordination, which causes duplicate or conflicting matches (it happens as soon as the deployment has more than one replica)"
+    ],
+    "unsupported_claims": [
+      "It says sticky routing to one pod would keep presence and matchmaking working across replicas. Sticky sessions only pin each client to a pod, so players on different pods still can't see each other's presence, receive invites or be matched together."
+    ],
+    "overall": 2,
+    "notes": "Staying on Node fits the team, and the agent openly said single-process state was the main scaling risk and that load testing was needed. Even so, it put the WebSocket gateway inside the REST API process with memory-only state and no shared bus, and it didn't cover reconnect storms, sizing, autoscaling, protecting Postgres or observability, so this build won't survive launch at 50k players."
+  },
+  "meta": {
+    "costUSD": 0.1401196,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.471
+  }
+}

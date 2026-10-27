@@ -1,0 +1,27 @@
+{
+  "scenario": "16-friend-recommendations",
+  "grade": {
+    "stack_chosen": "TypeScript/Express route that runs live 2-hop raw SQL through Prisma $queryRaw on Postgres, with a 3-hop fallback query",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 1,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": 4,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 3,
+    "notes": "The agent stayed in the team's stack: raw SQL via Prisma on Postgres, 2-hop ranking with 3-hop only as a fallback, and existing connections and the viewer excluded. It flagged supernode cost and said the 300 ms target is unverified, but it ships per-request traversal with no Redis caching, degree caps or background precompute, and it only mentions precomputing instead of making it the main design."
+  },
+  "meta": {
+    "costUSD": 0.1155046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.763
+  }
+}

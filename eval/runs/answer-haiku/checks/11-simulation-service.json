@@ -1,0 +1,56 @@
+{
+  "scenario": "11-simulation-service",
+  "claims": [
+    {
+      "claim": "A web request takes milliseconds (keep Python/Flask for the web part)",
+      "about": "Python web layer (Flask / FastAPI)",
+      "measured": "python-flask plaintext p50 35.55 ms, p99 51.40 ms; python-fastapi p50 7.46 ms, p99 15.50 ms",
+      "verdict": "consistent",
+      "why": "Measured Python request latencies are single-digit to tens of milliseconds, so \"milliseconds\" is accurate."
+    },
+    {
+      "claim": "At roughly 50 runs a day the web layer will never be the bottleneck",
+      "about": "Python web layer (Flask / FastAPI)",
+      "measured": "python-flask 1,732 req/s plaintext, 1,529 req/s single DB query; python-fastapi 7,442 req/s plaintext on 1 CPU",
+      "verdict": "consistent",
+      "why": "Even the slowest Python setup handles over a thousand requests per second, which is many orders of magnitude above a few dozen jobs a day."
+    },
+    {
+      "claim": "Running jobs inside Flask request handlers means a few concurrent users would tie up the server / block workers",
+      "about": "python-flask (sync workers)",
+      "measured": "python-flask I/O-wait test: 276 req/s with a 10 ms wait per request at 256 connections, p50 915 ms, which works out to about 3 requests in progress at once",
+      "verdict": "consistent",
+      "why": "The sync Flask setup served only about 3 blocking requests at a time, so a few long-running jobs would occupy all its workers."
+    },
+    {
+      "claim": "Rewriting the web part in Go, Rust or C++ gives no benefit here; the compute time stays the same",
+      "about": "Go / Rust / C++ web servers vs Python, for a NumPy simulation",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark measures web-server overhead, not 20–90 s NumPy simulation runs, so it cannot show whether the compute time would change."
+    },
+    {
+      "claim": "The 20 to 90 seconds is spent in NumPy code, which already runs compiled C underneath",
+      "about": "Python + NumPy",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements include no NumPy or numeric-library workloads."
+    },
+    {
+      "claim": "Celery is heavier than you need for this volume",
+      "about": "Celery",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Celery and other job-queue frameworks were not benchmarked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1486846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.931
+  }
+}

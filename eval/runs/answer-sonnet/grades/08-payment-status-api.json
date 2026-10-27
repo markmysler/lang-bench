@@ -1,0 +1,26 @@
+{
+  "scenario": "08-payment-status-api",
+  "grade": {
+    "primary_choice": "Java 21 + Spring Boot (servlet stack, JDBC) on existing OpenShift",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This is a strong answer that matches the reference. It argues for Java and Spring Boot from the approved-list rule, the team's skills and the modest load, and it puts the database path, replica lag, authorisation and load testing first, steering a Go push back to the architecture board with evidence. Small gaps: it does not name JVM tuning such as CDS/AOT or heap settings as the answer to 'lighter', it leaves out rate limiting, and its two-data-centre failure behaviour stops short of a circuit breaker or fallback design."
+  },
+  "meta": {
+    "costUSD": 0.1059846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.721
+  }
+}

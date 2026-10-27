@@ -1,0 +1,35 @@
+{
+  "scenario": "13-gateway-api",
+  "claims": [
+    {
+      "claim": "A single-threaded blocking server on tiny_http with no async runtime starts almost instantly",
+      "about": "Rust tiny_http server",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "tiny_http was not measured; the closest data is other Rust servers (rust-actix 239 ms, rust-axum 238 ms start-up), which points the same way but can't confirm tiny_http's figure."
+    },
+    {
+      "claim": "The tiny_http + serde_json server should use a few MB of RAM",
+      "about": "Rust tiny_http server",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "tiny_http was not benchmarked; the measured Rust servers (actix and axum) used 1 MB idle and 3–10 MB peak, which agrees with the claim but doesn't measure it."
+    },
+    {
+      "claim": "Streaming firmware uploads to disk rather than buffering keeps memory under 20 MB",
+      "about": "Rust tiny_http server (firmware upload path)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of the benchmarks tested large uploads or streaming, so memory during a firmware upload can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1227046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.495
+  }
+}

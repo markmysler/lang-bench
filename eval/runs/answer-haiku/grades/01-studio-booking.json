@@ -1,0 +1,37 @@
+{
+  "scenario": "01-studio-booking",
+  "grade": {
+    "primary_choice": "Check studio booking SaaS first; fall back to a custom Supabase/static-site app",
+    "choice": "unclear",
+    "ruled_out_recommended": [
+      "A custom-built web app written and hosted by the agent (Supabase + Netlify/Vercel + Resend), offered as a detailed fallback",
+      "Enterprise studio platforms (Mindbody, Glofox, WellnessLiving), named as the main SaaS candidates",
+      "No-code builders (Airtable with Softr or Glide), called a reasonable fallback"
+    ],
+    "needless_rewrite": false,
+    "constraints_cited": 1,
+    "team_fit": 1,
+    "unknowns_stated": 2,
+    "must_mention_covered": "5",
+    "red_flags_hit": [
+      "Recommending a custom-coded app and database, with the agent as its ongoing maintainer",
+      "Listing Mindbody, Glofox and WellnessLiving as candidates with only a vague 'many charge more than $30' rather than saying they cost several times the budget",
+      "Expecting the owner to deal with technical jobs such as domain settings and SPF/DKIM records"
+    ],
+    "unsupported_claims": [
+      "Says Calendly and Acuity are built for one-to-one appointments and awkward for group classes, but Acuity has class and group booking with capacity limits",
+      "Says a custom build would find class packs and memberships hard, which is overstated"
+    ],
+    "overall": 2,
+    "notes": "It sensibly suggests checking a booking service first and asks good questions, but the services it names are mostly enterprise platforms well over budget, and it rejects the cheap tools that would fit (Acuity, Bookwhen, Punchpass and similar). It then spends most of the answer on a custom Supabase app that the owner can't maintain, with the agent as the maintainer."
+  },
+  "meta": {
+    "costUSD": 0.11478460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 17.754
+  }
+}

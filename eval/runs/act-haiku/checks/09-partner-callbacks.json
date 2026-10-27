@@ -1,0 +1,35 @@
+{
+  "scenario": "09-partner-callbacks",
+  "claims": [
+    {
+      "claim": "Tomcat's default pool is 200 threads, which matches the ~200 waiting requests per pod in the load test",
+      "about": "Spring Boot (java-spring) on Tomcat",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't measure thread-pool size or the most requests that can wait at once: its I/O-wait test used only 256 connections with a 10 ms wait, and java-spring still served 15,611 req/s."
+    },
+    {
+      "claim": "Tomcat's default max-connections is 8192, raised to 12000 so it can hold the waiting partners' open connections",
+      "about": "Spring Boot (java-spring) on Tomcat",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No test went above 256 connections, so the benchmark says nothing about connection limits in the thousands."
+    },
+    {
+      "claim": "Holding 10,000 open connections needs enough file descriptors and pod memory",
+      "about": "Spring Boot (java-spring) on Tomcat",
+      "measured": "java-spring peak memory 491 MB at 256 connections in the I/O-wait test",
+      "verdict": "not_covered",
+      "why": "The claim gives no figure, and the measurements only go up to 256 connections, so the memory needed for 10,000 can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1502646,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.127
+  }
+}

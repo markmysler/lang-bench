@@ -1,0 +1,31 @@
+{
+  "scenario": "13-gateway-api",
+  "grade": {
+    "primary_choice": "Rust with a minimal synchronous server (tiny_http + serde_json), with C/libmicrohttpd as fallback",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "4",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "cpp-httplib 'pulls in OpenSSL'. TLS support in cpp-httplib is optional, not required.",
+      "Go 'adds a third language'. The team already uses C, C++, Rust and Python, so Go would be the fifth.",
+      "Python 30–60 MB resident is stated as typical. That is plausible but on the high side for Flask, and it is not tied to a measurement.",
+      "The claim that axum/tokio would noticeably inflate memory is overstated. A current_thread tokio runtime uses only a few MB."
+    ],
+    "overall": 4,
+    "notes": "This is a strong, well-reasoned Rust recommendation that covers streaming and signed handoff of the upload, pinning, vendoring and cargo-audit, and measuring on the target. It misses several points: binary and update size (strip, LTO, delta updates), with cellular wrongly dismissed as irrelevant; SBOMs; running unprivileged with MemoryMax; binding to the maintenance interface; rate limits; and a static-HTML technician UI."
+  },
+  "meta": {
+    "costUSD": 0.1141246,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.136
+  }
+}

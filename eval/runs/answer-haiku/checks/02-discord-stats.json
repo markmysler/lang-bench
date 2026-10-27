@@ -1,0 +1,42 @@
+{
+  "scenario": "02-discord-stats",
+  "claims": [
+    {
+      "claim": "50 users and a few requests a minute is well within what Flask handles. Performance is not a reason to choose anything else.",
+      "about": "python-flask",
+      "measured": "python-flask: 1,732 req/s plaintext, 1,700 req/s JSON and 1,529 req/s single-row DB on 1 CPU",
+      "verdict": "consistent",
+      "why": "Flask handled more than a thousand requests per second, which is thousands of times more than a few requests a minute."
+    },
+    {
+      "claim": "A Flask app plus discord.py with SQLite usually uses somewhere around 50–150 MB",
+      "about": "python-flask (plus discord.py)",
+      "measured": "python-flask: 115 MB idle and 117–123 MB peak; python-flask-gthread: 52 MB idle and 55–57 MB peak",
+      "verdict": "consistent",
+      "why": "The measured Flask variants fall inside the 50–150 MB range; discord.py's extra memory wasn't measured but is unlikely to change that by more than a factor of 2."
+    },
+    {
+      "claim": "It fits in 512 MB.",
+      "about": "python-flask",
+      "measured": "python-flask: 123 MB highest peak across all tests",
+      "verdict": "consistent",
+      "why": "The highest measured peak is about a quarter of the 512 MB limit."
+    },
+    {
+      "claim": "Go: Very low memory use",
+      "about": "go-gin / go-nethttp",
+      "measured": "go-gin: 2 MB idle and 8–16 MB peak; go-nethttp: 2 MB idle and 7–15 MB peak",
+      "verdict": "consistent",
+      "why": "Both Go servers are among the lowest memory users measured, far below Python, Node and the JVM."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1315046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.089
+  }
+}

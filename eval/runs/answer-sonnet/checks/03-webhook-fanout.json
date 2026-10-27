@@ -1,0 +1,56 @@
+{
+  "scenario": "03-webhook-fanout",
+  "claims": [
+    {
+      "claim": "The load is mostly waiting on sockets, and Node's event loop handles this well",
+      "about": "Node.js (Express/Fastify)",
+      "measured": "I/O wait test (10 ms per request, 256 connections): node-express 14,188 req/s, p99 35.39 ms; node-fastify 17,462 req/s, p99 27.96 ms; for comparison go-gin 20,235 and go-nethttp 18,905",
+      "verdict": "consistent",
+      "why": "In the I/O wait test Node serves 14–17k req/s on one core, within 1.5x of Go and the other fast runtimes, so it handles I/O-bound waiting well."
+    },
+    {
+      "claim": "A few small Fly machines will cover about 2,500 outbound deliveries/s with 2,500–5,000 requests in flight at 0.3–2 s each",
+      "about": "Node.js outbound HTTP client",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks measure inbound server throughput with 10 ms waits and at most 256 connections, not thousands of long-lived outbound client connections."
+    },
+    {
+      "claim": "Go would use less memory per connection than Node",
+      "about": "Go vs Node.js",
+      "measured": "I/O wait, 256 connections: go-gin 16 MB, go-nethttp 15 MB vs node-express 68 MB, node-fastify 69 MB peak memory",
+      "verdict": "consistent",
+      "why": "Go used about 4x less memory than Node holding the same 256 concurrent connections, so the direction is right."
+    },
+    {
+      "claim": "Go would use less CPU for TLS than Node",
+      "about": "Go vs Node.js",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of the tests use TLS. In the plain-HTTP I/O wait test, Go used less CPU (47–57%) than Node (76–92%) at similar or higher throughput."
+    },
+    {
+      "claim": "Go's performance gain over Node is marginal at this scale and might save tens of dollars a month",
+      "about": "Go vs Node.js",
+      "measured": "I/O wait: go-gin 20,235 req/s vs node-fastify 17,462 / node-express 14,188 req/s",
+      "verdict": "not_covered",
+      "why": "The measurements show Go about 1.2–1.4x ahead on I/O-bound work but give no cloud cost figures, so the dollar estimate can't be checked."
+    },
+    {
+      "claim": "Node's DNS lookup uses the libuv thread pool (default 4 threads), so slow customer DNS can stall every delivery",
+      "about": "Node.js runtime",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks don't measure DNS resolution or thread-pool behaviour."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1538096,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.185
+  }
+}

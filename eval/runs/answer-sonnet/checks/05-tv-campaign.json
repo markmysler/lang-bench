@@ -1,0 +1,77 @@
+{
+  "scenario": "05-tv-campaign",
+  "claims": [
+    {
+      "claim": "The language isn't the bottleneck.",
+      "about": "PHP / Laravel (php-laravel) compared with other stacks",
+      "measured": "Single DB query: php-laravel 149 req/s on 1 CPU; go-gin 22,138; node-express 9,034; bun-elysia 31,596",
+      "verdict": "off",
+      "why": "Laravel measured about 60–200 times slower than the other stacks on the same 1-CPU endpoint, so on 2 vCPUs the framework alone caps throughput near 300 req/s, well short of the 3,000 needed."
+    },
+    {
+      "claim": "A typical uncached Laravel endpoint with a database query costs roughly 10–30 ms of CPU.",
+      "about": "php-laravel (PHP-FPM)",
+      "measured": "149 req/s at 94% of 1 CPU on the single-query test, about 6.3 ms of CPU per request; p50 latency 410 ms under 64 connections",
+      "verdict": "consistent",
+      "why": "The 10 ms lower bound is within 2x of the measured ~6.3 ms, though the range as a whole is pessimistic."
+    },
+    {
+      "claim": "Two vCPUs therefore give you about 100–300 requests per second at best.",
+      "about": "php-laravel on 2 vCPU",
+      "measured": "149 req/s on 1 CPU (single DB query), so about 300 req/s on 2 vCPU",
+      "verdict": "consistent",
+      "why": "Scaling the 1-CPU figure by two gives about 300 req/s, which matches the top of the claimed range."
+    },
+    {
+      "claim": "A Go or Node rewrite might be several times faster.",
+      "about": "go-gin / go-nethttp / node-express / node-fastify vs php-laravel",
+      "measured": "Single DB query: go-gin 22,138, go-nethttp 19,543, node-fastify 9,423, node-express 9,034 vs php-laravel 149 req/s (about 60–150x); plaintext: go-gin 53,941 vs 681 (about 79x)",
+      "verdict": "off",
+      "why": "The direction is right, but the measured gap is roughly 60–150 times, far more than 'several times'."
+    },
+    {
+      "claim": "Just a bigger server alone only buys a small multiple, not the 30x or more you need.",
+      "about": "php-laravel capacity on the current 2 vCPU server",
+      "measured": "About 300 req/s on 2 vCPU for a DB-backed endpoint (149 per CPU), so 3,000 req/s needs about 10x",
+      "verdict": "off",
+      "why": "Measured Laravel throughput means about a 10x increase is needed, not 30x; the 30x figure comes from the low 100 req/s estimate."
+    },
+    {
+      "claim": "Laravel Octane (Swoole or RoadRunner) is faster and still PHP.",
+      "about": "php-laravel-octane vs php-laravel",
+      "measured": "Plaintext 1,172 vs 681; JSON 1,224 vs 705; single DB query 732 vs 149; 20 queries 123 vs 93; but 10 ms I/O wait 86 vs 591",
+      "verdict": "consistent",
+      "why": "Octane measured faster on every test except the I/O-wait one, where it was much slower."
+    },
+    {
+      "claim": "Octane brings memory leaks.",
+      "about": "php-laravel-octane",
+      "measured": "Peak memory 100–116 MB vs 58–75 MB for php-laravel within 15 s runs",
+      "verdict": "not_covered",
+      "why": "Short runs show higher memory use but nothing about growth over time or leaks."
+    },
+    {
+      "claim": "Password hashing is deliberately CPU-heavy; a few hundred logins per second will overwhelm 2 vCPUs.",
+      "about": "PHP/Laravel password hashing (bcrypt/argon)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No password-hashing or login workload was measured."
+    },
+    {
+      "claim": "With about 4 GB, pm.max_children is probably 30–40 depending on memory per worker.",
+      "about": "PHP-FPM worker memory",
+      "measured": "php-laravel container peak 58–75 MB, worker count not stated",
+      "verdict": "not_covered",
+      "why": "The measurements give whole-container memory with an unknown number of workers, so memory per worker can't be worked out."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1813146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 33.251
+  }
+}

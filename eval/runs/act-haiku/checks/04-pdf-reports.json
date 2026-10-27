@@ -1,0 +1,21 @@
+{
+  "scenario": "04-pdf-reports",
+  "claims": [
+    {
+      "claim": "A burst of ~3,000 downloads ran interleaved on the same event loop that serves /tasks, which is why those requests slowed to seconds",
+      "about": "node-express (the team's Express API with in-process PDF/chart rendering)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark has no test that mixes 400 ms CPU-bound chart renders with other Express endpoints, so the 'slowed to seconds' latency figure can't be checked against it."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.12103960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 9.775
+  }
+}

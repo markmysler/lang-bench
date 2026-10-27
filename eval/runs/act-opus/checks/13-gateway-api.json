@@ -1,0 +1,28 @@
+{
+  "scenario": "13-gateway-api",
+  "claims": [
+    {
+      "claim": "A minimal-dependency Rust server starts in well under a second",
+      "about": "Rust HTTP server (crates/techapi)",
+      "measured": "rust-actix 239 ms, rust-axum 238 ms start-up",
+      "verdict": "consistent",
+      "why": "Both measured Rust servers started in about 0.24 s, which is well under a second."
+    },
+    {
+      "claim": "A minimal-dependency Rust server uses far less than 20 MB of memory",
+      "about": "Rust HTTP server (crates/techapi)",
+      "measured": "rust-actix/rust-axum idle 1 MB; peak 3 MB on plaintext/JSON/CPU, up to 9–10 MB on I/O and database tests",
+      "verdict": "consistent",
+      "why": "Measured Rust servers used 1–10 MB, which is far below 20 MB as claimed."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1183346,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 8.999
+  }
+}

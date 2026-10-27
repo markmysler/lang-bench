@@ -1,0 +1,56 @@
+{
+  "scenario": "12-variant-search",
+  "claims": [
+    {
+      "claim": "One process: the index lives in memory once. Threads easily handle ~100 req/s bursts.",
+      "about": "Flask served by waitress, one process with 8 threads",
+      "measured": "Flask with threads (gthread) reached 4,031 req/s plaintext and 3,777 req/s JSON on 1 CPU; sync Flask reached 1,732 / 1,700 req/s",
+      "verdict": "consistent",
+      "why": "Threaded Flask on one CPU measured roughly 17 to 40 times the claimed 100 req/s, so 'easily' holds (waitress itself was not measured, but threaded Flask on another WSGI server was)."
+    },
+    {
+      "claim": "It should meet the 50 ms target",
+      "about": "Flask service handling lookups on Python",
+      "measured": "python-flask-gthread p99 37.24 ms plaintext and 37.73 ms JSON with the CPU saturated at about 4,000 req/s; python-flask p99 about 51 ms at about 1,700 req/s",
+      "verdict": "consistent",
+      "why": "Even with the CPU saturated, threaded Flask's p99 is under 50 ms, and at 100 req/s it is far from saturation, so framework overhead should not break the target for single-variant lookups (large region responses are not covered)."
+    },
+    {
+      "claim": "The server starts straight away and loads the index in a background thread",
+      "about": "Flask/Python server start-up",
+      "measured": "python-flask start-up 996 ms; python-flask-gthread 606 ms",
+      "verdict": "consistent",
+      "why": "Flask servers measured at roughly 0.6 to 1 s to start, which fits 'straight away' compared with the 3-minute index load."
+    },
+    {
+      "claim": "A single process matters because the 4 GB index would otherwise be duplicated per worker",
+      "about": "Python multi-process (multi-worker) memory use",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks only measure small per-server memory with no large in-process data, and each container had 1 CPU, so per-worker duplication of a 4 GB structure cannot be checked."
+    },
+    {
+      "claim": "A lookup is a binary search (microseconds) instead of a scan over every variant",
+      "about": "numpy searchsorted in Python",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No benchmark measures numpy binary-search time or scans over a large array."
+    },
+    {
+      "claim": "The per-chromosome split makes copies of the arrays, which could add up to roughly another 4 GB at load time",
+      "about": "Python/numpy memory use during index load",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks do not cover memory for copying large numpy arrays."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1535696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 21.035
+  }
+}

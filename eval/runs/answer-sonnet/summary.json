@@ -1,0 +1,29 @@
+{
+  "run": {
+    "kind": "answer",
+    "model": "sonnet",
+    "billing": "api-key",
+    "started": "2026-10-27T17:46:21.420Z"
+  },
+  "scenarios": 16,
+  "choice": {
+    "acceptable": 16,
+    "ruled_out": 0,
+    "unclear": 0
+  },
+  "needlessRewrites": 0,
+  "ruledOutRecommended": 0,
+  "mean": {
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "overall": 4.69
+  },
+  "claims": {
+    "claims": 81,
+    "consistent": 38,
+    "off": 3,
+    "not_covered": 40
+  },
+  "costUSD": 5.13
+}

@@ -1,0 +1,9 @@
+{
+  "costUSD": 0.003420655,
+  "models": [
+    "claude-haiku-5-5"
+  ],
+  "turns": 1,
+  "billing": "api-key",
+  "seconds": 21.524
+}

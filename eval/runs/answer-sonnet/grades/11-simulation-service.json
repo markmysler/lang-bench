@@ -1,0 +1,26 @@
+{
+  "scenario": "11-simulation-service",
+  "grade": {
+    "primary_choice": "Flask app with a SQLite-backed job table, 2–3 systemd-managed workers on the existing VM, behind Gunicorn and Caddy/nginx",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This is a direct, well-sized answer that hits every must-mention point: no new language, the async job pattern, the capacity estimate, limiting BLAS to one thread per run, provenance, SSO, input checks, low upkeep and result retention. It also lists the right unknowns to check. Small gaps: it rejects Galaxy only as self-hosted without considering an existing Galaxy server, and it undersells Gradio's built-in queue."
+  },
+  "meta": {
+    "costUSD": 0.1080796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.883
+  }
+}

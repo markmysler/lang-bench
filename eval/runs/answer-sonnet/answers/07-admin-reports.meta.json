@@ -1,0 +1,9 @@
+{
+  "costUSD": 0.048139799999999996,
+  "models": [
+    "claude-sonnet-5-5"
+  ],
+  "turns": 1,
+  "billing": "api-key",
+  "seconds": 18.732
+}

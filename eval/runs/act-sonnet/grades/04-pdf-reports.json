@@ -1,0 +1,27 @@
+{
+  "scenario": "04-pdf-reports",
+  "grade": {
+    "stack_chosen": "TypeScript/Node with a BullMQ queue on the existing Redis and a separate worker process; finished PDFs cached in Redis for an hour",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 1,
+    "raised_with_user": true,
+    "must_mention_covered": 4,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "It made the right architectural move: rendering goes through a BullMQ queue on the Redis they already run, into a separate TS worker meant to run as its own Fly process group, with no language switch. It never does the 3,000 × 0.4 s ≈ 20 CPU-minutes maths and doesn't suggest pre-generating reports. It also has gaps: base64 PDFs in Redis with a one-hour expiry instead of object storage with signed URLs, a 25 s wait inside the HTTP request, no queue-depth monitoring, and no explicit advice to stay in TypeScript."
+  },
+  "meta": {
+    "costUSD": 0.1083696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.702
+  }
+}

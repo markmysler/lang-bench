@@ -1,0 +1,49 @@
+{
+  "scenario": "06-webhook-delivery-rails",
+  "claims": [
+    {
+      "claim": "Sending a webhook costs a few milliseconds of CPU, so the whole day is well under one core of real work.",
+      "about": "Ruby / Sidekiq sending outbound HTTP POSTs",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark measures servers receiving requests, not the CPU cost of a Ruby client making outbound HTTPS calls from Sidekiq."
+    },
+    {
+      "claim": "Sidekiq threads are fine for this, because Ruby releases the GVL during network I/O.",
+      "about": "Ruby threads (Sidekiq)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The only Ruby figure is ruby-rails in the I/O-wait test (279 req/s at 17% CPU), which reflects that server's thread setup, not Sidekiq thread concurrency during outbound I/O."
+    },
+    {
+      "claim": "A Go service that sends in FIFO order with no per-customer isolation backs up the same way, only at a higher ceiling.",
+      "about": "Go vs Ruby",
+      "measured": "I/O wait: go-gin 20,235 and go-nethttp 18,905 req/s vs ruby-rails 279; plaintext: go-gin 53,941 vs ruby-rails 3,704",
+      "verdict": "consistent",
+      "why": "Go measured far above Ruby in every test, so saying Go has a higher ceiling points the right way."
+    },
+    {
+      "claim": "A fiber-based Ruby sender (Async/Falcon-style) handles thousands of concurrent sockets cheaply.",
+      "about": "Ruby Async / Falcon",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No fiber-based Ruby server or client was benchmarked."
+    },
+    {
+      "claim": "Ruby path: you may only buy 5–10x headroom.",
+      "about": "Ruby / Sidekiq after tuning",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements don't cover a tuned Sidekiq webhook sender against the current setup."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1494996,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.517
+  }
+}

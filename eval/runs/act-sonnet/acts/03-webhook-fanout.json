@@ -1,0 +1,140 @@
+{
+  "claude": {
+    "duration_api_ms": 48986,
+    "stop_reason": "end_turn",
+    "session_id": "5ee0fb45-7e66-4017-b4a8-7295bc9b5b3d",
+    "total_cost_usd": 0.1437975,
+    "usage": {
+      "input_tokens": 10,
+      "cache_creation_input_tokens": 21633,
+      "cache_read_input_tokens": 120650,
+      "output_tokens": 7763,
+      "output_tokens_details": {
+        "thinking_tokens": 1415
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 21633
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1013,
+          "cache_read_input_tokens": 29174,
+          "cache_creation_input_tokens": 5479,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 5479,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "inputTokens": 10,
+        "outputTokens": 7763,
+        "cacheReadInputTokens": 120650,
+        "cacheCreationInputTokens": 21633,
+        "webSearchRequests": 0,
+        "costUSD": 0.1437975,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 1415,
+        "canonicalModel": "claude-sonnet-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_0137Yiuy8kLyEp3EpV2mCKDi",
+        "tool_input": {
+          "command": "mkdir -p /tmp/tmp.lyj1zgZN1V/repo/apps/api/src/webhooks"
+        }
+      }
+    ],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 19,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I've written the delivery pipeline under `apps/api/src/webhooks/`. Nothing has been installed, compiled or run, so none of it is type-checked yet.\n\n**How it works**\n- **Enqueue:** `emitEvent` in `apps/api/src/events.ts` now calls `enqueueEvent`. That is a single BullMQ add to Redis with the event id as the job id, so re-emitting is idempotent. It never throws and the call isn't awaited, so Redis problems can't slow or break the API.\n- **Worker process:** `worker.ts` runs as its own process (`npm run worker -w @acme/api`), so slow customer endpoints can't take CPU or event-loop time from the API. It should get its own Fly process group.\n- **Fan-out:** a worker loads the account's enabled endpoints (1–5) and queues one delivery job per endpoint. The job id is `eventId__endpointId`, so a retried fan-out doesn't create duplicates.\n- **Delivery:**\n  - Each job reloads the endpoint, so a deleted or disabled endpoint is skipped.\n  - It POSTs the JSON event with a 10 s timeout and no redirect following, and any non-2xx response or timeout counts as a failure.\n  - Retries use exponential backoff from 10 s up to 1 h, with jitter.\n  - Retries stop and the job fails once the event is more than 24 h old.\n- **Signing:** the `x-acme-signature` header is `t=<unix>,v1=<hex HMAC-SHA256 of \"t.body\">` using the per-endpoint secret. The timestamp is included so receivers can reject replays. `x-acme-event-id` and `x-acme-event-type` headers are sent too.\n\n**Things to know**\n- **Capacity:** peak is about 2,500 deliveries per second at 300 ms to 2 s each, so thousands are in flight at once. Each worker runs 200 concurrently (`WEBHOOK_DELIVERY_CONCURRENCY`). You'll need several worker instances for peaks.\n- **Upstash cost:** BullMQ makes several Redis commands per job. At this volume that is a real cost on Upstash's per-command pricing, so check it.\n- **Prisma model:** the repo has no Prisma schema, so the `WebhookEndpoint` model is in a comment at the top of `store.ts`. Add it to your schema and run a migration.\n- **Not built yet:**\n  - Endpoint registration routes and secret generation.\n  - URL validation on registration, which should require https and block private or internal addresses to prevent SSRF.\n  - Auto-disabling endpoints that keep failing.\n  - Delivery-attempt history for customers.\n  - Tests.\n- **Build config:** there's no `tsconfig.json`, and `apps/api/src/index.ts` imports routes that don't exist. `npm run build` and `npm run worker` expect a `dist/` build that can't be produced yet.\n\nI also added `worker` and `worker:dev` scripts to `apps/api/package.json`.",
+    "ttft_ms": 2022,
+    "type": "result",
+    "duration_ms": 49497,
+    "uuid": "015b75ea-9cff-40aa-85aa-8f5f856b82b0",
+    "ttft_stream_ms": 1669,
+    "time_to_request_ms": 261,
+    "first_content_frame_ms": 1669,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "M  apps/api/package.json",
+    "M  apps/api/src/events.ts",
+    "A  apps/api/src/webhooks/config.ts",
+    "A  apps/api/src/webhooks/deliver.ts",
+    "A  apps/api/src/webhooks/enqueue.ts",
+    "A  apps/api/src/webhooks/queues.ts",
+    "A  apps/api/src/webhooks/signing.ts",
+    "A  apps/api/src/webhooks/store.ts",
+    "A  apps/api/src/webhooks/worker.ts"
+  ],
+  "files": {
+    "apps/api/package.json": "{\n  \"name\": \"@acme/api\",\n  \"private\": true,\n  \"scripts\": { \"dev\": \"tsx watch src/index.ts\", \"build\": \"tsc\", \"start\": \"node dist/index.js\", \"worker\": \"node dist/webhooks/worker.js\", \"worker:dev\": \"tsx watch src/webhooks/worker.ts\" },\n  \"dependencies\": {\n    \"@prisma/client\": \"^5.22.0\",\n    \"bullmq\": \"^5.25.0\",\n    \"express\": \"^4.21.1\",\n    \"ioredis\": \"^5.4.1\",\n    \"zod\": \"^3.23.8\"\n  },\n  \"devDependencies\": { \"prisma\": \"^5.22.0\", \"tsx\": \"^4.19.2\", \"@types/express\": \"^5.0.0\" }\n}\n",
+    "apps/api/src/events.ts": "import type { DomainEvent } from '@acme/shared';\nimport { enqueueEvent } from './webhooks/enqueue';\n\n/**\n * Called whenever something happens in the product (task created, comment added, ...).\n * Queues the event for webhook delivery; the actual HTTP calls run in the worker process.\n */\nexport async function emitEvent(event: DomainEvent): Promise<void> {\n  enqueueEvent(event);\n}\n",
+    "apps/api/src/webhooks/config.ts": "export const FANOUT_QUEUE = 'webhook-fanout';\nexport const DELIVERY_QUEUE = 'webhook-delivery';\n\n/** Deliveries are abandoned this long after the event was emitted. */\nexport const GIVE_UP_AFTER_MS = 24 * 60 * 60 * 1000;\n\n/** A customer endpoint that hasn't answered by then counts as a failed attempt. */\nexport const REQUEST_TIMEOUT_MS = 10_000;\n\nconst BACKOFF_BASE_MS = 10_000;\nconst BACKOFF_MAX_MS = 60 * 60 * 1000;\n\n/** Exponential backoff with jitter: ~10s, 20s, 40s, ... capped at 1h. */\nexport function backoffDelay(attemptsMade: number): number {\n  const exp = Math.min(BACKOFF_MAX_MS, BACKOFF_BASE_MS * 2 ** (attemptsMade - 1));\n  return Math.round(exp * (0.75 + Math.random() * 0.5));\n}\n\n// Deliveries are I/O bound (300ms-2s each, up to 5 per event). At the 500 events/s peak that is\n// ~2500 deliveries/s, i.e. thousands in flight; scale by running more worker processes.\nexport const DELIVERY_CONCURRENCY = Number(process.env.WEBHOOK_DELIVERY_CONCURRENCY ?? 200);\nexport const FANOUT_CONCURRENCY = Number(process.env.WEBHOOK_FANOUT_CONCURRENCY ?? 20);\n",
+    "apps/api/src/webhooks/deliver.ts": "import { UnrecoverableError, type Job } from 'bullmq';\nimport type { DomainEvent } from '@acme/shared';\nimport { GIVE_UP_AFTER_MS, REQUEST_TIMEOUT_MS } from './config';\nimport { signPayload } from './signing';\nimport { getEndpoint, listEndpoints } from './store';\nimport { getDeliveryQueue, type DeliveryJob } from './queues';\n\n/** Fan-out job: one delivery job per enabled endpoint of the event's account. */\nexport async function fanOut(job: Job<DomainEvent>): Promise<void> {\n  const event = job.data;\n  const endpoints = await listEndpoints(event.accountId);\n  if (endpoints.length === 0) return;\n  await getDeliveryQueue().addBulk(\n    endpoints.map((endpoint) => ({\n      name: event.type,\n      data: { endpointId: endpoint.id, event } satisfies DeliveryJob,\n      // Dedupes if the fan-out job itself is retried. (BullMQ ids can't contain ':'.)\n      opts: { jobId: `${event.id}__${endpoint.id}` },\n    })),\n  );\n}\n\n/** Delivery job: POST the signed event. Throwing triggers a retry with backoff. */\nexport async function deliver(job: Job<DeliveryJob>): Promise<void> {\n  const { endpointId, event } = job.data;\n\n  const endpoint = await getEndpoint(endpointId);\n  if (!endpoint || !endpoint.enabled) return; // deleted or disabled since fan-out\n\n  if (Date.now() - Date.parse(event.occurredAt) > GIVE_UP_AFTER_MS) {\n    throw new UnrecoverableError('older than 24h');\n  }\n\n  const body = JSON.stringify(event);\n  const res = await fetch(endpoint.url, {\n    method: 'POST',\n    redirect: 'manual',\n    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),\n    headers: {\n      'content-type': 'application/json',\n      'user-agent': 'AcmeCollab-Webhooks/1',\n      'x-acme-event-id': event.id,\n      'x-acme-event-type': event.type,\n      'x-acme-signature': signPayload(endpoint.secret, body, Math.floor(Date.now() / 1000)),\n    },\n    body,\n  });\n  // Drain so the connection can be reused.\n  await res.body?.cancel().catch(() => {});\n\n  if (!res.ok) throw new Error(`endpoint ${endpoint.id} responded ${res.status}`);\n}\n",
+    "apps/api/src/webhooks/enqueue.ts": "import type { DomainEvent } from '@acme/shared';\nimport { getFanoutQueue } from './queues';\n\n/**\n * Hands an event to the webhook pipeline. This is a single Redis write; endpoint lookup and\n * HTTP calls happen in the worker process. Never throws, so callers in the API are unaffected\n * by Redis problems.\n */\nexport function enqueueEvent(event: DomainEvent): void {\n  // jobId makes re-emitting the same event idempotent.\n  getFanoutQueue()\n    .add(event.type, event, { jobId: event.id })\n    .catch((err) => console.error('webhooks: failed to enqueue event', event.id, err));\n}\n",
+    "apps/api/src/webhooks/queues.ts": "import { Queue } from 'bullmq';\nimport IORedis from 'ioredis';\nimport type { DomainEvent } from '@acme/shared';\nimport { DELIVERY_QUEUE, FANOUT_QUEUE } from './config';\n\nexport interface DeliveryJob {\n  endpointId: string;\n  event: DomainEvent;\n}\n\n// BullMQ workers require maxRetriesPerRequest: null.\nexport function createRedis(): IORedis {\n  return new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {\n    maxRetriesPerRequest: null,\n  });\n}\n\nlet connection: IORedis | undefined;\nlet fanoutQueue: Queue<DomainEvent> | undefined;\nlet deliveryQueue: Queue<DeliveryJob> | undefined;\n\nfunction redis(): IORedis {\n  return (connection ??= createRedis());\n}\n\nexport function getFanoutQueue(): Queue<DomainEvent> {\n  return (fanoutQueue ??= new Queue<DomainEvent>(FANOUT_QUEUE, {\n    connection: redis(),\n    defaultJobOptions: { removeOnComplete: true, removeOnFail: 1000, attempts: 5, backoff: { type: 'exponential', delay: 1000 } },\n  }));\n}\n\nexport function getDeliveryQueue(): Queue<DeliveryJob> {\n  return (deliveryQueue ??= new Queue<DeliveryJob>(DELIVERY_QUEUE, {\n    connection: redis(),\n    defaultJobOptions: {\n      removeOnComplete: true,\n      removeOnFail: 5000,\n      // Effectively unbounded: the 24h age limit in the backoff strategy is what ends retries.\n      attempts: 1000,\n      backoff: { type: 'custom' },\n    },\n  }));\n}\n",
+    "apps/api/src/webhooks/signing.ts": "import { createHmac } from 'node:crypto';\n\n/**\n * Signature header value: `t=<unix seconds>,v1=<hex HMAC-SHA256 of \"<t>.<body>\">`.\n * Including the timestamp lets receivers reject replays.\n */\nexport function signPayload(secret: string, body: string, timestampSec: number): string {\n  const mac = createHmac('sha256', secret).update(`${timestampSec}.${body}`).digest('hex');\n  return `t=${timestampSec},v1=${mac}`;\n}\n",
+    "apps/api/src/webhooks/store.ts": "import { PrismaClient } from '@prisma/client';\n\nexport interface WebhookEndpoint {\n  id: string;\n  accountId: string;\n  url: string;\n  secret: string;\n  enabled: boolean;\n}\n\n/*\n * Requires this model in the Prisma schema (1-5 rows per account):\n *\n * model WebhookEndpoint {\n *   id        String   @id @default(cuid())\n *   accountId String\n *   url       String\n *   secret    String\n *   enabled   Boolean  @default(true)\n *   createdAt DateTime @default(now())\n *   @@index([accountId])\n * }\n */\nconst prisma = new PrismaClient();\n\nexport function listEndpoints(accountId: string): Promise<WebhookEndpoint[]> {\n  return prisma.webhookEndpoint.findMany({ where: { accountId, enabled: true } });\n}\n\nexport function getEndpoint(id: string): Promise<WebhookEndpoint | null> {\n  return prisma.webhookEndpoint.findUnique({ where: { id } });\n}\n",
+    "apps/api/src/webhooks/worker.ts": "/**\n * Separate process (own Fly.io process group) so slow customer endpoints can never\n * take CPU, memory or event-loop time from the API. Run: `npm run worker -w @acme/api`.\n */\nimport { Worker } from 'bullmq';\nimport {\n  DELIVERY_CONCURRENCY,\n  DELIVERY_QUEUE,\n  FANOUT_CONCURRENCY,\n  FANOUT_QUEUE,\n  GIVE_UP_AFTER_MS,\n  backoffDelay,\n} from './config';\nimport { deliver, fanOut } from './deliver';\nimport { createRedis } from './queues';\n\nconst connection = createRedis();\n\nconst fanout = new Worker(FANOUT_QUEUE, fanOut, { connection, concurrency: FANOUT_CONCURRENCY });\n\nconst delivery = new Worker(DELIVERY_QUEUE, deliver, {\n  connection,\n  concurrency: DELIVERY_CONCURRENCY,\n  settings: {\n    // Returning -1 moves the job to failed with no further retries.\n    backoffStrategy: (attemptsMade, _type, _err, job) =>\n      job && Date.now() - job.timestamp > GIVE_UP_AFTER_MS ? -1 : backoffDelay(attemptsMade),\n  },\n});\n\nfor (const w of [fanout, delivery]) {\n  w.on('failed', (job, err) => {\n    console.warn(`webhooks: ${w.name} job ${job?.id} attempt ${job?.attemptsMade} failed: ${err.message}`);\n  });\n  w.on('error', (err) => console.error(`webhooks: ${w.name} worker error`, err));\n}\n\nasync function shutdown(): Promise<void> {\n  await Promise.all([fanout.close(), delivery.close()]);\n  connection.disconnect();\n  process.exit(0);\n}\nprocess.on('SIGTERM', shutdown);\nprocess.on('SIGINT', shutdown);\n"
+  },
+  "meta": {
+    "costUSD": 0.1437975,
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "turns": 19,
+    "billing": "api-key",
+    "seconds": 51.841
+  }
+}

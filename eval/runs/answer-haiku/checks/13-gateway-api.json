@@ -1,0 +1,56 @@
+{
+  "scenario": "13-gateway-api",
+  "claims": [
+    {
+      "claim": "Python (Flask/FastAPI): the interpreter and framework typically take 30–60 MB resident",
+      "about": "python-flask / python-fastapi",
+      "measured": "Idle: FastAPI 40 MB, Flask 115 MB (gthread 52 MB, gevent 60 MB). Peak: FastAPI 41–47 MB, Flask 117–123 MB",
+      "verdict": "consistent",
+      "why": "FastAPI and the threaded or gevent Flask variants fall inside 30–60 MB, and even plain Flask at 115 MB is within 2x of the upper bound."
+    },
+    {
+      "claim": "Python (Flask/FastAPI) takes noticeably longer than a second to start on a Cortex-A53",
+      "about": "python-flask / python-fastapi",
+      "measured": "Start-up: FastAPI 895 ms, Flask 996 ms (gthread 606 ms, gevent 841 ms) on a much faster x86 Ultra 9",
+      "verdict": "consistent",
+      "why": "They already take close to a second on a fast x86 core, so taking well over a second on a slower Cortex-A53 is within a factor of 2."
+    },
+    {
+      "claim": "Node.js has a larger baseline memory footprint than Python",
+      "about": "node-express / node-fastify vs python-flask / python-fastapi",
+      "measured": "Idle: Node 38–43 MB vs Python 40 MB (FastAPI) and 52–115 MB (Flask variants). Plaintext peak: Node 55–57 MB vs FastAPI 41 MB and Flask 55–117 MB",
+      "verdict": "off",
+      "why": "At idle Node used about the same memory as FastAPI and less than every Flask variant, so the claim points the wrong way."
+    },
+    {
+      "claim": "Go: a static binary using the standard library's HTTP server would fit in the budget (under 20 MB, start in under 1 s)",
+      "about": "go-nethttp",
+      "measured": "Idle 2 MB, peak 7–15 MB across tests, start-up 238 ms",
+      "verdict": "consistent",
+      "why": "Measured memory and start-up are both well inside the 20 MB and 1 s limits."
+    },
+    {
+      "claim": "Full frameworks (Axum, Actix) and async Rust bring an async runtime that inflates memory and runtime size",
+      "about": "rust-axum / rust-actix",
+      "measured": "Idle 1 MB, peak 3–10 MB, image 79–83 MB, start-up 238–239 ms",
+      "verdict": "not_covered",
+      "why": "There is no measurement of a synchronous tiny_http server to compare with, though Axum and Actix were already the smallest servers measured, at 1 MB idle."
+    },
+    {
+      "claim": "Choosing C (libmicrohttpd) over Rust costs memory safety in the parser, not the requirements (it would still meet the memory and start-up limits)",
+      "about": "C with libmicrohttpd",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No C or libmicrohttpd server was measured; the closest is cpp-drogon, which is a different library."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1590896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 25.534
+  }
+}

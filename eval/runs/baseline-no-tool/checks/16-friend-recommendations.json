@@ -1,0 +1,49 @@
+{
+  "scenario": "16-friend-recommendations",
+  "claims": [
+    {
+      "claim": "Language barely matters; the fan-out and precompute design decide performance, and TypeScript versus anything else doesn't",
+      "about": "TypeScript (Node/Bun/Deno) compared with other stacks such as Go and the JVM",
+      "measured": "CPU fib(20) at 1 CPU: bun-elysia 18,041, deno-hono 14,144, node-fastify 8,308, node-express 7,213 req/s; go-gin 18,218, go-nethttp 15,093, kotlin-ktor 18,350, java-spring 14,258, rust-axum 29,499, cpp-drogon 35,839 req/s",
+      "verdict": "consistent",
+      "why": "Against the realistic alternatives (Go, JVM), TypeScript runtimes are level with them or within about 2x on CPU work, though the claim would not hold against Python or PHP, which are 7–15x slower."
+    },
+    {
+      "claim": "Batch computation: TypeScript is fine at this scale; a small Go batch job is a sensible fallback if the in-memory job becomes a bottleneck",
+      "about": "Node/TypeScript compared with Go for CPU-bound batch work",
+      "measured": "CPU fib(20): go-gin 18,218 and go-nethttp 15,093 req/s vs node-fastify 8,308, node-express 7,213, deno-hono 14,144, bun-elysia 18,041 req/s",
+      "verdict": "consistent",
+      "why": "Go measured about 2x faster than Node on CPU work and level with Bun, so Go as a modestly faster fallback matches the measurements."
+    },
+    {
+      "claim": "Serving is a key lookup plus cheap filters, which takes single-digit milliseconds",
+      "about": "TypeScript API server doing a single Postgres row lookup",
+      "measured": "Single-row DB query, 64 connections: bun-elysia p50 1.94 ms / p99 4.10 ms; deno-hono 3.36 / 7.75 ms; node-fastify 6.40 / 14.54 ms; node-express 6.66 / 17.28 ms",
+      "verdict": "consistent",
+      "why": "Median latency for TypeScript servers doing one DB row lookup is 2–7 ms, which is single-digit milliseconds, and p99 is at most about 2x above that."
+    },
+    {
+      "claim": "Stored as compact ID arrays, 40M memberships take roughly 300–400 MB in a TypeScript worker using typed arrays",
+      "about": "Node/TypeScript in-memory graph worker",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks only record server memory for small HTTP workloads, not memory for large in-process data structures."
+    },
+    {
+      "claim": "A two-hop pass over every user in memory should take minutes, and TypeScript handles this well with typed arrays rather than objects",
+      "about": "Node/TypeScript in-memory batch graph computation",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements have no graph-traversal batch workload and no comparison of typed arrays with objects, so there is nothing to check this against."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1671396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 26.454
+  }
+}

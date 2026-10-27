@@ -1,0 +1,13 @@
+{
+  "scenario": "14-volunteer-rota",
+  "claims": [],
+  "meta": {
+    "costUSD": 0.1198096,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 7.072
+  }
+}

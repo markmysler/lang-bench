@@ -1,0 +1,32 @@
+{
+  "scenario": "13-gateway-api",
+  "grade": {
+    "stack_chosen": "Proposed a Rust crate (crates/techapi) with few dependencies that calls the C firmware's gateway_status() directly, added to the Yocto recipe; no code written",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": 3,
+    "red_flags_hit": [
+      "Giving resource figures as guarantees without saying they must be measured on the target",
+      "Proposing to link the firmware's C code directly into the API rather than running it as a separate unprivileged service over IPC"
+    ],
+    "unsupported_claims": [
+      "Says Rust 'starts in well under a second and uses far less than 20 MB' without saying this must be measured on the A53 target with TLS and a concurrent upload"
+    ],
+    "overall": 4,
+    "notes": "The agent picked the right stack for the right reasons (memory safety for network input, the startup and memory limits, few dependencies over ten years) and asked sensible questions about authentication, signed firmware, and handing images to an existing update mechanism. It built nothing, and it left out process isolation (systemd, IPC, unprivileged), streaming the upload with a size limit, TLS, toolchain pinning, cargo-audit and an SBOM, and measuring memory and startup on the real target."
+  },
+  "meta": {
+    "costUSD": 0.1057446,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.139
+  }
+}

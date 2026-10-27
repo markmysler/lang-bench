@@ -1,0 +1,32 @@
+{
+  "scenario": "03-webhook-fanout",
+  "grade": {
+    "stack_chosen": "Node.js/TypeScript worker in a separate process, using BullMQ on the existing Redis and native fetch, with one fan-out job and then one job per endpoint",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 1,
+    "team_fit": 2,
+    "unknowns_stated": 1,
+    "raised_with_user": true,
+    "must_mention_covered": 5,
+    "red_flags_hit": [
+      "Omitting SSRF risk from customer-supplied URLs"
+    ],
+    "unsupported_claims": [
+      "'Re-emitting an event does not double-deliver': BullMQ deduplicates by job ID only while the job is still kept, and removeOnComplete drops completed jobs after 1 h, so a later re-emit is delivered again.",
+      "'Captured requests cannot be replayed': replay is only refused outside the 5-minute tolerance, and only if the receiver checks the timestamp."
+    ],
+    "overall": 3,
+    "notes": "It made a sound, team-fitting choice (a separate TypeScript BullMQ worker, per-endpoint jobs with jittered backoff, a 5 s timeout, HMAC signing with an event ID, no redirects followed) and listed its gaps honestly. But it never argued why Node suits this I/O-bound load, never sized the ~2,500 deliveries/s peak properly, ignored SSRF and outbox durability (a failed enqueue is logged and the event is lost), and never raised buying Svix or Hookdeck."
+  },
+  "meta": {
+    "costUSD": 0.1573646,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.193
+  }
+}

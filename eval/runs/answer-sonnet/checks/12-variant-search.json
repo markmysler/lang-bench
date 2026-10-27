@@ -1,0 +1,42 @@
+{
+  "scenario": "12-variant-search",
+  "claims": [
+    {
+      "claim": "If a lookup costs about 1 ms, one core handles roughly 1,000/s (with a thin Python FastAPI/Flask layer)",
+      "about": "python-fastapi / python-flask",
+      "measured": "Per 1 CPU: plaintext FastAPI 7,442 req/s, Flask (gthread) 4,031 req/s, Flask 1,732 req/s. CPU-bound test with about 1 ms of work per request: FastAPI 1,257 req/s, Flask 1,078 req/s, Flask-gthread 1,149 req/s",
+      "verdict": "consistent",
+      "why": "Python servers doing about 1 ms of work per request measured about 1,050–1,260 req/s per core, which is close to the claimed ~1,000/s."
+    },
+    {
+      "claim": "A C++ service would be fastest at runtime (compared with the Python options)",
+      "about": "C++ (cpp-drogon) vs Python (FastAPI/Flask)",
+      "measured": "cpp-drogon 85,540 plaintext / 35,839 CPU req/s vs python-fastapi 7,442 / 1,257 and python-flask 1,732 / 1,078",
+      "verdict": "consistent",
+      "why": "Drogon measured roughly 10–30 times faster than the Python stacks, and it had the highest CPU-test throughput of all servers."
+    },
+    {
+      "claim": "With a memory-mapped index, start-up becomes close to instant and a restart costs seconds, not 3 minutes",
+      "about": "python-fastapi / python-flask service",
+      "measured": "Start-up: python-fastapi 895 ms, python-flask 996 ms, python-flask-gthread 606 ms",
+      "verdict": "consistent",
+      "why": "The Python servers measured under 1 s to start, which fits 'close to instant' and 'seconds'."
+    },
+    {
+      "claim": "A region returning 500,000 variants will not take 50 ms, because serialising JSON dominates",
+      "about": "Python web layer JSON serialisation",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The JSON test only serialises a tiny payload, so the cost of very large responses was not measured."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1504396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.916
+  }
+}

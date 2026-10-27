@@ -1,0 +1,28 @@
+{
+  "scenario": "07-admin-reports",
+  "grade": {
+    "primary_choice": "Build a namespaced admin area inside the existing Rails monolith",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [
+      "Missing CSV/formula injection when exporting customer-controlled strings that will be opened in Excel"
+    ],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This closely matches the reference: monolith first, Postgres search, Sidekiq exports to S3 behind signed links, replica/statement_timeout/rollups to protect the primary, Pundit-style authorization, audit logging, and namespaced modular code, with a strong list of things to check first. Small gaps: it doesn't mention CSV formula injection or export rate limits, and it doesn't explicitly say that only the three-person platform team knows Go."
+  },
+  "meta": {
+    "costUSD": 0.09904959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 9.034
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "scenario": "15-matchmaking",
+  "grade": {
+    "primary_choice": "Keep Node/TypeScript: a separate WebSocket gateway on several pods, Redis for cross-pod routing and presence, and a single-owner sharded matchmaker",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "7",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "A direct, well-reasoned 'stay on Node' answer. It keeps realtime out of the REST process, routes across pods through Redis, assigns one owner per matchmaking shard, covers reconnect storms, load-balancer timeouts and graceful drain, and requires load tests that include deploys and reconnect storms. It leaves out autoscaling on connection count rather than CPU and scaling out before launch, observability and alerting for two operators, and protecting Postgres from the login rush; its in-memory matchmaker queue also lacks the atomic shared-queue detail the reference gives."
+  },
+  "meta": {
+    "costUSD": 0.11590460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 16.083
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "scenario": "12-variant-search",
+  "claims": [
+    {
+      "claim": "Forked gunicorn workers would each copy-on-write their share of the 4 GB, because the annotations are Python objects, so the service should run one worker with threads",
+      "about": "Python / Flask under gunicorn (forked workers vs threads)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements cover only small per-container footprints with no large in-memory dataset, and they never compare forked workers with threads, so they can't show how much memory forked workers would copy from a 4 GB index."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1323896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 9.625
+  }
+}

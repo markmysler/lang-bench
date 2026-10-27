@@ -1,0 +1,21 @@
+{
+  "scenario": "03-webhook-fanout",
+  "claims": [
+    {
+      "claim": "Each worker runs 200 concurrently (WEBHOOK_DELIVERY_CONCURRENCY). You'll need several worker instances for peaks [of ~2,500 deliveries/s].",
+      "about": "Node.js BullMQ worker process making outbound HTTP deliveries",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks only measure inbound HTTP servers. Nothing measures a Node process making outbound fetch calls with BullMQ/Redis job overhead, and the claim follows from the concurrency setting and the team's latency figures rather than from any measured runtime throughput."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1478796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.338
+  }
+}

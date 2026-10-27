@@ -1,0 +1,42 @@
+{
+  "scenario": "02-discord-stats",
+  "claims": [
+    {
+      "claim": "The whole process (discord.py + FastAPI in one Python process) should use roughly 80–150 MB, well within 512 MB",
+      "about": "python-fastapi + discord.py",
+      "measured": "python-fastapi alone: 40 MB idle, 41–47 MB peak; discord.py not measured",
+      "verdict": "not_covered",
+      "why": "Only the FastAPI half was measured, at about 41–47 MB; discord.py's gateway connection and caches were not measured, so the total for the combined process can't be checked."
+    },
+    {
+      "claim": "Go: very small memory use",
+      "about": "go-gin / go-nethttp",
+      "measured": "2 MB idle, 7–16 MB peak across all tests",
+      "verdict": "consistent",
+      "why": "The Go servers are among the lightest measured, at 2 MB idle and 16 MB or less at peak."
+    },
+    {
+      "claim": "Java/Spring is heavy on memory for 512 MB",
+      "about": "java-spring / java-spring-vt",
+      "measured": "131–134 MB idle; 209–500 MB peak (java-spring reached 491–500 MB in the I/O and database tests)",
+      "verdict": "consistent",
+      "why": "Spring Boot had the largest footprint measured and came close to the 512 MB limit under load."
+    },
+    {
+      "claim": ".NET is heavy on memory for 512 MB",
+      "about": "csharp-aspnet",
+      "measured": "20 MB idle, 44–62 MB peak",
+      "verdict": "off",
+      "why": "ASP.NET Core used 62 MB at most, about an eighth of 512 MB and less than Node or Rails, so calling it heavy points the wrong way."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1341946,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.056
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "scenario": "05-tv-campaign",
+  "grade": {
+    "primary_choice": "Keep Laravel; cache public reads at a CDN and on the server, slim down per-user endpoints, add temporary capacity, load test",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [
+      "Leaving the default rate limiter in place (it never looks at Laravel's default throttle and suggests per-IP limits without considering mobile carrier NAT)"
+    ],
+    "unsupported_claims": [
+      "'A few hundred per core' for uncached Laravel is on the optimistic side; the reference puts 100–300 req/s for the whole 2 vCPU box"
+    ],
+    "overall": 4,
+    "notes": "Strong, well-reasoned answer: it rejects the rewrite, splits public from per-user endpoints with clear privacy warnings, and covers SWR and purging, load testing, rollback and staffed monitoring. It misses the default throttle and carrier NAT 429 risk, doesn't check Set-Cookie or Authorization headers on public calls, doesn't size MySQL max_connections, and only partly frames costs for the fixed-price contract."
+  },
+  "meta": {
+    "costUSD": 0.1184896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 16.894
+  }
+}

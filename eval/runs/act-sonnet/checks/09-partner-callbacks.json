@@ -1,0 +1,35 @@
+{
+  "scenario": "09-partner-callbacks",
+  "claims": [
+    {
+      "claim": "Tomcat's default pool is 200 platform threads, and each waiting request holds one thread, so each pod stopped accepting at about 200 waiting requests",
+      "about": "Spring Boot on Tomcat with platform threads (java-spring)",
+      "measured": "java-spring I/O wait (10 ms, 256 connections): 15,611 req/s, p50 15.01 ms, p99 29.52 ms, 491 MB",
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't test how many requests can wait at once or a 30-second hold, so the 200-thread ceiling can't be checked against it."
+    },
+    {
+      "claim": "With spring.threads.virtual.enabled, waiting requests park cheap virtual threads",
+      "about": "Spring Boot with virtual threads (java-spring-vt)",
+      "measured": "java-spring-vt I/O wait (256 connections): 14,571 req/s, p99 37.37 ms, 444 MB, compared with 15,611 req/s and 491 MB for platform threads",
+      "verdict": "not_covered",
+      "why": "The I/O-wait test used only 256 connections with 10 ms waits, so it can't show what virtual threads cost per parked request at thousands of long waits; at that small scale they weren't faster or much smaller."
+    },
+    {
+      "claim": "With virtual threads and max-connections 12000, the gateway should hold 10,000 waiting connections per pod",
+      "about": "Spring Boot with virtual threads on Tomcat (java-spring-vt)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No test went above 256 connections or held requests for 30 seconds, so a capacity of 10,000 connections per pod can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1309796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.781
+  }
+}

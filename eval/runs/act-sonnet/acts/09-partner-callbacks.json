@@ -1,0 +1,124 @@
+{
+  "claude": {
+    "duration_api_ms": 19397,
+    "stop_reason": "end_turn",
+    "session_id": "3a1aca90-0a5a-4c8a-8c37-67810242d1d9",
+    "total_cost_usd": 0.0630328,
+    "usage": {
+      "input_tokens": 10,
+      "cache_creation_input_tokens": 14167,
+      "cache_read_input_tokens": 116053,
+      "output_tokens": 1599,
+      "output_tokens_details": {
+        "thinking_tokens": 277
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 14167
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 547,
+          "cache_read_input_tokens": 26877,
+          "cache_creation_input_tokens": 310,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 310,
+            "ephemeral_1h_input_tokens": 0
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "inputTokens": 10,
+        "outputTokens": 1599,
+        "cacheReadInputTokens": 116053,
+        "cacheCreationInputTokens": 14167,
+        "webSearchRequests": 0,
+        "costUSD": 0.0630328,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 277,
+        "canonicalModel": "claude-sonnet-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_01GmmDRwRme9gXRzq2wMyCQy",
+        "tool_input": {
+          "command": "cat > src/main/resources/application.yml <<'EOF'\nspring:\n  application:\n    name: partner-gateway\n  threads:\n    virtual:\n      enabled: true   # each waiting request parks a virtual thread instead of holding one of 200 platform threads\nserver:\n  tomcat:\n    max-connections: 12000   # default 8192; must cover 10,000 if one pod has to carry the full load\n    accept-count: 500\nmanagement:\n  endpoints.web.exposure.include: health,metrics\nEOF\ngit diff --stat"
+        }
+      }
+    ],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "safety_stops": 0,
+    "is_error": false,
+    "num_turns": 6,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "I changed `src/main/resources/application.yml` so the gateway should hold 10,000 waiting connections. I haven't built it or load-tested it. The repo also doesn't compile as it stands, because `Confirmations` and `Confirmation` are referenced but not in the repo.\n\n**Cause:** the controller blocks on `future.get(30s)`. Tomcat's default pool is 200 platform threads, and each waiting request holds one thread. That matches the load test, where each pod stopped accepting at about 200 waiting requests.\n\n**Changes:**\n- **`spring.threads.virtual.enabled: true`:** waiting requests now park cheap virtual threads. This uses Java 21 and Spring Boot 3, both approved in `ARCHITECTURE.md`, so it needs no new dependency and no architecture-board review. The controller code is unchanged.\n- **`server.tomcat.max-connections: 12000`:** Tomcat's default is 8192. If one pod fails, the other has to carry all 10,000 connections.\n- **`server.tomcat.accept-count: 500`:** a larger queue for connections that arrive in a burst.\n\n**Still to do:**\n- **`Confirmations` is missing.** It needs to complete futures from Kafka without blocking. Its `waitFor(id)` future should be removed from the map on timeout and on completion, or abandoned waits will leak memory.\n- **Pod limits:** OpenShift file-descriptor and memory limits need to allow 10,000 sockets per pod if one pod must carry everything.\n- **Load test:** rerun it at 10,000 connections held for 30 seconds, and again with one pod down.",
+    "ttft_ms": 2724,
+    "type": "result",
+    "duration_ms": 20329,
+    "uuid": "6e7593d5-f0d8-467a-9f46-6e56c7f7d656",
+    "ttft_stream_ms": 2346,
+    "time_to_request_ms": 367,
+    "first_content_frame_ms": 2346,
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "changed": [
+    "M  src/main/resources/application.yml"
+  ],
+  "files": {
+    "src/main/resources/application.yml": "spring:\n  application:\n    name: partner-gateway\n  threads:\n    virtual:\n      enabled: true   # each waiting request parks a virtual thread instead of holding one of 200 platform threads\nserver:\n  tomcat:\n    max-connections: 12000   # default 8192; must cover 10,000 if one pod has to carry the full load\n    accept-count: 500\nmanagement:\n  endpoints.web.exposure.include: health,metrics\n"
+  },
+  "meta": {
+    "costUSD": 0.0630328,
+    "models": [
+      "claude-sonnet-5-5"
+    ],
+    "turns": 6,
+    "billing": "api-key",
+    "seconds": 22.497
+  }
+}

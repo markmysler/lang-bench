@@ -1,0 +1,27 @@
+{
+  "scenario": "15-matchmaking",
+  "grade": {
+    "stack_chosen": "Node.js + TypeScript with ws, as a separate Kubernetes WebSocket gateway deployment; a single shared Redis for presence, pub/sub routing between pods, and an atomic Lua-based matchmaking queue",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": "5",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "The agent built a sound design for this team: a Node gateway in its own deployment, separate from the REST API, with Redis Lua scripts for presence, routing between pods and atomic matching, so no player is matched twice. It flagged its assumptions about JWTs, friends lists, skill rating and the new Redis dependency. It did not mention load testing, autoscaling on connection count, Postgres pooling for the login rush, observability, or Kubernetes details such as load balancer idle timeouts and PodDisruptionBudgets, and its SIGTERM handling closes every socket at once instead of draining gradually."
+  },
+  "meta": {
+    "costUSD": 0.1622946,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.474
+  }
+}

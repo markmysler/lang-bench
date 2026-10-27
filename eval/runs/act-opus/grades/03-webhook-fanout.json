@@ -1,0 +1,27 @@
+{
+  "scenario": "03-webhook-fanout",
+  "grade": {
+    "stack_chosen": "Separate Node.js/TypeScript worker using BullMQ on the existing Redis, two queues (fan-out, then one job per event and endpoint), node:https with an SSRF-safe DNS lookup and HMAC signing",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "raised_with_user": true,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "This is a solid, stack-fitting build: a separate worker, one job per endpoint with jittered backoff, 10 s timeouts, response bodies discarded, thorough SSRF blocking, HMAC with event IDs, and correct sizing arithmetic (2,500 deliveries/s, about 13 processes). It loses points because it has no per-endpoint concurrency limit or circuit breaker, so timing-out customers can fill the shared 200 slots, and because the fire-and-forget enqueue drops events (the outbox is only offered as a later fix, and Redis persistence isn't mentioned); it also never names Svix/Hookdeck as a buy option or says Go should be revisited only on measured evidence."
+  },
+  "meta": {
+    "costUSD": 0.1672496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 20.281
+  }
+}

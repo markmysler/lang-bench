@@ -1,0 +1,30 @@
+{
+  "scenario": "11-simulation-service",
+  "grade": {
+    "primary_choice": "Flask with a SQLite/Postgres job table and systemd workers on the existing VM; Slurm submission later if IT allows",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Total CPU is well under an hour' understates the load: a few dozen runs of up to 90 seconds can come to about 45–75 minutes a day.",
+      "'Four cores run four jobs cleanly' contradicts the answer's own 'one or two' workers and leaves no CPU for the web server. The reference caps workers at 2–3.",
+      "The claim that FastAPI 'validates input more strictly' is debatable. It depends on how validation is written."
+    ],
+    "overall": 5,
+    "notes": "This is a strong, well-grounded answer. It says no new language is needed, recommends an async job queue in the team's own stack, and covers BLAS thread limits, reproducibility, auth, input checks, data governance, and specific things to measure or ask IT. Small gaps: the worker count is inconsistent (1–2 workers vs 4 jobs), backups are not mentioned, and it says to avoid building accounts while also recommending invited accounts."
+  },
+  "meta": {
+    "costUSD": 0.11704460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.648
+  }
+}
