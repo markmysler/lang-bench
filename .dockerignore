@@ -1,0 +1,10 @@
+**/node_modules
+**/target
+**/dist
+results
+.git
+servers
+db
+loadgen
+orchestrator/webdist/*
+!orchestrator/webdist/webdist.go

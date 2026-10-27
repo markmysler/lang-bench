@@ -1,0 +1,190 @@
+.chart {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 0 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
+}
+
+svg.plot {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.axis {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.baseline {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.bandLabel {
+  fill: var(--faint);
+  font-size: 11px;
+}
+
+.endLabel {
+  fill: var(--text-2);
+  font-size: 11px;
+}
+
+.crosshair {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.tooltip {
+  position: absolute;
+  top: 28px;
+  z-index: 2;
+  min-width: 160px;
+  padding: 8px 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.tooltip dl {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2px 8px;
+  margin: 4px 0 0;
+  align-items: center;
+}
+
+.tooltipRow,
+.tooltip dt {
+  display: contents;
+}
+
+.tooltip dd {
+  margin: 0;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.tooltipName {
+  color: var(--text-2);
+}
+
+.tableToggle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tableToggle summary {
+  cursor: pointer;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+/* Bars */
+
+.bars {
+  display: grid;
+  grid-template-columns: minmax(96px, max-content) 1fr;
+  gap: 6px 10px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.barTrack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bar {
+  height: 16px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+}
+
+.barValue {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.barNote {
+  font-size: 12px;
+  color: var(--muted);
+}

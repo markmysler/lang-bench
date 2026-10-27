@@ -1,0 +1,10 @@
+{
+  "id": "java-spring",
+  "language": "Java",
+  "languageVersion": "25",
+  "framework": "Spring Boot",
+  "frameworkVersion": "4.1.2",
+  "runtime": "HotSpot JVM 25 (JIT)",
+  "concurrency": "Platform thread per request (Tomcat worker pool)",
+  "tuning": "Tomcat defaults (max 200 threads); HikariCP pool of DB_POOL connections; -XX:MaxRAMPercentage=60"
+}

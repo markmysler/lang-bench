@@ -1,0 +1,6 @@
+dist
+dist-e2e
+playwright-report
+test-results
+package-lock.json
+e2e/fixtures/*.json

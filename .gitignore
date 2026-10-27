@@ -2,7 +2,6 @@
 node_modules/
 dist/
 target/
-build/
 *.class
 __pycache__/
 .venv/
@@ -16,3 +15,13 @@ results/*
 .vscode/
 .DS_Store
 Thumbs.db
+
+# The dashboard is built into the orchestrator image
+orchestrator/webdist/*
+!orchestrator/webdist/.gitkeep
+!orchestrator/webdist/webdist.go
+
+# Web test output
+web/dist-e2e/
+web/playwright-report/
+web/test-results/
