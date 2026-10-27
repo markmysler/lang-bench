@@ -10,6 +10,7 @@ import {
   parseTeams,
   replyText,
   summarise,
+  summariseByScope,
   toWsl,
 } from './lib.mjs';
 
@@ -109,6 +110,25 @@ test('claim checks are totalled', () => {
     { claims: [{ verdict: 'not_covered' }, { verdict: 'consistent' }] },
   ]);
   assert.deepEqual(totals, { claims: 4, consistent: 2, off: 1, not_covered: 1 });
+});
+
+test('results split by scope, each with its own totals', () => {
+  const g = (choice, overall) => ({ grade: { choice, overall, needless_rewrite: false } });
+  const by = summariseByScope(
+    [
+      { id: 'a', ...g('acceptable', 5) },
+      { id: 'b', ...g('ruled_out', 1) },
+      { id: 'c', ...g('acceptable', 3) },
+      { id: 'd', ...g('acceptable', 4) },
+    ],
+    { a: { scope: 'in' }, b: { scope: 'in' }, c: { scope: 'out' } },
+  );
+  assert.deepEqual(Object.keys(by), ['in', 'partial', 'out', 'untagged']);
+  assert.equal(by.in.scenarios, 2);
+  assert.equal(by.in.mean.overall, 3);
+  assert.equal(by.partial.scenarios, 0);
+  assert.equal(by.out.scenarios, 1);
+  assert.equal(by.untagged.scenarios, 1);
 });
 
 test('summary counts choices, rewrites and averages scores', () => {

@@ -1,0 +1,77 @@
+{
+  "scenario": "20-chat-start",
+  "claims": [
+    {
+      "claim": "Laravel for the core (accounts, dashboards, config, message storage, billing, webhooks, API) ... none of it is hard to scale at 50,000 widgets",
+      "about": "php-laravel",
+      "measured": "php-laravel 681 req/s plaintext, 149 req/s single DB query per CPU",
+      "verdict": "not_covered",
+      "why": "The measurements give per-core throughput but not the request rate the core app would see at 50,000 widgets, so there is nothing to compare against."
+    },
+    {
+      "claim": "Laravel Reverb as the realtime layer, running as its own long-lived process on one or two VMs (implying it can hold the widget connections)",
+      "about": "Laravel Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb was not benchmarked, and no test measures WebSocket connection capacity."
+    },
+    {
+      "claim": "Elixir/Phoenix is the strongest fit for this workload; it was built for huge numbers of idle connections",
+      "about": "elixir-phoenix",
+      "measured": "I/O-wait test with 256 connections: 18,711 req/s, p99 19.16 ms, 160 MB",
+      "verdict": "not_covered",
+      "why": "The largest test used 256 short-request connections, not tens of thousands of idle long-lived ones, so the claim about idle connections can't be checked."
+    },
+    {
+      "claim": "Node with Socket.IO or Go: both can handle this (tens of thousands of live connections)",
+      "about": "Node (Socket.IO) / Go",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Socket.IO wasn't tested and no benchmark measures holding thousands of persistent connections."
+    },
+    {
+      "claim": "Laravel Octane is built for fast request handling",
+      "about": "php-laravel-octane",
+      "measured": "Octane 1,172 vs Laravel 681 req/s plaintext; 1,224 vs 705 JSON; 732 vs 149 single DB query",
+      "verdict": "consistent",
+      "why": "Octane measured about 1.7x to 5x faster than plain Laravel on the request-handling tests, though it is still slower than almost every non-PHP server."
+    },
+    {
+      "claim": "Octane is not suited to holding tens of thousands of open sockets",
+      "about": "php-laravel-octane",
+      "measured": "I/O-wait test with 256 connections: 86 req/s, p50 1,993 ms, p99 3,001 ms, 17% CPU",
+      "verdict": "consistent",
+      "why": "Octane already fell apart with only 256 concurrent waiting connections, worse than plain Laravel's 591 req/s, which supports the claim even though tens of thousands weren't tested."
+    },
+    {
+      "claim": "Plain PHP-FPM with polling wastes money and feels slow",
+      "about": "php-laravel (PHP-FPM)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Polling wasn't benchmarked, so its cost and perceived latency compared with push can't be checked."
+    },
+    {
+      "claim": "PHP-FPM and queue workers can't hold sockets",
+      "about": "php-laravel (PHP-FPM)",
+      "measured": "I/O-wait test with 256 connections: 591 req/s, p50 413 ms",
+      "verdict": "not_covered",
+      "why": "This is a claim about how PHP-FPM is built, and no test measured holding persistent sockets."
+    },
+    {
+      "claim": "50,000 idle WebSocket connections is achievable on a few well-tuned boxes",
+      "about": "realtime layer (Reverb)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No benchmark measures WebSocket connection counts or memory per connection."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1578846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 24.008
+  }
+}

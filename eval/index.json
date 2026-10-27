@@ -174,12 +174,13 @@
     },
     "20-chat-start": {
       "kinds": [
-        "mismatch"
+        "mismatch",
+        "stay"
       ],
       "scope": "partial",
       "group": "chat",
       "covered": "I/O-wait concurrency: Laravel on PHP-FPM 591 req/s per CPU against 20,000+ for Go, Rust and Bun. WebSockets after phase 5; Laravel Reverb not measured.",
-      "tests": "At the start, with concurrency ranked first, the mismatch is flagged with numbers; a good answer weighs the founder's Laravel skill and Laravel Reverb against a stack built for many connections."
+      "tests": "Concurrency is ranked first. Laravel with Reverb as a separate WebSocket server is the in-stack answer the judge accepts; a tool must not flag Laravel on PHP-FPM figures, because Reverb isn't measured. (An earlier version of this note expected a mismatch flag.)"
     },
     "21-chat-scale": {
       "kinds": [
@@ -224,7 +225,7 @@
       "scope": "in",
       "group": "tracking",
       "covered": "As 24.",
-      "tests": "With Java reviewers, code they can follow still counts: Java, or a simple language they can learn to review, such as Go; the advice should shift from 24."
+      "tests": "With Java reviewers, code they can follow still counts: tuned Java stays the answer; the judge rules out other languages here."
     },
     "26-tracking-agent": {
       "kinds": [
@@ -233,7 +234,7 @@
       "scope": "in",
       "group": "tracking",
       "covered": "As 24.",
-      "tests": "With nobody reading the code, the team's Java matters least; a lean stack that fits 512 MB easily and that agents write reliably fits best, with simple operations for IT."
+      "tests": "With nobody reading the code, the team's Java matters less: a lean stack that fits 512 MB easily and that agents write reliably, such as Go, becomes acceptable beside tuned Spring Boot. (The independent judge accepted both; an earlier version of this note said the lean stack fits best.)"
     },
     "27-booking-rush-steady": {
       "kinds": [

@@ -1,0 +1,77 @@
+{
+  "scenario": "20-chat-start",
+  "claims": [
+    {
+      "claim": "2,000 simultaneous widgets is small. One modest VM handles it",
+      "about": "Laravel Reverb (or Centrifugo) realtime server",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Reverb nor Centrifugo was measured, and no test holds thousands of long-lived WebSocket connections open."
+    },
+    {
+      "claim": "At 50,000, idle connections are cheap and mostly cost memory; plan on a small pool of realtime VMs",
+      "about": "Laravel Reverb / Centrifugo realtime servers",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements contain no figures for memory per idle connection or for connection counts anywhere near 50,000."
+    },
+    {
+      "claim": "Centrifugo is built for large connection counts",
+      "about": "Centrifugo (Go)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Centrifugo is not among the measured servers."
+    },
+    {
+      "claim": "Reverb is less proven at scale than Centrifugo or Node socket servers",
+      "about": "Laravel Reverb vs Centrifugo / Node",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Reverb nor Centrifugo was benchmarked, and no WebSocket workload was run."
+    },
+    {
+      "claim": "Node/TypeScript is very good at sockets",
+      "about": "Node / TypeScript runtimes",
+      "measured": "I/O wait, 256 conns: bun-elysia 24,037 req/s, deno-hono 20,833, node-fastify 17,462, node-express 14,188",
+      "verdict": "not_covered",
+      "why": "The closest test is HTTP requests that wait 10 ms at 256 connections, not long-lived sockets, so the claim cannot be checked directly."
+    },
+    {
+      "claim": "Elixir/Phoenix or Go end to end has the best raw concurrency",
+      "about": "elixir-phoenix, go-gin, go-nethttp",
+      "measured": "I/O wait, 256 conns: phoenix 18,711 req/s (86% CPU), go-gin 20,235 (47%), go-nethttp 18,905 (57%); cpp-drogon 24,160, bun-elysia 24,037, kotlin-ktor 21,766, rust-axum 21,042 (24% CPU)",
+      "verdict": "off",
+      "why": "In the waiting-request test Phoenix and Go trail Bun, Drogon, Ktor, Rust and OpenResty, and Phoenix uses far more CPU, so 'best' points the wrong way, even though all of them are within about 1.3x of each other."
+    },
+    {
+      "claim": "Laravel Octane speeds up request handling",
+      "about": "php-laravel-octane vs php-laravel",
+      "measured": "plaintext 1,172 vs 681 req/s; JSON 1,224 vs 705; 1 DB query 732 vs 149; CPU 813 vs 544",
+      "verdict": "consistent",
+      "why": "Octane was faster than plain Laravel on every request-handling test, by about 1.5x to 5x."
+    },
+    {
+      "claim": "Octane doesn't make PHP a good home for thousands of open sockets",
+      "about": "php-laravel-octane",
+      "measured": "I/O wait, 256 conns: octane 86 req/s, p50 1,993 ms (plain Laravel 591 req/s, p50 413 ms)",
+      "verdict": "consistent",
+      "why": "With 256 waiting connections Octane collapsed to 86 req/s with 2 s median latency, worse than plain Laravel."
+    },
+    {
+      "claim": "PHP-FPM with polling/long-polling: each waiting request ties up a worker",
+      "about": "php-laravel (PHP-FPM)",
+      "measured": "I/O wait, 256 conns: 591 req/s, p50 412.91 ms, p99 458.02 ms",
+      "verdict": "consistent",
+      "why": "With a 10 ms wait per request Laravel served only about 6 requests at a time, and latency queued to about 413 ms, which matches a worker being held for each waiting request."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1837246,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 34.504
+  }
+}

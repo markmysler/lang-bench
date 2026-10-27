@@ -1,0 +1,26 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "grade": {
+    "primary_choice": "Cancellations as a short Postgres transaction on the existing Flask stack, but with last spring's concurrency decision reopened first",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 1,
+    "unknowns_stated": 2,
+    "must_mention_covered": 6,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 3,
+    "notes": "The cancellation design is strong: a conditional UPDATE, idempotent retries, soft cancel with an audit row, an outbox for notifications, a question about whether cancel calls the insurer, policy questions and timeouts. But the answer opens with 'there's a capacity issue to settle first', reopens the documented sync-worker decision without new load evidence, holds the rollout on it, and floats gthread then gevent where the reference wants more workers or replicas and a clear statement that the decision still stands."
+  },
+  "meta": {
+    "costUSD": 0.11170459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.008
+  }
+}

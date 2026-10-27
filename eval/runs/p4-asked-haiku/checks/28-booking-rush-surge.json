@@ -1,0 +1,42 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "claims": [
+    {
+      "claim": "Sync workers hold one request each while they wait, so in-flight requests need about one worker each (120–360 workers at 600 req/s, roughly 7–21 times today's fleet)",
+      "about": "python-flask (sync workers)",
+      "measured": "python-flask I/O-wait (10 ms wait, 256 connections): 276 req/s, p50 915 ms, CPU 18%, against 1,732 req/s on plaintext",
+      "verdict": "consistent",
+      "why": "Sync Flask's throughput drops more than 6x when each request waits, while CPU sits at 18%, so it is limited by worker count, as the answer says."
+    },
+    {
+      "claim": "Switching to gevent workers is the way to handle a long insurer wait without rewriting, instead of staying on sync workers",
+      "about": "python-flask-gevent vs python-flask (sync)",
+      "measured": "I/O wait: python-flask-gevent 2,956 req/s vs python-flask 276 req/s (about 10.7x); p50 71 ms vs 915 ms",
+      "verdict": "consistent",
+      "why": "Gevent served about 10x more waiting requests than sync Flask on one CPU, so recommending it for I/O-bound waits matches the data."
+    },
+    {
+      "claim": "Threaded workers (gthread) give much smaller headroom than gevent because thread counts per process stay low",
+      "about": "python-flask-gthread vs python-flask-gevent",
+      "measured": "I/O wait: python-flask-gthread 374 req/s (CPU 19%) vs python-flask-gevent 2,956 req/s (CPU 99%)",
+      "verdict": "consistent",
+      "why": "Gthread reached only about 1/8 of gevent's throughput under I/O wait and left the CPU mostly idle, which fits 'much smaller headroom'."
+    },
+    {
+      "claim": "Running 300+ sync worker processes means you should check per-process memory across that many processes",
+      "about": "python-flask (sync workers)",
+      "measured": "python-flask peak memory 122 MB and idle 115 MB per container; per-worker memory is not measured",
+      "verdict": "not_covered",
+      "why": "The measurements give memory per container, not per worker process, so the memory cost of scaling to hundreds of workers can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.15676459999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 22.875
+  }
+}

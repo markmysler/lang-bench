@@ -1,0 +1,29 @@
+{
+  "scenario": "18-volunteer-matching",
+  "grade": {
+    "primary_choice": "Buy an off-the-shelf volunteer management tool first; if none fits, build a Django and managed Postgres monolith",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Saying CiviCRM 'needs constant updating and security patching' ignores hosted CiviCRM, where the provider does the patching. The reference lists hosted CiviCRM as acceptable.",
+      "Saying Salesforce Nonprofit is out of proportion and needs a specialist administrator dismisses an option the reference accepts, and the answer gives no evidence for it."
+    ],
+    "overall": 4,
+    "notes": "The answer is strong: it says buy first, keeps the build boring (Django, managed Postgres, a container), and covers GDPR special-category data, the independent security review, charity-owned accounts and an exit plan for when the credits end. It misses tests/CI/Dependabot, encryption, secrets management, audit logging, data sharing agreements with partners, safeguarding checks and a cost figure, and it is too dismissive of hosted CiviCRM and Salesforce, which the reference accepts."
+  },
+  "meta": {
+    "costUSD": 0.11305960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.411
+  }
+}

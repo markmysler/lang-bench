@@ -1,0 +1,117 @@
+{
+  "scenario": "21-chat-scale",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep Laravel Reverb and scale it out: enable Reverb's Redis-backed horizontal scaling, run several Reverb processes per VM (one per core, since each process is single-threaded), and spread them behind the load balancer",
+        "why": "Reverb is built to scale this way, 60,000 connections is a modest number for a tuned cluster of event-loop servers, and nothing in the 300k-line app or the client code has to change."
+      },
+      {
+        "choice": "Tune Reverb and the host before adding hardware: use the ext-uv (or ext-event) event loop instead of stream_select, raise file-descriptor and kernel socket limits, fix load-balancer WebSocket idle timeouts, and review activity timeout, max message size, Pulse/telemetry ingestion and debug settings",
+        "why": "The default PHP loop and OS limits often cause slow delivery and memory pressure at peak, and fixing them is cheap, quick and needs only skills the team already has."
+      },
+      {
+        "choice": "Profile the whole broadcast path first (event dispatch, queue workers, Redis pub/sub, the Reverb event loop, client fan-out), then fix the actual bottleneck",
+        "why": "Slow delivery may come from queued broadcasts, too few queue workers, Redis, MySQL writes or presence-channel fan-out rather than the WebSocket server, and a Go rewrite would fix none of those."
+      },
+      {
+        "choice": "Reduce per-connection and per-message cost: avoid presence channels with many members, trim payloads, use ShouldBroadcastNow or dedicated broadcast queues where it makes sense, and cut redundant channel subscriptions",
+        "why": "Fan-out and presence membership updates often dominate CPU and memory, so shrinking them pays off at 7.5x the load whatever server is used."
+      },
+      {
+        "choice": "Load-test to about 1.5x the 60,000 target (roughly 90,000 connections at realistic message rates) with k6, Artillery or a Pusher-protocol load tool, including node-failure and reconnect-storm scenarios",
+        "why": "This is the only way to know the needed node count and cost, and to have proof before the customer arrives."
+      },
+      {
+        "choice": "Larger or memory-optimised VMs for the Reverb tier as a stopgap",
+        "why": "This buys headroom within days at a known cost while the measuring and tuning happen."
+      },
+      {
+        "choice": "Soketi (a self-hosted, Pusher-protocol-compatible server) as a fallback if tuned Reverb can't meet the per-node cost target",
+        "why": "It is a drop-in swap at the protocol level with no client or backend rewrite, but its slower maintenance pace should be checked first."
+      },
+      {
+        "choice": "Managed Pusher-compatible service (Pusher Channels, Ably) as an emergency bridge or overflow for the big customer",
+        "why": "It is a configuration-level switch that removes operational risk before the deadline, but at 60,000 connections it is likely far more expensive than self-hosting, so it must be priced against the hosting-cost priority."
+      },
+      {
+        "choice": "Isolate the large customer on its own Reverb app or node pool",
+        "why": "This limits blast radius for reliability and makes their load easy to measure and to bill against."
+      },
+      {
+        "choice": "A Go realtime service (custom Pusher-protocol-compatible, or Centrifugo) as a later, evidence-driven project after the launch",
+        "why": "It is reasonable only if measurements show Reverb's cost per connection stays unacceptable after tuning, and only when there is time to staff it beyond two people."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the realtime layer in Go before the big customer arrives",
+        "why": "It puts a 3-month hard deadline at risk on a from-scratch rewrite by 2 of 12 engineers (bus factor, ops and on-call knowledge), and it does nothing for the bottlenecks that are likely outside the socket server."
+      },
+      {
+        "choice": "Switching to a non-Pusher protocol (Centrifugo, a custom Go or Node protocol, Socket.IO) inside the 3-month window",
+        "why": "It needs client SDK, channel-auth and backend broadcasting changes across a large app, plus a migration, all under a deadline with paying customers."
+      },
+      {
+        "choice": "Rewriting in Elixir/Phoenix, Node, Rust or another stack the team doesn't know",
+        "why": "Nobody on the team has the skills, the deadline is close, and running two stacks long-term costs more."
+      },
+      {
+        "choice": "Rewriting or splitting the Laravel monolith into microservices to fix this",
+        "why": "It is far out of scope and adds no realtime capacity in time."
+      },
+      {
+        "choice": "Migrating to Kubernetes or a new platform as part of this fix",
+        "why": "It changes the deploy and ops model under deadline pressure without fixing the bottleneck, and the team runs plain VMs today."
+      },
+      {
+        "choice": "Only adding more of today's Reverb VMs without enabling Redis scaling or tuning",
+        "why": "Without Redis scaling, messages don't reach clients on other nodes, and scaling an untuned setup 7.5x multiplies hosting cost."
+      }
+    ],
+    "must_mention": [
+      "Don't do the Go rewrite before the deadline: 3 months with 2 Go engineers is too risky for a launch with paying customers, and a rewrite can wait until measurements justify it",
+      "Measure first: find out whether the memory and latency problems are in Reverb itself or in queues, Redis, the database or broadcast fan-out",
+      "Reverb scales horizontally through Redis pub/sub across several processes and nodes behind the load balancer, and each process is single-threaded, so run several per VM",
+      "Practical Reverb tuning: the ext-uv/ext-event loop (stream_select limits connections to about 1,024), file-descriptor and kernel limits, load-balancer WebSocket timeouts",
+      "Load-test above 60,000 connections with realistic message rates before the customer goes live",
+      "Reliability under failure: N+1 capacity so a dead node's connections can reconnect elsewhere, client reconnect with jitter and backoff, and graceful draining during deploys",
+      "Keeping the Pusher protocol means Soketi or a managed service stays a low-risk fallback",
+      "Estimate the hosting cost of the scaled setup (node count times VM price) and weigh it against managed-service pricing",
+      "Rough capacity maths: estimate memory per connection from today's numbers, then project to 60,000 plus headroom"
+    ],
+    "red_flags": [
+      "Recommending the Go rewrite as the main plan before the deadline, or claiming Go is needed to handle 60,000 connections",
+      "Assuming the WebSocket server is the bottleneck without asking for profiling or metrics",
+      "Treating 60,000 concurrent connections as extreme scale that needs exotic technology",
+      "Saying PHP or Reverb can't handle this load without mentioning Redis scaling, multiple processes or event-loop tuning",
+      "Recommending a protocol change or migration that touches client SDKs and auth across a 300k-line app within 3 months",
+      "Recommending managed Pusher or Ably without pointing out the significant cost at 60,000 connections when hosting cost is a stated priority",
+      "Ignoring failure modes: reconnect storms, load-balancer limits, deploy disconnects, single points of failure in Redis",
+      "Giving no load-testing or validation plan before a contractual go-live",
+      "Making two engineers the only owners of a critical new service without addressing the bus-factor and on-call risk",
+      "Quoting made-up benchmark numbers as if they were facts about this system"
+    ],
+    "unknowns": [
+      "Where the delivery latency actually comes from: Reverb's event loop, queue workers, Redis, the database or the client",
+      "Memory per connection today, and whether the memory grows (leak) or stays flat",
+      "Which event loop Reverb uses now, the Reverb version, and whether Redis scaling is already on",
+      "How many of the 10 VMs run Reverb, and their sizes",
+      "Message rate per chat and fan-out per message (channels per chat, presence-channel sizes, agents watching many chats)",
+      "How the big customer's traffic behaves: a gradual ramp or a big-bang cutover, peak shape, any SLA or latency terms in the contract",
+      "Load-balancer type and its WebSocket connection and timeout limits",
+      "Redis capacity and topology (single instance or HA) under 7.5x pub/sub load",
+      "Budget limits and whether paying for a managed service is acceptable",
+      "Whether the Go engineers' proposal rests on measured Reverb limits or on assumptions"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1520046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 50.486
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "scenario": "20-chat-start",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Laravel for the app (API, agent dashboard, auth, billing, message storage) with Laravel Reverb as a separate WebSocket server process",
+        "why": "The founder already knows Laravel, so they ship fastest. Reverb is Laravel's own WebSocket server: it runs on an event loop, uses the Pusher protocol and works with Laravel broadcasting and Echo, so long-lived widget connections stay out of PHP-FPM."
+      },
+      {
+        "choice": "Scale Reverb horizontally across a few VMs, using Redis pub/sub between the nodes and a WebSocket-aware load balancer or nginx proxy",
+        "why": "2,000 connections fits on one small node. 50,000 is a few nodes behind Redis, which suits their plan of a few cloud VMs and keeps hosting cheap."
+      },
+      {
+        "choice": "Soketi (self-hosted, Pusher-compatible) as an alternative WebSocket server behind Laravel broadcasting",
+        "why": "It speaks the same Pusher protocol, so Laravel and Echo code doesn't change. It's a fair fallback if Reverb falls short in load tests, but it is a Node service to run and is less actively maintained."
+      },
+      {
+        "choice": "A managed Pusher-protocol service (Pusher Channels or Ably) during the first year",
+        "why": "No WebSocket infrastructure to run while they find product fit, and the Pusher protocol lets them switch to self-hosted Reverb later without changing app code. Pricing per connection gets expensive near 50,000, so it's a starting point, not the long-term answer."
+      },
+      {
+        "choice": "Redis for queues (with Horizon), broadcasting and presence/ephemeral state, and Postgres or MySQL for messages",
+        "why": "This is the standard Laravel setup the founder already knows, and it is enough for this load."
+      },
+      {
+        "choice": "A lightweight embeddable widget in vanilla JS, Preact or Svelte using laravel-echo/pusher-js, with typing indicators sent as client events (whispers)",
+        "why": "The widget runs on other companies' sites, so it must be small. Sending typing indicators as whispers keeps them off the database and the queue."
+      },
+      {
+        "choice": "Laravel Octane (Swoole, RoadRunner or FrankenPHP) for the HTTP side if it's needed later",
+        "why": "It's an optional throughput improvement for API and auth endpoints. It doesn't solve WebSockets and isn't needed on day one."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting from day one in Elixir/Phoenix, Go or Node.js because 'PHP can't do real-time'",
+        "why": "Neither founder has these skills, so shipping slows. The concurrency goal is reachable from Laravel with an event-loop WebSocket server, so a rewrite buys nothing they need."
+      },
+      {
+        "choice": "Holding widget connections in PHP-FPM through long-polling or SSE",
+        "why": "Every open connection occupies a whole FPM worker, so thousands of widgets would need thousands of PHP processes. That breaks concurrency first and hosting cost second."
+      },
+      {
+        "choice": "Short polling from the widget (for example every 1–3 seconds)",
+        "why": "Messages aren't instant, and 50,000 widgets polling all the time creates huge request volume and cost."
+      },
+      {
+        "choice": "Livewire, or any server-rendered and stateful approach, for the embedded customer widget",
+        "why": "The widget runs inside third-party pages and must be light, isolated and connection-efficient. Livewire is fine for the internal agent dashboard but not for the widget."
+      },
+      {
+        "choice": "Pusher or Ably as the permanent answer at 50,000 connections",
+        "why": "Per-connection pricing at that scale conflicts with hosting cost, their second priority. It's fine early if they can move to Reverb later."
+      },
+      {
+        "choice": "Kubernetes, microservices or a custom-built WebSocket cluster from day one",
+        "why": "Too much operational work for two founders. A few VMs running Laravel, Reverb, Redis and a database cover the three-year target."
+      },
+      {
+        "choice": "Firebase or Supabase Realtime as the core chat backend instead of Laravel",
+        "why": "It throws away the founder's Laravel strength, splits the backend in two, and brings its own lock-in and per-usage costs."
+      }
+    ],
+    "must_mention": [
+      "Yes, keep Laravel. The real decision is to keep long-lived connections out of PHP-FPM and run a dedicated event-loop WebSocket server (Reverb, or a Pusher-protocol equivalent) next to the Laravel app.",
+      "2,000 concurrent connections is small and one modest Reverb node handles it. 50,000 is reachable by scaling Reverb horizontally with Redis pub/sub across a few VMs.",
+      "Production Reverb needs OS and runtime tuning: a raised open-file limit (ulimit/nofile), and an event-loop extension such as ext-uv, because the default stream_select loop caps out at about 1,024 connections. The nginx or load balancer in front must support WebSocket upgrades and long idle timeouts.",
+      "Typing indicators and other ephemeral events should go as client-to-client whispers or through Redis, never through queued jobs and database writes. Only real messages get persisted.",
+      "Broadcasting from Laravel should go through a Redis queue worker (Horizon) so HTTP requests aren't slowed by fan-out.",
+      "Plan auth for anonymous widget visitors: per-visitor or per-conversation private channels, a cheap token-based channel auth endpoint, and keys scoped per customer so tenants can't read each other's conversations.",
+      "Use the Pusher protocol (Echo/pusher-js) so the WebSocket backend can be swapped between Reverb, Soketi and Pusher/Ably without rewriting the app.",
+      "Load-test the WebSocket layer before 50,000 is real, including reconnect storms after deploys or node restarts (clients should reconnect with jittered backoff)."
+    ],
+    "red_flags": [
+      "Telling them Laravel or PHP is the wrong choice and they must start in Elixir, Go or Node, ignoring their skills and their timeline.",
+      "Claiming PHP fundamentally can't hold many concurrent WebSocket connections, without mentioning Reverb, ReactPHP or Swoole.",
+      "Recommending long-polling or SSE served by PHP-FPM workers, or short polling, as the real-time transport.",
+      "Recommending Pusher or Ably for the whole three years without warning about cost at 50,000 connections.",
+      "Leaving out the ~1,024-connection stream_select limit and file-descriptor tuning, so the first deploy quietly caps out.",
+      "Routing typing indicators through the database or the job queue.",
+      "Proposing Kubernetes, microservices, Kafka or multi-region setups for a two-person pre-launch team.",
+      "Recommending Livewire or a heavy SPA framework for the third-party embedded widget.",
+      "Treating Laravel Octane as the WebSocket solution."
+    ],
+    "unknowns": [
+      "Message and typing-event rates per connection, and broadcast fan-out (how many agents watch each conversation). This drives Reverb node count and Redis load more than the raw connection count does.",
+      "How many connections a single Reverb node handles on their chosen VM size. This needs a load test.",
+      "Whether agent dashboards and mobile apps add significantly to the connection count beyond customer widgets.",
+      "How much budget there is for a managed service in year one compared with the operational time it costs to self-host.",
+      "Data residency, retention and compliance needs of their customers (GDPR, region-specific hosting), which may constrain where VMs and managed services can sit.",
+      "Whether the 50,000 projection materializes and how spiky the traffic is (business hours, time zones).",
+      "Latency requirements across regions, which would decide whether one region is enough."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1375296,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 52.158
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "scenario": "26-tracking-agent",
+  "grade": {
+    "primary_choice": "Tuned Spring Boot with plain JDBC on the existing Postgres",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 6,
+    "red_flags_hit": [
+      "Planning a single instance with no failover for a system drivers depend on all day"
+    ],
+    "unsupported_claims": [
+      "Node or Python have 'similar memory issues to Java' (both usually have a much smaller footprint than an untuned JVM)"
+    ],
+    "overall": 4,
+    "notes": "The answer recommends tuned Spring Boot with JDBC and covers JVM limits, testing on the real VM size, idempotency keys, scanner buffering, partitioning, the runbook and bus factor. It never proposes running two or more instances behind a load balancer, and it doesn't say outright that a scan is acknowledged only after it is committed."
+  },
+  "meta": {
+    "costUSD": 0.1025246,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.085
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "scenario": "26-tracking-agent",
+  "claims": [
+    {
+      "claim": "A Go or Rust binary would use less memory [than the Spring Boot JVM]",
+      "about": "Go / Rust vs Java Spring Boot",
+      "measured": "Peak memory: go-gin 8–16 MB, go-nethttp 7–15 MB, rust-actix/axum 3–10 MB vs java-spring 220–500 MB, java-spring-vt 209–444 MB; idle 1–2 MB vs 131–134 MB",
+      "verdict": "consistent",
+      "why": "Go and Rust used tens of times less memory than Spring Boot in every test, so the direction is right."
+    },
+    {
+      "claim": "Go or Rust: best resource use",
+      "about": "Go / Rust",
+      "measured": "Rust 3–10 MB peak and 23–24% CPU on the I/O-wait test; Go 7–16 MB peak; both among the lowest memory figures measured",
+      "verdict": "consistent",
+      "why": "Rust and Go are among the leanest servers measured for memory and use little CPU when waiting on I/O."
+    },
+    {
+      "claim": "Node or Python: similar memory issues to Java for less benefit",
+      "about": "Node (Express/Fastify) and Python (FastAPI/Flask) vs Java Spring Boot",
+      "measured": "Peak memory: node-express 55–75 MB, node-fastify 57–77 MB, python-fastapi 41–47 MB, python-flask 117–123 MB vs java-spring 220–500 MB, java-spring-vt 209–444 MB",
+      "verdict": "off",
+      "why": "Node and Python peaked at roughly 2–8 times less memory than Spring Boot, and Fastify also beat plain Spring on throughput in several tests, so their memory use was not similar to Java's."
+    },
+    {
+      "claim": "A Spring Boot JVM realistically takes 200–300 MB resident",
+      "about": "Java Spring Boot",
+      "measured": "Peak memory 209–500 MB across tests (java-spring 220–500 MB, java-spring-vt 209–444 MB); idle memory 131–134 MB",
+      "verdict": "consistent",
+      "why": "The measured peaks run from about 210 to 500 MB, which is within a factor of 2 of the 200–300 MB range, though the database tests reached nearly 500 MB."
+    },
+    {
+      "claim": "Quarkus or Micronaut: lower memory and faster startup than Spring Boot",
+      "about": "Quarkus / Micronaut vs Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements include neither Quarkus nor Micronaut."
+    },
+    {
+      "claim": "JPA adds memory, CPU, and hidden query behavior",
+      "about": "JPA vs plain JDBC in Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements don't compare JPA with JDBC."
+    },
+    {
+      "claim": "Batching cuts per-request overhead far more than any framework choice",
+      "about": "Request batching vs framework choice",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Batching wasn't measured, and the frameworks differed by up to about 150 times in throughput, so the comparison can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1509046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 24.178
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "scenario": "21-chat-scale",
+  "grade": {
+    "primary_choice": "Keep Reverb: measure, tune, scale out, load-test at 2x, with a managed Pusher-compatible service as fallback",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "The 'tens of KB per connection' figure for a simple Go server is a loose generalisation presented without evidence",
+      "The 50 KB-per-connection Reverb figure is clearly hypothetical, but it is used to call the hosting-cost difference 'small' before any measurement"
+    ],
+    "overall": 5,
+    "notes": "This is a strong, well-sequenced plan that rejects the Go rewrite before the deadline for the right reasons: deadline risk, bus factor and an unmeasured bottleneck. It covers ext-uv vs stream_select, one process per core, OS/proxy limits, a Redis pub/sub instance of its own, failure-mode load tests, reconnect jitter, managed fallback pricing and per-customer isolation; it only lightly covers N+1 capacity, graceful draining, load-balancer idle timeouts and explicit node-count cost estimates."
+  },
+  "meta": {
+    "costUSD": 0.1191396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.304
+  }
+}

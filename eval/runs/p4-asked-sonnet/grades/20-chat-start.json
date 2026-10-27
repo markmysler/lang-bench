@@ -1,0 +1,28 @@
+{
+  "scenario": "20-chat-start",
+  "grade": {
+    "primary_choice": "Keep Laravel for the app and run Laravel Reverb as a separate WebSocket server, with Centrifugo as the fallback",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "4 (keep Laravel with a dedicated WS server outside FPM; 2k on one node and 50k on a Redis-coordinated pool; anonymous-visitor token auth with strict per-customer channel isolation; load testing including reconnect storms with jittered backoff). Partial on two more: it names fd limits and LB timeouts but not ext-uv or the stream_select cap, and it plans swappability through a narrow interface rather than the Pusher protocol. Missing: typing indicators as whispers, and queued broadcasting via Horizon.",
+    "red_flags_hit": [
+      "Partially: leaves out the ~1,024-connection stream_select limit and the need for an event-loop extension such as ext-uv. It does mention file-descriptor tuning."
+    ],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "A sound recommendation that fits the team: it keeps Laravel, keeps connections out of PHP-FPM with Reverb, warns about the cost of Pusher/Ably at 50k, and gives strong advice on load tests, reconnect storms and tenant isolation, plus a useful lazy-connect cost lever. It misses the Reverb-specific production traps (the stream_select/ext-uv cap), sending typing indicators as whispers, Horizon-queued broadcasting, and the Pusher protocol as the swap layer."
+  },
+  "meta": {
+    "costUSD": 0.1169146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 17.785
+  }
+}

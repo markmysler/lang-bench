@@ -1,0 +1,29 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "grade": {
+    "primary_choice": "Reopen the sync-worker decision and move to gevent workers with timeouts, a circuit breaker and PgBouncer (async eligibility preferred if product allows), then build cancellations",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "gthread 'thread counts per process stay low, so the headroom is much smaller than gevent's': this undersells gthread, since a few processes × 25–50 threads is a normal setup for I/O-bound waits",
+      "'Each worker holds a Postgres connection' is stated as fact, but it depends on the team's current pooling setup"
+    ],
+    "overall": 4,
+    "notes": "This is a strong answer: it does the right capacity math, reopens the written decision explicitly, gives the gevent/psycogreen caveats, covers PgBouncer, insurer protection, load testing, and thorough cancellation domain risks, and avoids a rewrite. It falls short because it leads with a contract-changing async-eligibility redesign on a one-month timeline, dismisses gthread unfairly without mentioning thread safety, and only implies that cancellations should be a separate change rather than saying so outright."
+  },
+  "meta": {
+    "costUSD": 0.1173546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 21.275
+  }
+}

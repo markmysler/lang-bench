@@ -1,0 +1,56 @@
+{
+  "scenario": "23-imaging-throughput",
+  "claims": [
+    {
+      "claim": "Ruby only passes data between those calls, which is typically a few milliseconds of a 150–400 ms job",
+      "about": "Ruby (Sidekiq workers calling libvips and the model)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks test HTTP servers doing toy work and never measure how much time Ruby spends passing data between calls into native libraries like libvips."
+    },
+    {
+      "claim": "Rewriting the workers in Go or Rust would still call the same libvips and model; it would save something like 5–10% of the CPU time (small gains)",
+      "about": "Go/Rust vs Ruby for image-processing workers",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The CPU test shows Go/Rust doing much more pure-language compute than Rails (18–29k vs 3k req/s for fib(20)), but nothing measures a workload where most of the time is spent in native libraries, so the 5–10% estimate can't be checked."
+    },
+    {
+      "claim": "Ruby has a global lock that limits how much Ruby code can run in parallel within one process, so run one Sidekiq process per core",
+      "about": "Ruby (MRI) / Sidekiq",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Every server ran on 1 CPU, so the measurements can't show how Ruby threads scale across several cores."
+    },
+    {
+      "claim": "Using the jemalloc memory allocator helps Ruby a lot",
+      "about": "Ruby memory use",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No allocator settings were compared in the measurements."
+    },
+    {
+      "claim": "Moving the tagging part to Python doesn't make anything faster",
+      "about": "Python vs Ruby for the tagging step",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "In the HTTP tests Python stacks were not faster than Rails (for example, CPU fib: Flask about 1.1k vs Rails 3.1k req/s), which agrees with the claim, but nothing measures model inference in native code."
+    },
+    {
+      "claim": "Long-running Ruby processes grow in memory when handling large images, so restart workers periodically",
+      "about": "Ruby worker processes",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Runs lasted only 15 s on small requests, so memory growth over hours of large-image work isn't measured."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1478696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.768
+  }
+}

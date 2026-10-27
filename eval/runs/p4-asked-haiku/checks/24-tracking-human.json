@@ -1,0 +1,56 @@
+{
+  "scenario": "24-tracking-human",
+  "claims": [
+    {
+      "claim": "Spring Boot on Java with PostgreSQL can handle 200 small writes a second without exotic parts",
+      "about": "java-spring",
+      "measured": "java-spring 7,668 req/s for a single Postgres row (12,731 with virtual threads) on 1 CPU; 1,254–1,699 req/s at 20 queries per request",
+      "verdict": "consistent",
+      "why": "The measured database throughput on one CPU is far above 200 requests a second, so the measurements support the claim."
+    },
+    {
+      "claim": "A Spring Boot app with a 256 MB heap typically uses 300–400 MB resident once metaspace, threads, and code cache are counted",
+      "about": "java-spring",
+      "measured": "java-spring peak 220–500 MB across tests (312 MB JSON, 374 MB CPU, 491 MB I/O, 499 MB database); idle 134 MB",
+      "verdict": "consistent",
+      "why": "The measured peaks under load range from about 220 to 500 MB, and 300–400 MB is well within a factor of 2 of that."
+    },
+    {
+      "claim": "Spring Boot fits alone on a 512 MB VM, with little room to spare",
+      "about": "java-spring",
+      "measured": "java-spring ran in a 512 MB container with peaks up to 499–500 MB in the database tests",
+      "verdict": "consistent",
+      "why": "It ran within 512 MB in every test, but its peaks came close to the limit, which matches 'little room to spare'."
+    },
+    {
+      "claim": "Go, Node, or Python have a smaller memory footprint than Spring Boot",
+      "about": "go-gin/go-nethttp, node-express/node-fastify, python-fastapi/python-flask vs java-spring",
+      "measured": "Go 7–16 MB, Node 55–77 MB, Python 41–123 MB peak vs Spring Boot 209–500 MB peak; idle Go 2 MB, Node 38–43 MB, Python 40–115 MB vs Spring 131–134 MB",
+      "verdict": "consistent",
+      "why": "All three use clearly less memory than Spring Boot in every test, so the direction of the claim is correct."
+    },
+    {
+      "claim": "Heavy JPA/Hibernate uses more memory and CPU than plain JDBC, JdbcTemplate, or jOOQ",
+      "about": "Spring Boot data-access libraries",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark does not compare data-access libraries within Spring Boot."
+    },
+    {
+      "claim": "Quarkus or Spring Boot native images (GraalVM) give much lower memory and faster startup",
+      "about": "Quarkus / GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor native-image builds were measured; only JVM Spring Boot (5,939–6,224 ms start-up, 131–134 MB idle) is in the data."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1509396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.973
+  }
+}

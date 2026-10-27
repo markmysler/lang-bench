@@ -1,0 +1,28 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "grade": {
+    "primary_choice": "Revisit the sync-worker decision and switch to gthread workers; build cancellations in parallel",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "60–100 MB per sync worker is an assumed figure, though it is plausible and framed as an estimate"
+    ],
+    "overall": 5,
+    "notes": "The answer covers every must-mention point: Little's law math, the reopened decision, gthread or gevent caveats, PgBouncer, insurer protection and limits, load testing, and solid cancellation domain design. It respects the earlier decision, rules out a rewrite, and lists the right unknowns as questions."
+  },
+  "meta": {
+    "costUSD": 0.10239460000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 10.752
+  }
+}

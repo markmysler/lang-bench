@@ -1,0 +1,35 @@
+{
+  "scenario": "21-chat-scale",
+  "grade": {
+    "primary_choice": "No Go rewrite now: measure, tune and scale Reverb, load-test, and only then consider a narrow Go gateway",
+    "choice": "acceptable",
+    "ruled_out_recommended": [
+      "As a conditional fallback, it suggests switching to Centrifugo (a non-Pusher protocol) and says it could replace Reverb 'in weeks', which plays down the client SDK and auth changes needed inside the 3-month window"
+    ],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "5",
+    "red_flags_hit": [
+      "It offers a protocol change (Centrifugo, or a custom Go gateway with an unspecified protocol) as a fallback that could land inside the 3-month window, without noting the client and auth migration cost",
+      "It covers failure modes only in part: it mentions reconnect storms and load-balancer timeouts but not N+1 capacity, Redis as a single point of failure, reconnect jitter or graceful draining during deploys"
+    ],
+    "unsupported_claims": [
+      "Says Centrifugo 'could replace Reverb in weeks', which ignores the client-side protocol migration",
+      "Says a Go gateway is 'maybe a few thousand lines', an unbacked estimate",
+      "States 'the bottleneck is connection handling' as fact while also saying it hasn't been measured yet"
+    ],
+    "overall": 4,
+    "notes": "The answer gets the main call right: it rejects the rewrite, puts measurement first, and covers Redis scaling, OS and load-balancer limits, a load test with reconnect storms, bus factor and managed-service cost. It misses the ext-uv/ext-event loop fix, the point that each Reverb process is single-threaded, testing above 60,000 connections, and N+1 or draining, and it presents Centrifugo as an easy swap without noting it means leaving the Pusher protocol."
+  },
+  "meta": {
+    "costUSD": 0.12462960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 20.341
+  }
+}

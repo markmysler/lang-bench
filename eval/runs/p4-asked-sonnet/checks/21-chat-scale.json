@@ -1,0 +1,42 @@
+{
+  "scenario": "21-chat-scale",
+  "claims": [
+    {
+      "claim": "Go would give you far lower memory per connection [than Reverb]",
+      "about": "Go WebSocket server vs Laravel Reverb (PHP)",
+      "measured": "Not measured. Closest figures are HTTP peak memory in the 256-connection I/O-wait test: go-gin 16 MB, go-nethttp 15 MB, php-laravel 62 MB, php-laravel-octane 116 MB",
+      "verdict": "not_covered",
+      "why": "The benchmark does not include Reverb or any WebSocket workload and does not measure memory per connection. Its HTTP figures only loosely suggest that Go uses less memory than Laravel."
+    },
+    {
+      "claim": "Without ext-uv or ext-ev, PHP falls back to stream_select, which has a hard ~1,024 file-descriptor limit and is slower",
+      "about": "PHP event loop used by Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of the measured servers is a PHP event-loop server, and nothing compares event-loop backends or file-descriptor limits."
+    },
+    {
+      "claim": "Many teams run well past 60,000 chats on PHP-based WebSocket servers once configured properly",
+      "about": "PHP WebSocket servers (Reverb and similar)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark measures HTTP request throughput only, not how many WebSocket connections a server can hold at once."
+    },
+    {
+      "claim": "Centrifugo is mature and built for very high connection counts",
+      "about": "Centrifugo (Go)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Centrifugo was not benchmarked, and connection capacity was not measured for any server."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1393546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.086
+  }
+}

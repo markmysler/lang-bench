@@ -1,0 +1,28 @@
+{
+  "scenario": "22-storefront-cost",
+  "grade": {
+    "primary_choice": "Stay on Django; fix concurrency, fan-out, and autoscaling signal before considering Go",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 8,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Django's ORM is still synchronous' is an oversimplification: Django has had an async ORM interface since 4.1, even though the database I/O underneath still runs in a thread."
+    ],
+    "overall": 5,
+    "notes": "This is a strong answer that matches the reference. It covers all eight must-mention points in a sensible order (measure, parallelize with timeouts, gthread then gevent, scale on concurrency, PgBouncer, caching) and answers leadership's Go question directly, with an optional time-boxed spike. Small gaps: it does not ask whether the recommendations and pricing calls are actually independent, or whether those services can handle more concurrent load."
+  },
+  "meta": {
+    "costUSD": 0.1082296,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.368
+  }
+}

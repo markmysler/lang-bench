@@ -1,0 +1,49 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "claims": [
+    {
+      "claim": "Busy workers ≈ requests per second × time per request: at 40 req/s and ~450 ms that's about 18 sync workers busy at once (24 at 600 ms), against 17 workers",
+      "about": "python-flask (sync gunicorn workers)",
+      "measured": "python-flask I/O wait (10 ms, 256 conns): 276 req/s, p50 915 ms",
+      "verdict": "not_covered",
+      "why": "The benchmark shows sync Flask behaving as if each worker holds one request (heavy queueing under I/O wait), but it doesn't give the worker count or a 200–600 ms upstream, so the 18-of-17 figure can't be checked."
+    },
+    {
+      "claim": "With sync workers, if the insurer goes from 400 ms to 5 s, 17 workers can serve only about 3 requests a second",
+      "about": "python-flask (sync gunicorn workers)",
+      "measured": "python-flask I/O wait (10 ms, 256 conns): 276 req/s at 18% CPU",
+      "verdict": "not_covered",
+      "why": "Low CPU and long queueing fit the one-request-per-worker model, but neither 17 workers nor a 5 s wait was measured."
+    },
+    {
+      "claim": "A cancellation (short Postgres transaction in the Flask app) should finish in tens of milliseconds",
+      "about": "python-flask",
+      "measured": "python-flask single-row DB query at 64 conns: p50 41.54 ms, p99 57.99 ms, 1,529 req/s",
+      "verdict": "consistent",
+      "why": "Even when saturated, sync Flask answers a single-query DB request in roughly 40–60 ms, which is tens of milliseconds."
+    },
+    {
+      "claim": "gthread workers are the cheapest way to get more headroom if near capacity, well before gevent",
+      "about": "python-flask-gthread vs python-flask (sync) vs python-flask-gevent",
+      "measured": "I/O wait: flask sync 276 req/s, flask-gthread 374 req/s, flask-gevent 2,956 req/s",
+      "verdict": "consistent",
+      "why": "gthread did beat sync Flask on waiting workloads (about 1.35x), so the claim points the right way; \"cheapest\" refers to migration effort, and the gain measured here is small compared with gevent's roughly 10x."
+    },
+    {
+      "claim": "A short insurer timeout plus circuit breaker protects the morning rush more than any change of worker type",
+      "about": "python-flask sync vs gevent/gthread workers",
+      "measured": "I/O wait: flask sync 276 req/s, flask-gevent 2,956 req/s, flask-gthread 374 req/s",
+      "verdict": "not_covered",
+      "why": "The benchmark shows gevent handling about 10x more waiting requests than sync, but it never measured a timeout or circuit breaker, so the comparison can't be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1677446,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 29.919
+  }
+}

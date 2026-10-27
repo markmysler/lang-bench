@@ -1,0 +1,103 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Build online cancellations in the existing Flask/Postgres codebase, as a separate change from any concurrency work",
+        "why": "The feature is ordinary CRUD with state changes and needs no new technology, and keeping it separate stops a risky runtime change hiding inside a feature PR."
+      },
+      {
+        "choice": "Switch gunicorn to gevent workers (with psycogreen or a gevent-compatible Postgres driver, and monkey-patching checked)",
+        "why": "At 600 rps a 200–600 ms insurer call means about 120–360 requests waiting at once, and gevent lets a few processes hold hundreds of waiting calls while the team keeps writing Flask the same way."
+      },
+      {
+        "choice": "Switch to gunicorn gthread workers (for example a few processes × 25–50 threads)",
+        "why": "The insurer wait is I/O, so the GIL doesn't matter, and threads are the smallest, best-understood change for a Flask team, as long as the code is thread-safe."
+      },
+      {
+        "choice": "Scale sync workers horizontally across more containers as a short-term bridge, with PgBouncer in front of Postgres",
+        "why": "It needs no code change, but roughly 400+ processes means real memory cost and far more DB connections than Postgres allows by default, so it buys time at best."
+      },
+      {
+        "choice": "Strict timeouts, bounded retries and a circuit breaker or bulkhead on the insurer call, plus a shared, pooled HTTP session",
+        "why": "At 600 rps a slow insurer would otherwise fill every worker and take down booking and cancellation together during the morning rush."
+      },
+      {
+        "choice": "Load-test at 600+ rps against a stubbed insurer with realistic latency before the go-live month",
+        "why": "The new worker model, worker counts and connection limits have to be proven with measurements, not argued on paper."
+      },
+      {
+        "choice": "Short-TTL caching of eligibility results, if the insurer and the business allow it",
+        "why": "It can cut calls to the insurer a lot, but only where eligibility doesn't need to be real-time."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the service in FastAPI/Starlette/asyncio before next month",
+        "why": "A full rewrite of a healthcare booking API in a few weeks is a reliability risk, and gevent or gthread solve the waiting problem without it."
+      },
+      {
+        "choice": "Moving to Go, Node or another non-Python stack",
+        "why": "The team wants to stay in Python, and it is unnecessary for an I/O-bound workload."
+      },
+      {
+        "choice": "Keeping the current 17 sync workers unchanged",
+        "why": "By Little's law, 600 rps × about 0.4 s means roughly 240 requests in flight, against a capacity of 17. The rush would queue and time out."
+      },
+      {
+        "choice": "Adding Flask `async def` views under sync gunicorn workers as the fix",
+        "why": "Flask runs each async view in its own event loop inside the worker, which still blocks for the whole request, so concurrency doesn't change."
+      },
+      {
+        "choice": "Shipping cancellations and ignoring the capacity issue",
+        "why": "It breaks the team's main concern, reliability during the morning rush, which the new load will break first."
+      },
+      {
+        "choice": "Quietly switching the worker model inside the cancellations work",
+        "why": "It overrides a documented team decision without discussion and mixes a runtime change with feature work."
+      }
+    ],
+    "must_mention": [
+      "The documented decision to stay on sync workers rested on 40 rps; at 600 rps that premise is gone, and the team should revisit the decision explicitly (and record the new one) before the regional rollout.",
+      "Do the capacity math: 600 rps × 0.2–0.6 s ≈ 120–360 requests waiting at once, against 17 workers today, so the current setup will fail at peak.",
+      "Raise this before starting on cancellations, but still deliver cancellations; the two are separate pieces of work and the capacity work is more urgent.",
+      "Recommend gevent or gthread workers as the low-change fix that stays in Python, with the caveats: database driver compatibility with gevent (psycopg2 needs psycogreen), thread safety for gthread, and monkey-patching order.",
+      "Postgres connections: hundreds of concurrent requests or workers need a pool or PgBouncer, or max_connections runs out.",
+      "Protect the insurer dependency with timeouts, a circuit breaker and graceful degradation, and check whether the insurer can handle about 600 rps or will rate-limit.",
+      "Load-test at the expected peak before go-live.",
+      "Cancellations need correct domain handling: atomic state transitions or row locks against concurrent booking and cancel races, idempotent cancel requests, cancellation-window policy rules, freeing the slot, an audit trail suitable for healthcare, and notifying the patient (and the insurer, if needed).",
+      "Check whether cancellation calls the insurer, which would add to the same bottleneck."
+    ],
+    "red_flags": [
+      "Implementing cancellations without mentioning the 15× load increase and the blocking insurer call.",
+      "Recommending a rewrite to FastAPI, Quart or another language on a one-month timeline.",
+      "Calling gevent drop-in without warning about blocking C extensions such as psycopg2 and monkey-patching.",
+      "Claiming Flask async views fix the problem under sync workers.",
+      "Recommending 'just add more workers' without accounting for memory and Postgres connection limits.",
+      "Unilaterally overriding the team's written decision, or dismissing it as wrong when it was right at 40 rps.",
+      "Adding retries on the insurer call without timeouts or backoff, which multiplies load during an insurer slowdown.",
+      "Caching eligibility indefinitely, or without checking that it is clinically and contractually acceptable.",
+      "Cancellation logic without concurrency control, idempotency or an audit trail.",
+      "Presenting performance numbers as fact without saying a load test is needed."
+    ],
+    "unknowns": [
+      "The insurer's capacity, rate limits and SLA at about 600 rps, and its p99 latency (not just 200–600 ms).",
+      "Whether the cancellation flow calls the insurer or other external services.",
+      "Memory per gunicorn worker, and how far the containers or cluster can scale out.",
+      "Postgres max_connections, current pooling, and how much database work each request does.",
+      "The Postgres driver and HTTP client in use, and whether any C extensions or global state would break under gevent or threads.",
+      "The shape of the peak: sustained 600 rps or short spikes, and the overall share of booking versus cancellation traffic.",
+      "Whether eligibility results can legally and contractually be cached, and for how long.",
+      "Cancellation business rules: cutoff windows, fees, who may cancel, and what notifications are required."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.13088460000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 39.576
+  }
+}

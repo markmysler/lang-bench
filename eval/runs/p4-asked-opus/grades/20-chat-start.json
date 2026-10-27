@@ -1,0 +1,28 @@
+{
+  "scenario": "20-chat-start",
+  "grade": {
+    "primary_choice": "Keep Laravel and run Laravel Reverb as a separate WebSocket server, scaled out through Redis",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "7",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "The claim that Ably works with Pusher clients 'through its compatibility mode' may be out of date; Ably's Pusher adapter has had limited support, so it should be checked."
+    ],
+    "overall": 5,
+    "notes": "The answer keeps Laravel and puts Reverb behind the Pusher protocol, as the reference does. It covers the ~1,024-connection limit, ext-uv and open-file tuning, whispers for typing indicators, cheap token auth for visitors, and reconnect storms with jittered backoff, and it lists clear load tests. It handles queued broadcasting only partly: it offers a high-priority queue as an option rather than requiring Horizon, and it never mentions per-customer key scoping."
+  },
+  "meta": {
+    "costUSD": 0.11133459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.787
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "scenario": "19-client-booking-payments",
+  "grade": {
+    "primary_choice": "Hosted booking tool (Acuity, Bookeo, SimplyBook.me) with Stripe deposits, embedded in Webflow",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This is a strong, well-hedged answer. It recommends a hosted tool rather than a back end because of the volume, the designer's skills and the handover goal, and covers client account ownership, deposits and balance, capacity, costs, reuse as a documented pattern, and a trial plan. Small gaps: it gives no percentage for card fees, it frames payments only around Stripe without mentioning Square or an existing till, and it doesn't ask about the client's budget."
+  },
+  "meta": {
+    "costUSD": 0.10198460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.528
+  }
+}

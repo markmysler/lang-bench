@@ -1,0 +1,21 @@
+{
+  "scenario": "19-client-booking-payments",
+  "claims": [
+    {
+      "claim": "30 workshops at 8 places is about 240 seats a month. Hosted tools handle that easily, and a custom system would give you no performance benefit.",
+      "about": "hosted booking tools (Acuity, Bookeo, SimplyBook.me) vs. an unspecified custom serverless build",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't measure hosted SaaS booking tools or a particular serverless stack, so it can't check this load claim. It only says that every measured server except PHP Laravel handles thousands of requests per second on one CPU, far more than 240 bookings a month."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.12339460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 7.987
+  }
+}

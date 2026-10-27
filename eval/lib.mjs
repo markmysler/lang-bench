@@ -187,3 +187,16 @@ export function summarise(graded) {
     mean: Object.fromEntries(SCORES.map((k) => [k, Math.round((sums[k] / n) * 100) / 100])),
   };
 }
+
+/**
+ * Totals per scope tag from index.json (in, partial, out), plus scenarios with no tag. The tool
+ * is scored on in and partial; out is scored on whether it admitted the gap.
+ */
+export function summariseByScope(graded, indexScenarios) {
+  const groups = { in: [], partial: [], out: [], untagged: [] };
+  for (const g of graded) {
+    const scope = indexScenarios[g.id]?.scope;
+    (groups[scope] ?? groups.untagged).push(g);
+  }
+  return Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, summarise(v)]));
+}

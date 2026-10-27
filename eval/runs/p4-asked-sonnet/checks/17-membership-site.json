@@ -1,0 +1,21 @@
+{
+  "scenario": "17-membership-site",
+  "claims": [
+    {
+      "claim": "One VPS (Hetzner or DigitalOcean, 2–4 GB RAM) is plenty for 20,000 subscribers",
+      "about": "Self-hosted Ghost (Node.js) on a single VPS",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Ghost was not benchmarked, and the closest server, node-express, only shows simple endpoints using 55–75 MB peak memory and a few thousand to about 17,600 requests/s; that says nothing about Ghost's memory use or what a 20,000-subscriber newsletter needs."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.12144959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 9.402
+  }
+}

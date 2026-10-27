@@ -1,0 +1,21 @@
+{
+  "scenario": "18-volunteer-matching",
+  "claims": [
+    {
+      "claim": "At your scale (600 volunteers, a few hundred matches a month) it's a light load",
+      "about": "Django with PostgreSQL (Python)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Django isn't among the measured servers; Python Flask and FastAPI are, and even the slowest Python setups handle hundreds of requests per second, far more than this workload needs, but there are no Django figures to check the claim against directly."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1292696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 9.792
+  }
+}

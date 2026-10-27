@@ -1,0 +1,26 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "grade": {
+    "primary_choice": "Add cancellations to the existing Flask app on the current sync workers",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 8,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This is a strong answer. It keeps the documented decision, applies Little's law to the team's real numbers, and covers soft-cancel, locking, idempotency, an outbox, timeouts, policy questions and explicit triggers for revisiting the decision. One small gap: if headroom runs out, it points to gthread workers instead of first suggesting more gunicorn workers or container replicas, which is the lower-risk option."
+  },
+  "meta": {
+    "costUSD": 0.10043959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.24
+  }
+}

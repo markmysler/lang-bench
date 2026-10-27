@@ -1,0 +1,26 @@
+{
+  "scenario": "18-volunteer-matching",
+  "grade": {
+    "primary_choice": "Evaluate off-the-shelf volunteer SaaS first; else Django + managed Postgres on PaaS",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "7",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "The answer recommends checking off-the-shelf software before building, and its fallback stack is boring and easy to hand over. It covers special category data, account ownership, credit expiry, testing in place of code review, and human-confirmed matching well. It misses MFA, encryption, secrets management and audit logging, and gives no running-cost estimate. It is also thin on partner role-based access and data sharing agreements, and it doesn't say outright which steps (such as ICO registration) the agent can't do or certify."
+  },
+  "meta": {
+    "costUSD": 0.11428960000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.266
+  }
+}

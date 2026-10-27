@@ -1,0 +1,70 @@
+{
+  "scenario": "21-chat-scale",
+  "claims": [
+    {
+      "claim": "Reverb runs on an event loop, as a Go server would; both hold a connection as a small amount of memory, not a thread",
+      "about": "Laravel Reverb (PHP/ReactPHP) vs Go",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb was not benchmarked, and per-connection memory for WebSocket servers was not measured."
+    },
+    {
+      "claim": "Go does use less memory per connection than Reverb",
+      "about": "Go vs Laravel Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The PHP entries are Laravel over FPM or Octane, not Reverb, and no long-lived WebSocket connections were measured."
+    },
+    {
+      "claim": "A simple Go server with read and write buffers per connection often uses tens of KB per connection",
+      "about": "Go (net/http, Gin)",
+      "measured": "go-nethttp: 15 MB peak at 256 connections vs 2 MB idle, roughly 50 KB per connection; go-gin: 16 MB vs 2 MB, roughly 55 KB per connection",
+      "verdict": "consistent",
+      "why": "Peak minus idle memory, divided by connections, gives roughly 50 KB per HTTP keep-alive connection, which is tens of KB, though these are HTTP connections, not WebSocket ones."
+    },
+    {
+      "claim": "If Reverb uses even 50 KB per connection, 150,000–200,000 connections need about 10 GB of RAM",
+      "about": "Laravel Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb's per-connection memory was not measured, so the 50 KB input can't be checked."
+    },
+    {
+      "claim": "The default stream_select loop cannot go past about 1,024 connections per process",
+      "about": "Laravel Reverb / ReactPHP event loop",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark did not test Reverb or its event-loop backends."
+    },
+    {
+      "claim": "Each Reverb process uses a single core",
+      "about": "Laravel Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Each server ran with only 1 CPU and Reverb was not included, so multi-core use can't be judged."
+    },
+    {
+      "claim": "Centrifugo is built to handle very large numbers of connections",
+      "about": "Centrifugo (Go)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Centrifugo was not benchmarked."
+    },
+    {
+      "claim": "Soketi is fast and light on memory",
+      "about": "Soketi (Node.js)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Soketi was not benchmarked, and the Node servers that were measured (Express, Fastify) are different software."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1548646,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.962
+  }
+}

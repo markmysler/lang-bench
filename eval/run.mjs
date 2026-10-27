@@ -28,6 +28,7 @@ import {
   parseTeams,
   replyText,
   summarise,
+  summariseByScope,
   toWsl,
 } from './lib.mjs';
 
@@ -277,6 +278,7 @@ function summary(run) {
   const s = {
     run: existsSync(runDir(run, 'run.json')) ? JSON.parse(read('runs', run, 'run.json')) : null,
     ...summarise(graded),
+    byScope: summariseByScope(graded, JSON.parse(read('index.json')).scenarios),
     claims: checkTotals(checks),
     costUSD: Math.round(costs.reduce((a, b) => a + b, 0) * 100) / 100,
   };

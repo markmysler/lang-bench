@@ -20,6 +20,72 @@
     "unknowns_stated": 2,
     "overall": 4.94
   },
+  "byScope": {
+    "in": {
+      "scenarios": 2,
+      "choice": {
+        "acceptable": 2,
+        "ruled_out": 0,
+        "unclear": 0
+      },
+      "needlessRewrites": 0,
+      "ruledOutRecommended": 0,
+      "mean": {
+        "constraints_cited": 2,
+        "team_fit": 2,
+        "unknowns_stated": 2,
+        "overall": 5
+      }
+    },
+    "partial": {
+      "scenarios": 8,
+      "choice": {
+        "acceptable": 8,
+        "ruled_out": 0,
+        "unclear": 0
+      },
+      "needlessRewrites": 0,
+      "ruledOutRecommended": 0,
+      "mean": {
+        "constraints_cited": 2,
+        "team_fit": 2,
+        "unknowns_stated": 2,
+        "overall": 5
+      }
+    },
+    "out": {
+      "scenarios": 6,
+      "choice": {
+        "acceptable": 6,
+        "ruled_out": 0,
+        "unclear": 0
+      },
+      "needlessRewrites": 0,
+      "ruledOutRecommended": 0,
+      "mean": {
+        "constraints_cited": 2,
+        "team_fit": 2,
+        "unknowns_stated": 2,
+        "overall": 4.83
+      }
+    },
+    "untagged": {
+      "scenarios": 0,
+      "choice": {
+        "acceptable": 0,
+        "ruled_out": 0,
+        "unclear": 0
+      },
+      "needlessRewrites": 0,
+      "ruledOutRecommended": 0,
+      "mean": {
+        "constraints_cited": 0,
+        "team_fit": 0,
+        "unknowns_stated": 0,
+        "overall": 0
+      }
+    }
+  },
   "claims": {
     "claims": 92,
     "consistent": 38,

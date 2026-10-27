@@ -1,0 +1,33 @@
+{
+  "scenario": "21-chat-scale",
+  "grade": {
+    "primary_choice": "Don't rewrite now; measure, tune and scale Reverb horizontally with a week-3 decision gate",
+    "choice": "acceptable",
+    "ruled_out_recommended": [
+      "Switching to a non-Pusher protocol (Centrifugo) inside the 3-month window, offered as the conditional 'best fallback' at the week-3 gate"
+    ],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 6,
+    "red_flags_hit": [
+      "Recommends a protocol change (Centrifugo, which needs new client libraries and a new auth flow) as the main fallback inside the 3-month window, though only if a measured test fails",
+      "Leaves out load-balancer WebSocket limits and timeouts, and Redis as a single point of failure for availability (it mentions only Redis throughput limits)"
+    ],
+    "unsupported_claims": [
+      "'Many teams run well past that on PHP-based WebSocket servers' is a vague claim with nothing to back it"
+    ],
+    "overall": 4,
+    "notes": "The answer is strong and well grounded: no rewrite before the deadline, measure first, ext-uv instead of stream_select with its ~1,024 limit, Redis scaling, a 100k+ load test with reconnect storms, cost compared with managed services, and the bus-factor risk. It falls short by naming Centrifugo, a protocol change, as the main fallback inside the deadline instead of Soketi or a managed Pusher-compatible service. It also never says Reverb is single-threaded, so it misses running several processes per VM, and it skips load-balancer timeouts and N+1 capacity planning."
+  },
+  "meta": {
+    "costUSD": 0.1208596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 17.082
+  }
+}

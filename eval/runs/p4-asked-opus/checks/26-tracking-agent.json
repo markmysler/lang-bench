@@ -1,0 +1,98 @@
+{
+  "scenario": "26-tracking-agent",
+  "claims": [
+    {
+      "claim": "Other languages would fit a 512 MB machine more comfortably",
+      "about": "Java/Spring Boot vs other stacks",
+      "measured": "java-spring peak 220–500 MB (499 MB in single-row DB, 500 MB in 20-query DB), java-spring-vt 209–444 MB; go-gin 8–16 MB, rust 3–10 MB, node 55–77 MB",
+      "verdict": "consistent",
+      "why": "Spring Boot's peak memory is many times higher than most other stacks and comes close to the 512 MB limit."
+    },
+    {
+      "claim": "200 small writes a second is well within what Spring Boot and Postgres can handle, even on one vCPU",
+      "about": "java-spring / java-spring-vt",
+      "measured": "single-row DB on 1 CPU: java-spring 7,668 req/s, java-spring-vt 12,731 req/s",
+      "verdict": "consistent",
+      "why": "Measured throughput on 1 CPU is about 38–64 times the 200/s peak."
+    },
+    {
+      "claim": "The thing to watch is memory, not speed",
+      "about": "java-spring",
+      "measured": "java-spring peak 499–500 MB in DB tests on a 512 MB container, while throughput is far above 200/s",
+      "verdict": "consistent",
+      "why": "Throughput has plenty of headroom, but peak memory nearly reached the 512 MB container limit."
+    },
+    {
+      "claim": "It fits in 512 MB if set up for it",
+      "about": "java-spring",
+      "measured": "java-spring peak 499 MB (single-row DB), 500 MB (20 queries); java-spring-vt 307 MB",
+      "verdict": "consistent",
+      "why": "The production-tuned Spring Boot servers ran inside a 512 MB container, the virtual-thread variant with more room to spare."
+    },
+    {
+      "claim": "With one vCPU, Java starts and warms up slowly, so updating a single machine means a noticeable gap",
+      "about": "java-spring",
+      "measured": "start-up 5,939 ms (java-spring), 6,224 ms (java-spring-vt) vs 238–295 ms for Go/Rust/C++",
+      "verdict": "consistent",
+      "why": "Spring Boot's measured start-up is about 6 s, roughly 20 times slower than the fastest servers."
+    },
+    {
+      "claim": "Slow startup on one vCPU: updates and crash recovery take tens of seconds per machine",
+      "about": "java-spring",
+      "measured": "start-up 5,939–6,224 ms",
+      "verdict": "off",
+      "why": "Measured start-up is about 6 s, more than 2 times below 'tens of seconds' (20 s or more)."
+    },
+    {
+      "claim": "Go is the best fit for the machine: small memory use, fast startup",
+      "about": "go-gin / go-nethttp",
+      "measured": "idle 2 MB, peak 7–16 MB, start-up 238–293 ms",
+      "verdict": "consistent",
+      "why": "Go's memory and start-up are among the lowest measured; only Rust is slightly smaller."
+    },
+    {
+      "claim": "Python is also tight on throughput with one vCPU",
+      "about": "python-fastapi / python-flask",
+      "measured": "single-row DB: python-fastapi 3,706 req/s, python-flask 1,529, flask-gthread 2,119, flask-gevent 1,905",
+      "verdict": "off",
+      "why": "Even the slowest Python server handles about 7.6 times the 200/s peak, so throughput is not tight."
+    },
+    {
+      "claim": "Quarkus or Micronaut: still Java, with lower memory use and faster startup",
+      "about": "Quarkus / Micronaut",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither framework was benchmarked."
+    },
+    {
+      "claim": "GraalVM native image cuts memory to roughly 100–150 MB and starts in under a second",
+      "about": "Spring Boot GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image build was measured."
+    },
+    {
+      "claim": "Reactive Spring (WebFlux): virtual threads give the same benefit",
+      "about": "Spring WebFlux vs Spring Boot with virtual threads",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "WebFlux was not benchmarked, so the comparison can't be checked."
+    },
+    {
+      "claim": "Java uses memory beyond the heap limit, so tuning only the heap can still let the OS kill the process at peak",
+      "about": "JVM",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements report total peak memory but not heap settings or heap versus off-heap use."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1731746,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 28.521
+  }
+}

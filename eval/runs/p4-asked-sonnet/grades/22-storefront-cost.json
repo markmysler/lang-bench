@@ -1,0 +1,30 @@
+{
+  "scenario": "22-storefront-cost",
+  "grade": {
+    "primary_choice": "Stay on Django and switch from sync workers to gunicorn gthread, plus PgBouncer, parallel downstream calls and autoscaling on saturation",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Pod count can often drop several-fold' is a guess with no data behind it",
+      "The claim that the async Django ORM stops running in a thread pool 'if you adopt psycopg3 async' is doubtful, because Django's async ORM still wraps sync database calls even with psycopg3",
+      "The ~200 ms baseline request time is assumed, not given"
+    ],
+    "overall": 5,
+    "notes": "The answer clearly rejects the Go rewrite because the workload is I/O-bound. It names the CPU-based autoscaling mismatch and the risk of running out of Postgres connections, and lays out a measured, canaried plan that keeps the team on its current stack. Gaps are small: it doesn't ask about the Django version or explicitly mention right-sizing pod requests, and one async-ORM detail is shaky."
+  },
+  "meta": {
+    "costUSD": 0.1061796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.01
+  }
+}

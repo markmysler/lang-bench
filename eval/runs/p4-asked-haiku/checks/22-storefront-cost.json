@@ -1,0 +1,70 @@
+{
+  "scenario": "22-storefront-cost",
+  "claims": [
+    {
+      "claim": "Each gunicorn sync worker handles one request at a time; while it waits on I/O it does nothing, so at peak requests queue behind busy workers",
+      "about": "Python gunicorn sync workers (Django; Flask sync used as the closest measured stand-in)",
+      "measured": "python-flask (sync), I/O wait at 256 connections: 276 req/s, p50 915 ms, p99 932 ms, CPU 18%",
+      "verdict": "consistent",
+      "why": "With a 10 ms wait per request, the sync server reached only 276 req/s and its p50 rose to about 915 ms, which is the queueing behind blocked workers that the claim describes."
+    },
+    {
+      "claim": "Waiting workers use almost no CPU, so a CPU-based autoscaler doesn't add pods when the queue grows",
+      "about": "Python gunicorn sync workers",
+      "measured": "python-flask I/O wait CPU 18% (gthread 19%), while p50 was 915 ms",
+      "verdict": "consistent",
+      "why": "The sync and gthread servers stayed at about 18–19% CPU while requests queued for nearly a second, so CPU does not reflect the backlog."
+    },
+    {
+      "claim": "Go would give each pod far more concurrent requests, which addresses the queueing",
+      "about": "Go vs Python sync workers",
+      "measured": "I/O wait: go-gin 20,235 req/s and go-nethttp 18,905 req/s vs python-flask 276 req/s",
+      "verdict": "consistent",
+      "why": "Go handled about 70 times as many requests per second on the I/O-wait test, so 'far more' points the right way."
+    },
+    {
+      "claim": "The dependency latencies stay the same in any language; a Go service would still spend that time waiting, and the external calls set the floor on latency",
+      "about": "Go",
+      "measured": "go-gin I/O wait p50 12.13 ms, go-nethttp 12.82 ms, against a 10 ms simulated upstream wait",
+      "verdict": "consistent",
+      "why": "Go's median latency sat just above the 10 ms upstream wait, so the wait time still sets the floor."
+    },
+    {
+      "claim": "gthread workers give more concurrent requests per pod than sync workers",
+      "about": "gunicorn gthread vs sync (Flask as stand-in)",
+      "measured": "I/O wait: flask-gthread 374 vs flask 276 req/s; DB single query: 2,119 vs 1,529 req/s",
+      "verdict": "consistent",
+      "why": "gthread measured higher than sync on the I/O and database tests, though only by about 1.35x on the I/O-wait test."
+    },
+    {
+      "claim": "gevent gives more concurrency than gthread for I/O-bound sync code",
+      "about": "gunicorn gevent vs gthread (Flask as stand-in)",
+      "measured": "I/O wait: flask-gevent 2,956 vs flask-gthread 374 req/s; DB single query: 1,905 vs 2,119; DB 20 queries: 369 vs 504",
+      "verdict": "consistent",
+      "why": "On the pure I/O-wait test gevent handled about 8 times as many requests as gthread, though it measured slightly lower than gthread on the Postgres tests."
+    },
+    {
+      "claim": "Go is worth extracting for a CPU-bound hot path (implied to be much faster than Python for CPU-bound work)",
+      "about": "Go vs Python",
+      "measured": "fib(20): go-gin 18,218 and go-nethttp 15,093 req/s vs python-flask 1,078 and gthread 1,149 req/s",
+      "verdict": "consistent",
+      "why": "Go was roughly 14–17 times faster than the Flask variants on the CPU-bound test."
+    },
+    {
+      "claim": "In a spike of one endpoint, Go vs Django with the same real dependencies, the difference will be smaller than the proposal assumes because the dependencies dominate",
+      "about": "Go vs Django",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Django is not among the measured servers, the proposal's assumed speed-up is not stated, and the benchmark has no test with 40–80 ms dependencies."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.16297459999999997,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 25.765
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "scenario": "26-tracking-agent",
+  "grade": {
+    "primary_choice": "Lean Spring Boot (Java 21, JdbcClient, no JPA/WebFlux) tuned for 512 MB, falling back to a native image",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Go at 'about 30–50 MB for this workload' and Spring Boot 'often 300–400 MB' are stated as fact without a measurement, though both are plausible ballpark figures"
+    ],
+    "overall": 5,
+    "notes": "A strong answer that follows from the constraints: tuned Spring Boot with an explicit memory budget, a spike on the real VM, a native image as fallback, bus-factor reasoning, idempotent scans, Postgres on its own VM, retention, and a runbook. Two gaps: it never says to acknowledge a scan only after it is durably committed (and batching could blur this), and it raises two instances as a question to check rather than a firm recommendation."
+  },
+  "meta": {
+    "costUSD": 0.10937960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.731
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "scenario": "23-imaging-throughput",
+  "grade": {
+    "primary_choice": "Keep Ruby/Rails/Sidekiq; profile, then add parallelism with one process per core, make each image cheaper, and autoscale on queue depth",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "The 5–10% CPU saving from a Go or Rust rewrite is an unmeasured guess, though the answer calls it a guess.",
+      "'Each Sidekiq thread holds a database connection' is loosely worded: threads take a connection from a shared pool only when they use the database."
+    ],
+    "overall": 5,
+    "notes": "The answer works out from CPU-hours versus wall-clock time that the run was nearly serial, rejects a rewrite because of where the CPU time goes and because the founder reviews the code, and covers profiling, GVL and VIPS_CONCURRENCY, autoscaling on queue depth and separate bulk queues. Its tagging-model advice is weaker: it covers small input size and batching but leaves out quantisation, ONNX Runtime and loading the model once per process, and it skips spot instances and the managed tagging API option."
+  },
+  "meta": {
+    "costUSD": 0.11072459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.968
+  }
+}

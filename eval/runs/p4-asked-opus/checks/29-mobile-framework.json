@@ -1,0 +1,28 @@
+{
+  "scenario": "29-mobile-framework",
+  "claims": [
+    {
+      "claim": "Flutter has consistent rendering and strong performance",
+      "about": "Flutter (Dart mobile UI framework)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements cover only HTTP server frameworks. The one Dart entry, dart-shelf, is a server, so it says nothing about Flutter's speed on a phone."
+    },
+    {
+      "claim": "Flutter is clearly stronger than React Native for custom rendering, heavy animation and games",
+      "about": "Flutter vs React Native (mobile UI frameworks)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No mobile UI framework was benchmarked, so this comparison can't be checked against the data."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1237396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 8.461
+  }
+}

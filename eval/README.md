@@ -118,3 +118,45 @@ No run made a needless rewrite: every agent, in every mode, stayed with the team
 - Grades come from the same model family as the Opus agent, so self-preference is possible.
 - The claim checker is also a model; its central finding (Laravel) was checked by hand against
   `measurements.md`, the rest were not.
+
+## Phase 4 baseline, 27 October 2026
+
+Scenarios 17 to 29, asked directly, no tool: runs `p4-asked-opus`, `p4-asked-sonnet` and
+`p4-asked-haiku`, judged and graded by claude-opus-5-5. 130 calls, 15.08 USD.
+
+| Model | Acceptable | Overall | In / partial / out | Claims | Off | Not covered |
+| --- | --- | --- | --- | --- | --- | --- |
+| Opus | 13/13 | 5.00 | 5.0 / 5.0 / 5.0 | 82 | 11 | 45 |
+| Sonnet | 13/13 | 4.69 | 5.0 / 4.33 / 4.5 | 71 | 11 | 34 |
+| Haiku | 13/13 | 4.08 | 4.0 / 4.33 / 4.0 | 53 | 1 | 26 |
+
+No needless rewrites. Asked directly, every model chose acceptably again; quality falls from Opus
+to Haiku, as in Phase 3.
+
+### The paired scenarios
+
+- **Declined flag (27, 28).** At the same load, Opus and Sonnet kept the team's recorded decision;
+  Haiku reopened it unprompted. At fifteen times the load all three raised it again with an
+  in-stack fix (gthread or gevent workers, timeouts, a pooler). The decision log has something to
+  fix, mainly for cheaper models.
+- **Who maintains the project (24 to 26).** All three models recommended tuned Spring Boot in all
+  three settings. The judge shifted only a little: Go is ruled out when the Java team maintains or
+  reviews the code, and becomes acceptable when an agent maintains it alone, while Spring Boot stays
+  acceptable throughout. The agents' answers are not wrong; the expected shift in `index.json` was
+  stronger than the independent judge's, and has been toned down.
+- **Laravel for a concurrency-first product (20, 21).** All three kept Laravel and added Laravel
+  Reverb, its own WebSocket server, as a separate process. The judge agreed and ruled out a rewrite
+  from day one. This is the most useful result for the design: Reverb is a variant lang-bench does
+  not measure, and its Laravel figures come from PHP-FPM. Used here, they would flag the wrong
+  thing. Variants such as Reverb, Octane with Swoole and RoadRunner must be measured before the
+  tool may flag a stack on concurrency.
+
+### Claims
+
+23 of 206 claims (11%) were off by more than 2x, nearly three times the Phase 3 rate (4%). They cluster in
+the tracking API (15 across 24 to 26) and the Django storefront (6), and most are about throughput
+and CPU (14), fewer about memory and start-up (9). On the tracking API, agents overstate how much
+CPU Spring Boot needs ("one instance on one CPU might cope at 200 requests a second"; measured:
+7,668 a second on one database row). On the storefront, they overstate what gthread workers buy
+(measured on the I/O workload: 374 requests a second against 276 for sync workers, and 20,235 for
+Go). These are Flask servers standing in for Django, which the checker did not point out.

@@ -1,0 +1,113 @@
+{
+  "scenario": "18-volunteer-matching",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "An off-the-shelf volunteer management SaaS with charity pricing and a signed data processing agreement (for example Better Impact, Assemble, TeamKinetic, Volunteero or Rosterfy), configured rather than built",
+        "why": "At 600 volunteers and a few hundred matches a month, buying first best fits the handover rule and the 'no constant care' rule, because the vendor handles security, patching, backups and GDPR tooling, though the subscription probably can't be paid from cloud credits."
+      },
+      {
+        "choice": "A charity CRM with volunteer features (Salesforce Nonprofit with donated licences, or hosted CiviCRM)",
+        "why": "These are widely known in the charity sector, so a hired developer or consultant can take them over, and they come with permissions and audit features, though setup is heavier than a dedicated volunteer tool."
+      },
+      {
+        "choice": "If custom is justified: a single server-rendered monolith in a mainstream, batteries-included framework (Django is the best fit because of its built-in admin, auth, forms and permissions; Rails or Laravel are equally fine)",
+        "why": "This is the most boring, best-documented shape there is: any hired web developer can take it over, and a few hundred records needs nothing more."
+      },
+      {
+        "choice": "Managed PostgreSQL from the credit-donating cloud (Cloud SQL, Azure Database for PostgreSQL, Amazon RDS) with automated backups, encryption at rest and point-in-time recovery",
+        "why": "It is a standard, portable database with no server to patch, at a cost of roughly 15 to 30 USD a month at this size."
+      },
+      {
+        "choice": "Hosting on a managed platform (Google Cloud Run, Azure App Service, AWS App Runner or Elastic Beanstalk) deployed from a charity-owned Git repository through CI",
+        "why": "There is no OS to patch, the cost fits well within 100 USD a month, and deployment is repeatable and documented for a successor."
+      },
+      {
+        "choice": "Simple rule-based matching (filter by skills, availability and location, then a human coordinator confirms)",
+        "why": "At a few hundred matches a month a filter-and-confirm screen is enough, it is easy to explain and audit, and it keeps a person accountable for decisions involving vulnerable people."
+      },
+      {
+        "choice": "A no-code database or app builder (Airtable plus Softr or Glide) only if UK/EU data residency, per-seat cost and partner-level permissions check out",
+        "why": "It is easy for a non-developer to hand over and needs little maintenance, but these tools often fall short on special-category data controls and fine-grained access for partners."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Microservices, Kubernetes or a container orchestration setup",
+        "why": "It breaks 'nothing that needs constant care' and makes handover much harder, with no benefit at this scale."
+      },
+      {
+        "choice": "A self-managed VM with a self-hosted database (DIY Postgres or MySQL on Compute Engine or EC2)",
+        "why": "OS and database patching, backups and security hardening would be ongoing work that nobody at the charity can do or check."
+      },
+      {
+        "choice": "An SPA frontend (React, Vue or Next.js) with a separate API backend",
+        "why": "It doubles the code and the attack surface a non-reviewing volunteer must approve, and adds nothing for forms and lists."
+      },
+      {
+        "choice": "Firebase or Supabase with the browser talking straight to the database, protected only by security rules or row-level security",
+        "why": "A single misconfigured rule would expose health and contact data, and the volunteer can't review the rules; it also locks the charity into one vendor."
+      },
+      {
+        "choice": "Google Forms plus a shared Google Sheet or Excel file as the system of record",
+        "why": "It can't limit partners to only their own matches, has no proper audit trail, and invites copying and emailing health data around, which breaks data protection."
+      },
+      {
+        "choice": "A web of serverless functions and proprietary cloud services (Lambda, Step Functions, DynamoDB, Cosmos DB and so on)",
+        "why": "It ties the system to whichever provider donated credits, which may expire, and it is hard for a generalist developer to take over."
+      },
+      {
+        "choice": "Niche, very new or exotic frameworks and languages",
+        "why": "They break the trustees' rule that a later hire must be able to take over."
+      },
+      {
+        "choice": "An ML or LLM-based matching engine, or sending volunteer records to a third-party AI API",
+        "why": "It is unnecessary at this volume, can't be explained to volunteers or partners, and sends special-category health data to another processor without a lawful basis or DPA."
+      }
+    ],
+    "must_mention": [
+      "Check existing volunteer management software before building custom: at this scale, buying is likely cheaper over time, easier to hand over and safer for health data. The agent should say so even though it was asked to build.",
+      "The health-related accessibility notes are special category data (UK/EU GDPR Article 9). They need an explicit lawful condition (usually explicit consent), a DPIA before go-live, data minimisation (structured accessibility needs rather than free-text medical detail where possible), a retention and deletion policy, and UK/EU data residency.",
+      "Partner organisations should see only what they need for a confirmed match, not the whole volunteer list or the health notes. This needs role-based access, accounts for each partner, and data sharing agreements with partners.",
+      "The volunteer's approval is not a code review. Mitigate with a small, conventional codebase, automated tests and CI, automatic dependency and security updates (Dependabot or Renovate), a staging environment, and a one-off independent security and code review by a paid or pro-bono developer before real personal data goes in.",
+      "If building custom, recommend one boring stack concretely: a server-rendered monolith (Django, Rails or Laravel) plus managed Postgres on a managed platform service, with an estimated running cost (roughly 20 to 50 USD a month) well under the 100 USD budget.",
+      "Every account (cloud, Git repository, domain, email/SMS provider, password manager) must be owned by the charity, with at least two trustees or staff holding access, not the volunteer's personal accounts. Include a README, an architecture note and a runbook so a hired developer can take over.",
+      "Donated credits are usually time-limited. Keep the design portable (standard Postgres, a containerised or standard app), set billing alerts and budget caps, and make an exit plan for when the credits end.",
+      "Automated backups with a tested restore, MFA for all admin and coordinator logins, encryption in transit and at rest, secrets kept in a secrets manager and never in code, and audit logging of who viewed or changed personal data.",
+      "Matching should be a simple, explainable filter with a human coordinator confirming, especially since volunteers may be placed with vulnerable people (consider safeguarding and DBS-style checks as part of the process).",
+      "Some steps the agent can't do or certify: ICO registration and privacy notice wording, the DPIA sign-off, and trustee approval. These are the charity's responsibility."
+    ],
+    "red_flags": [
+      "Saying or implying the system is 'GDPR compliant' or 'secure' simply because the agent built it, or treating the volunteer's approval as a security review.",
+      "Recommending Kubernetes, microservices, self-managed servers, or any setup that needs regular patching or watching.",
+      "Storing health notes as unrestricted free text visible to all partners, or exporting them to spreadsheets or email.",
+      "Putting data in US-only regions or tools without a data transfer basis, or feeding volunteer records to an LLM or other third-party API without a DPA.",
+      "Setting up infrastructure, the repository or the domain under the volunteer's (or the agent operator's) personal accounts.",
+      "Hardcoding secrets, skipping backups, or not having MFA on admin access.",
+      "Building straight away without mentioning off-the-shelf options or the DPIA, consent and retention questions.",
+      "Designing around donated credits as if they were permanent, with no cost ceiling or exit plan.",
+      "Choosing a trendy or niche stack, or a sprawling one (SPA, GraphQL, event bus), that a typical hired web developer would struggle to take over.",
+      "Overengineering matching (ML, scoring engines) or presenting automated matches as final with no human check where vulnerable people are involved."
+    ],
+    "unknowns": [
+      "Which cloud provider donated the credits, how long they last, and whether they can pay for marketplace SaaS or only that provider's services.",
+      "Whether the charity has any cash budget outside the credits for a SaaS subscription or a one-off professional security review.",
+      "Jurisdiction (assumed UK/EU GDPR) and any data residency requirements from partners or funders.",
+      "Exactly what the accessibility notes contain and whether they're needed at all, or could be reduced to a few structured categories.",
+      "How partner organisations should interact: their own logins and portal, or coordinator-mediated email.",
+      "Whether volunteers work with children or vulnerable adults, so that safeguarding and background-check records must also be held.",
+      "Whether SMS or email notifications are needed, and the cost and data-processor implications of the provider.",
+      "Whether an existing volunteer SaaS fits the charity's actual workflow closely enough. This needs a short trial with real coordinators.",
+      "Who at the charity will be the named data controller contact and handle subject access, deletion requests and breaches."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.17394959999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 75.078
+  }
+}

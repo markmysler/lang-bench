@@ -1,0 +1,29 @@
+{
+  "scenario": "23-imaging-throughput",
+  "grade": {
+    "primary_choice": "Keep Ruby, profile, then fix parallelism/scheduling and per-image costs (libvips, tagging model)",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "A Go/Rust rewrite would cost 'months'; for this scope it is more likely weeks, though the point still holds",
+      "Batching is 'often a big gain on CPU', which overstates it: CPU batching gains are usually modest"
+    ],
+    "overall": 5,
+    "notes": "The arithmetic is correct: 2–6 CPU-hours, fewer than one busy core, about 14 images/s needing 4–6 cores. The answer reaches the reference's conclusion, with profiling first, fan-out, a per-customer fairness point, libvips shrink-on-load, model optimisation and the founder's ability to review Ruby. Two points are only partly covered: it never names the GVL or VIPS_CONCURRENCY, and it describes autoscaling generally rather than scaling on queue depth."
+  },
+  "meta": {
+    "costUSD": 0.10632960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.276
+  }
+}

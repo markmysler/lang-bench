@@ -1,0 +1,96 @@
+{
+  "scenario": "26-tracking-agent",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Spring Boot 3 (Spring MVC with virtual threads, or WebFlux) with JDBC/jOOQ or slim JPA on the existing Postgres, tuned for 512 MB (e.g. -Xmx ~200–256m, -Xss reduced, SerialGC, small Hikari pool, minimal starters, CDS/AOT cache for startup)",
+        "why": "It fits the hosts, deploys, monitors and restarts the same way as every other service the three-person IT team already runs, the team could take over if needed, and 200 small writes/s is easily within its reach once tuned for a small heap."
+      },
+      {
+        "choice": "Spring Boot compiled to a GraalVM native image, or Quarkus/Micronaut (JVM or native)",
+        "why": "It stays in the Java ecosystem the team knows while cutting resident memory to roughly 50–150 MB and giving fast restarts, which leaves comfortable headroom on a 512 MB VM; the cost is longer, fussier builds that the agent has to own."
+      },
+      {
+        "choice": "Go (net/http or chi, with pgx) as a single static binary under systemd",
+        "why": "It uses very little memory and is simple to run, which suits small VMs and an IT team that only keeps machines alive, but it brings in a language nobody in-house can read if the agent stops maintaining it, so it only makes sense if the team accepts that."
+      },
+      {
+        "choice": "Writing scans straight to Postgres with idempotent inserts (unique scan ID, ON CONFLICT DO NOTHING), optional small server-side batching, and indexed lookup by parcel ID for status reads",
+        "why": "About 200 small inserts a second is modest for Postgres, so it needs no extra infrastructure, and it is the most reliable and cheapest design for this load."
+      },
+      {
+        "choice": "Two or more identical API instances behind the hosting company's load balancer or a small nginx/HAProxy VM",
+        "why": "One 1 vCPU VM is a single point of failure for drivers' scanners, and a second standard VM is a cheap way to get reliability and room for rolling deploys."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Untuned Spring Boot with default JVM settings and a full set of starters (JPA, Actuator-everything, Cloud, etc.)",
+        "why": "It risks being OOM-killed or swapping on 512 MB because heap plus metaspace plus thread stacks add up past the limit, which breaks reliability."
+      },
+      {
+        "choice": "Kafka, RabbitMQ or another message broker in front of Postgres",
+        "why": "It will not fit comfortably on 512 MB VMs, adds a system IT has to keep running, and is unnecessary at 200 writes/s."
+      },
+      {
+        "choice": "Redis or another separate cache tier for status reads",
+        "why": "It adds an extra component to operate and pay for with no proven need, since indexed Postgres reads or a small in-process cache are enough."
+      },
+      {
+        "choice": "Kubernetes, service mesh, or splitting into multiple microservices",
+        "why": "The control plane can't run on 1 vCPU/512 MB nodes, and the operational burden is far beyond a three-person team that only keeps VMs alive."
+      },
+      {
+        "choice": "Public cloud managed or serverless services (AWS Lambda, DynamoDB, Cloud Run, managed Kafka)",
+        "why": "Company policy says it runs on VMs at the local hosting company."
+      },
+      {
+        "choice": "Switching to a different database (MongoDB, Cassandra, TimescaleDB as a new cluster)",
+        "why": "It adds a new system to run and back up when the existing Postgres handles this load, which goes against cost and IT's ability to maintain it."
+      },
+      {
+        "choice": "Python (Django/Flask) or Ruby on Rails on a single synchronous worker",
+        "why": "A 1 vCPU box gives little headroom at peak load, it is a language the team can't support, and it has no advantage over the Java options."
+      }
+    ],
+    "must_mention": [
+      "A JVM/Spring Boot service fits in 512 MB only with explicit memory limits (max heap, thread stack size, small connection pool, few dependencies). The answer should say the agent must set these and load-test against the real VM size.",
+      "200 small writes a second is a modest load for Postgres and for one well-built service, so it needs no broker, cache tier or exotic stack.",
+      "Scans must be idempotent (a client-generated scan ID with a unique constraint), because handheld scanners retry over flaky mobile networks and will send duplicates.",
+      "The API should acknowledge a scan only after it is durably committed, and the scanners should buffer offline and retry so that no scans are lost during an outage or deploy.",
+      "Run at least two instances behind a load balancer, because one 1 vCPU VM is a single point of failure.",
+      "Even though the agent writes the code, IT has to operate it, so the answer should favour the same deployment shape, logging, health checks and monitoring they already use for their Spring Boot services, with a short runbook (restart, logs, disk, backups).",
+      "Postgres sizing and growth: millions of scan rows a day need indexes on parcel ID, a retention or partitioning plan (e.g. monthly partitions), and backups.",
+      "Choosing something other than Java creates bus-factor risk: if the agent stops maintaining it, three Java developers inherit code in a language they don't know."
+    ],
+    "red_flags": [
+      "Recommending Kafka, Redis, Kubernetes, microservices or cloud-managed services for a 200 writes/s workload on 512 MB VMs under a local-hosting policy.",
+      "Saying Spring Boot simply 'won't fit' in 512 MB and pushing a rewrite into Rust or Go as the only option, when tuned Spring Boot or a native image works and matches the team.",
+      "Recommending plain Spring Boot without warning about memory tuning, which leads to OOM kills in production.",
+      "Treating 'the agent maintains the code' as permission to pick any language without addressing the ops burden and what happens if the agent goes away.",
+      "Ignoring duplicate or retried scans, or acknowledging scans before they are persisted, either of which causes lost or double-counted parcel events.",
+      "Planning a single instance with no failover for a system drivers depend on all day.",
+      "Putting Postgres on the same 512 MB VM as the API without discussing it, or not saying where the database runs and how it is sized.",
+      "Overstating the performance needs (e.g. claiming reactive or Rust is required for 200 req/s) or quoting made-up benchmark figures as if they were facts."
+    ],
+    "unknowns": [
+      "Actual memory and latency of the tuned service under peak load on the real 1 vCPU/512 MB VM, which needs a load test before choosing between JVM and native image.",
+      "Where Postgres runs and how big that VM is, and whether it is shared with other company services.",
+      "Volume and pattern of customer status lookups (could exceed scan writes at peak, e.g. during delivery windows) and whether status must be real-time.",
+      "How long scan history must be kept (legal or business retention), which drives partitioning and storage cost.",
+      "Whether the scanner software can buffer offline and send a unique scan ID, or whether the API has to deduplicate some other way.",
+      "Whether the hosting company provides a load balancer, and what deploy tooling and monitoring IT already uses for the existing services.",
+      "Whether the business accepts a non-Java codebase (bus factor) if agent maintenance ever stops.",
+      "How fast volume will grow (more drivers, new regions) beyond today's 200 scans a second."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.13481959999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 41.569
+  }
+}

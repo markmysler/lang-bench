@@ -1,0 +1,98 @@
+{
+  "scenario": "26-tracking-agent",
+  "claims": [
+    {
+      "claim": "200 small inserts a second is modest... a trimmed Spring Boot app handles it",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Single-row Postgres query: 7,668 req/s (java-spring) and 12,731 req/s (java-spring-vt) on 1 CPU",
+      "verdict": "consistent",
+      "why": "Measured Spring Boot database throughput on one CPU is about 38–64 times the 200/s required, so 'handles it' holds."
+    },
+    {
+      "claim": "Go would win on footprint",
+      "about": "go-gin / go-nethttp vs java-spring",
+      "measured": "Go peak memory 11–16 MB vs Spring Boot 209–500 MB; Go image 85–92 MB vs 287 MB",
+      "verdict": "consistent",
+      "why": "Go used about 20–40 times less memory than Spring Boot in every test, which is the direction the claim gives."
+    },
+    {
+      "claim": "Go: about 30–50 MB for this workload",
+      "about": "go-gin / go-nethttp",
+      "measured": "Peak memory 11–12 MB (database tests), 15–16 MB (I/O wait), 2 MB idle",
+      "verdict": "off",
+      "why": "Measured Go memory for database-backed work is 11–12 MB, so even the low end of 30 MB is about 2.5 times too high."
+    },
+    {
+      "claim": "Go: instant startup",
+      "about": "go-gin / go-nethttp",
+      "measured": "Start-up 238–293 ms",
+      "verdict": "consistent",
+      "why": "A start-up of about a quarter of a second is close enough to 'instant'."
+    },
+    {
+      "claim": "Spring Boot native image (GraalVM): far lower memory and fast startup",
+      "about": "Spring Boot native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No GraalVM native-image build was measured."
+    },
+    {
+      "claim": "Quarkus, Micronaut, Javalin are lighter",
+      "about": "Quarkus / Micronaut / Javalin",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of these frameworks were benchmarked."
+    },
+    {
+      "claim": "Node is slower per core than Spring Boot",
+      "about": "node-express / node-fastify vs java-spring",
+      "measured": "Plaintext: fastify 40,730 / express 17,601 vs spring 13,653; JSON: fastify 37,277 vs spring 27,264; single DB query: fastify 9,423 / express 9,034 vs spring 7,668 (spring-vt 12,731)",
+      "verdict": "off",
+      "why": "Node matched or beat plain Spring Boot in most tests (Fastify was about 3 times faster on plaintext), so the claim mostly points the wrong way."
+    },
+    {
+      "claim": "Python is slower per core than Spring Boot",
+      "about": "python-fastapi / python-flask vs java-spring",
+      "measured": "Single DB query: fastapi 3,706 / flask 1,529–2,119 vs spring 7,668–12,731; JSON: fastapi 6,732 vs spring 27,264",
+      "verdict": "consistent",
+      "why": "Python servers measured well below Spring Boot in every test."
+    },
+    {
+      "claim": "Node and Python use more memory than Spring Boot",
+      "about": "node-* / python-* vs java-spring",
+      "measured": "Node 55–77 MB and Python 41–123 MB peak vs Spring Boot 209–500 MB peak",
+      "verdict": "off",
+      "why": "Node and Python used about 3–10 times less memory than Spring Boot, the opposite of the claim."
+    },
+    {
+      "claim": "Spring Boot's total memory (heap, metaspace, threads, JIT) often lands at 300–400 MB",
+      "about": "java-spring / java-spring-vt",
+      "measured": "Peak 209–374 MB in HTTP and CPU tests, 307–500 MB in database tests; 131–134 MB idle",
+      "verdict": "consistent",
+      "why": "Measured peaks under load fall in or near the 300–400 MB range."
+    },
+    {
+      "claim": "CPU may bind before memory does",
+      "about": "java-spring",
+      "measured": "7,668–12,731 req/s at about 100% of 1 CPU for a single-row query (about 2–3% CPU at 200/s); peak memory 307–499 MB against 512 MB",
+      "verdict": "off",
+      "why": "At 200 req/s Spring Boot would use only a few percent of one CPU while its memory approaches the 512 MB limit, so memory binds first, not CPU."
+    },
+    {
+      "claim": "Startup can take 20–40 seconds, so every deploy is a short outage",
+      "about": "java-spring",
+      "measured": "Start-up 5,939 ms (java-spring), 6,224 ms (java-spring-vt) on 1 CPU",
+      "verdict": "off",
+      "why": "Measured start-up on one CPU was about 6 s, so 20–40 s is more than 3 times too high."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.17514960000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 29.102
+  }
+}

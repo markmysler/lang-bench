@@ -1,0 +1,102 @@
+{
+  "scenario": "24-tracking-human",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Spring Boot (Spring MVC, Java 21, virtual threads optional) with JDBC/JPA writing to Postgres, with the JVM tuned for 512 MB",
+        "why": "It is the stack the three developers already run and know, 200 small writes per second is light work for one tuned JVM, and nothing new has to be learned or kept running."
+      },
+      {
+        "choice": "Spring Boot with plain JdbcTemplate or jOOQ and batched inserts for scans, instead of a heavy JPA entity graph",
+        "why": "This keeps heap use and CPU per request low on 1 vCPU and allows multi-row inserts, without leaving Spring."
+      },
+      {
+        "choice": "Spring Boot compiled to a GraalVM native image, as an optional step if load tests show memory is too tight",
+        "why": "It cuts memory use and startup time sharply while keeping the same code and skills, but it adds build complexity, so it is a fallback and not the default."
+      },
+      {
+        "choice": "Two or more small VMs running the same stateless Spring Boot service behind the hosting company's load balancer or a small reverse proxy (nginx/HAProxy)",
+        "why": "This gives reliability and headroom on standard VMs without breaking the VM policy."
+      },
+      {
+        "choice": "Quarkus or Micronaut (JVM or native)",
+        "why": "Still Java with a smaller memory footprint, so it is defensible, but it is a second framework for a three-person team and only worth it if tuned Spring Boot measurably fails to fit."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewrite in Go, Rust, Node.js, Python, or .NET for efficiency",
+        "why": "The team only knows Java and must maintain the service themselves, and the load does not need another language's efficiency."
+      },
+      {
+        "choice": "Kafka, RabbitMQ, or another message broker in front of the database",
+        "why": "Kafka will not fit comfortably in 512 MB, it adds a cluster that three developers must operate, and 200 small writes per second does not need one."
+      },
+      {
+        "choice": "Kubernetes or container orchestration platforms",
+        "why": "It adds a lot of operational overhead for a three-person team, and the control plane cannot run sensibly on 1 vCPU / 512 MB VMs."
+      },
+      {
+        "choice": "Public cloud managed services (AWS Lambda, DynamoDB, API Gateway, Cloud Run, etc.)",
+        "why": "Company policy requires the local hosting company's VMs."
+      },
+      {
+        "choice": "Microservices split (separate ingestion, query, and notification services from the start)",
+        "why": "More processes to deploy and monitor on tiny VMs with no benefit at this scale."
+      },
+      {
+        "choice": "Switching to a NoSQL or time-series database (Cassandra, MongoDB, InfluxDB) for the scans",
+        "why": "Postgres easily handles this write rate, and a new database adds operations work and memory pressure the team cannot absorb."
+      },
+      {
+        "choice": "Reactive rewrite (Spring WebFlux/R2DBC) as a requirement",
+        "why": "It is not needed for 200 req/s, it is harder for the team to debug and maintain, and virtual threads or a bounded thread pool give enough concurrency."
+      }
+    ],
+    "must_mention": [
+      "Recommend staying on Spring Boot + Postgres, because the team's Java skills and maintainability matter more than raw efficiency at this load.",
+      "200 small writes per second is modest, and a single well-tuned JVM service with Postgres handles it; this is not a high-scale problem.",
+      "The JVM must be tuned explicitly for 512 MB: cap the heap (e.g. -Xmx ~200-256m or MaxRAMPercentage), limit metaspace and thread count/stack size, use SerialGC on 1 vCPU, keep the Hikari pool small, and drop unused starters.",
+      "Load-test on the actual 1 vCPU / 512 MB VM at peak-plus-margin (e.g. 400 scans/s plus customer reads) before going live, watching RSS, GC pauses, and p99 latency.",
+      "Scan ingestion must be idempotent (client-generated scan ID with a unique constraint or ON CONFLICT DO NOTHING) so scanner retries never duplicate or lose scans.",
+      "Scanners should buffer locally and retry on failure, and the API should return success only after the scan is durably stored.",
+      "Postgres sizing and placement matter: give it its own VM (or more resources if policy allows), and consider batched inserts or grouped commits to keep fsync cost down.",
+      "Data model: an append-only scan history table plus a current-status table or index so customer status lookups are cheap; plan for growth with time-based partitioning and a retention policy.",
+      "Run at least two app instances behind a load balancer for reliability, plus Postgres backups and a tested restore.",
+      "Keep customer status reads separate from scanner ingestion, or rate-limit them, so a spike in customer traffic cannot starve scan writes.",
+      "Basic observability the team can run: health checks, Actuator/Micrometer metrics, logs, and alerts on errors and latency."
+    ],
+    "red_flags": [
+      "Recommending a language or runtime the team doesn't know (Go, Rust, Node) because it uses less memory, ignoring that three Java developers must maintain it.",
+      "Claiming Spring Boot/JVM cannot run in 512 MB and therefore must be abandoned, or the opposite: saying it will fit with no tuning or load testing.",
+      "Introducing Kafka, Kubernetes, Redis clusters, service meshes, or other infrastructure the small team must operate on tiny VMs.",
+      "Suggesting cloud or serverless services that break the local hosting policy.",
+      "Buffering scans only in application memory and acknowledging them before they are persisted, which loses data on a crash or restart.",
+      "Ignoring idempotency and retries, so scanner retries create duplicates or dropped scans.",
+      "Designing for a single VM with no discussion of failure, backups, or restore for a business-critical tracking system.",
+      "Running Postgres and the JVM together on one 512 MB VM without flagging the memory contention.",
+      "Making GraalVM native image, WebFlux, or a new framework mandatory and adding complexity before measuring.",
+      "Unsupported benchmark numbers presented as guarantees for this hardware."
+    ],
+    "unknowns": [
+      "Where Postgres runs and how it is sized (shared VM, its own 512 MB VM, or something larger the hosting company provides), and whether that is the real bottleneck.",
+      "Customer status read volume and burstiness (e.g. after notification emails), compared with the 200/s scan writes.",
+      "Whether the scanners can batch several scans per request and buffer offline, and how they handle retries.",
+      "Whether multiple VMs and a load balancer are available under the hosting policy, and how many VMs the budget allows.",
+      "Actual memory footprint (RSS) and p99 latency of the tuned service on the target VM; only a load test can answer this.",
+      "Latency and availability requirements (how fast a scan must be visible to customers, and acceptable downtime).",
+      "Data retention requirements and expected daily scan volume, which drive storage, partitioning, and backup size.",
+      "Current Java and Spring Boot versions (Java 21+ enables virtual threads; Spring Boot 3 enables native image support).",
+      "Authentication and security requirements for the scanner devices and the public customer endpoint."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1385596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 43.001
+  }
+}

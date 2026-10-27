@@ -1,0 +1,35 @@
+{
+  "scenario": "21-chat-scale",
+  "claims": [
+    {
+      "claim": "Go usually needs a few KB to tens of KB per idle connection, so 60k connections is often a few GB",
+      "about": "Go (WebSocket connection gateway)",
+      "measured": "go-gin peak memory 16 MB and go-nethttp 15 MB with 256 busy HTTP connections, against 2 MB idle",
+      "verdict": "not_covered",
+      "why": "The benchmark tops out at 256 short HTTP connections and never measures idle WebSocket connections, so it can't confirm the per-connection memory or what 60k connections would cost."
+    },
+    {
+      "claim": "Reverb's per-connection cost could be much higher [than Go's]",
+      "about": "Laravel Reverb vs Go",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb was not benchmarked, and the Laravel and Octane HTTP servers that were tell us nothing about Reverb's WebSocket memory per connection."
+    },
+    {
+      "claim": "Node or Elixir are both good at connection-heavy work, with little benefit over Go",
+      "about": "Node.js and Elixir vs Go",
+      "measured": "I/O wait test at 256 connections: elixir-phoenix 18,711 req/s, node-fastify 17,462, node-express 14,188, go-gin 20,235, go-nethttp 18,905",
+      "verdict": "consistent",
+      "why": "In the high-concurrency I/O-wait test, Elixir and Node came within roughly 1.5x of Go, which fits 'good at it, but little gain over Go'."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1393546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.535
+  }
+}

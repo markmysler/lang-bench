@@ -1,0 +1,105 @@
+{
+  "scenario": "23-imaging-throughput",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep Ruby/Rails/Sidekiq and scale processing out across more worker processes and containers",
+        "why": "50,000 images × 0.15–0.4 s comes to about 2–5.5 CPU-hours, so six hours of wall-clock time means roughly one core was doing the work; about 8–16 cores working in parallel gets the batch under an hour with no rewrite."
+      },
+      {
+        "choice": "Autoscale Sidekiq workers on queue depth or latency (for example KEDA, the cloud provider's autoscaler, or a scheduled scale-up), ideally on spot or preemptible instances",
+        "why": "Catalogue uploads come in bursts, so paying for many cores only while a queue exists meets the one-hour target and keeps cost per image low."
+      },
+      {
+        "choice": "Run one Sidekiq process per core (or per vCPU pair) with modest thread concurrency, and tune libvips' own threading (VIPS_CONCURRENCY)",
+        "why": "Ruby's global interpreter lock (GVL), and libvips threads competing with Sidekiq threads, can quietly cap a single process at about one core; process-level parallelism avoids that."
+      },
+      {
+        "choice": "Optimise the image pipeline inside libvips: decode once, use thumbnail and shrink-on-load, produce all variants from one load, stream from and to object storage, and avoid ImageMagick or ActiveStorage variant overhead",
+        "why": "This cuts CPU per image directly, which helps cost and throughput, and it is a small change in the existing code."
+      },
+      {
+        "choice": "Optimise the tagging model: load it once per process rather than per job, use ONNX Runtime, quantise it, feed it a small input resolution, and batch inference",
+        "why": "The model is probably the largest share of the 150–400 ms, and these changes reduce cost per image far more than changing the host language would."
+      },
+      {
+        "choice": "If the model is only practical in Python, move just the tagging into a small Python inference worker or sidecar and keep the rest in Ruby",
+        "why": "This is a targeted change made for an ecosystem reason, not a rewrite, and the coding agent can maintain it."
+      },
+      {
+        "choice": "Per-customer or per-batch queues, with priority or rate limits, so a 50,000-image upload does not starve other customers",
+        "why": "This becomes an operational need as soon as faster bulk processing is available to more than one pilot customer."
+      },
+      {
+        "choice": "Measure a managed vision or tagging API, or burst compute such as Cloud Run jobs, Lambda or Batch, against self-hosted inference",
+        "why": "These are reasonable options for a two-person team if the per-image price beats the cost of running and scaling their own CPUs, which needs measuring."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the processing in Go, Rust, C++ or Elixir now",
+        "why": "The CPU time is spent in libvips (C) and the model, not in Ruby, so a rewrite barely changes per-image CPU or cost; it also costs weeks of a two-person team's time and moves the code into a language the founder can't review."
+      },
+      {
+        "choice": "Rewriting the processing in Python wholesale",
+        "why": "It is no faster for libvips work and creates a second codebase; only the tagging model might justify Python, and only as a narrow piece."
+      },
+      {
+        "choice": "Just raising Sidekiq thread concurrency in the existing containers",
+        "why": "It adds no CPU; because of the GVL and libvips' own threads it may give no speed-up and can cause memory blow-ups."
+      },
+      {
+        "choice": "Kubernetes plus Kafka or a microservices re-architecture",
+        "why": "That is heavy operational overhead for two people when the Sidekiq/Redis queue already provides the fan-out they need."
+      },
+      {
+        "choice": "GPUs bought up front for the whole pipeline",
+        "why": "libvips work won't use them, and for the model they make sense only if measurement shows inference dominates and batches keep the GPU busy; otherwise they raise cost per image."
+      },
+      {
+        "choice": "Permanently over-provisioning a large fixed fleet",
+        "why": "It meets the burst target but undermines cost per processed image, which is one of the two things the team cares about."
+      }
+    ],
+    "must_mention": [
+      "Do the arithmetic: 2–5.5 CPU-hours of work finished in 6 wall-clock hours means the run was effectively serial or close to it, so this is a parallelism and capacity problem, not a language problem.",
+      "Ruby is not the hot path: libvips is C, and the model runs in native code. Ruby's per-image overhead is a few milliseconds out of 150–400.",
+      "A rewrite would barely change cost per image, because the per-image CPU stays roughly the same in any language.",
+      "Profile before changing anything: split time into download, decode, resize and watermark, tagging, upload and queue wait, and check whether the model is reloaded on every job.",
+      "Watch for the GVL and libvips thread contention; prefer several processes per container and tune VIPS_CONCURRENCY.",
+      "Scale workers elastically on queue depth so the burst is fast and idle time costs little.",
+      "The tagging model is the most likely place to make each image cheaper (quantisation, batching, smaller input, load once).",
+      "Staying on Ruby keeps the founder able to review the agent's code, which matters for this team."
+    ],
+    "red_flags": [
+      "Recommending a rewrite in Go or Rust as the fix, or claiming it would make processing 5–10× faster.",
+      "Agreeing that Ruby is the problem without doing the CPU-hours versus wall-clock arithmetic.",
+      "Ignoring that the founder reviews the code in Ruby, and that a new language weakens their oversight of agent-written code.",
+      "Suggesting only more Sidekiq threads in one process as the fix.",
+      "Proposing Kubernetes, Kafka, a service mesh or a microservices split for a two-person team.",
+      "Recommending GPUs or a large always-on fleet without considering cost per image.",
+      "Giving no measurement or profiling step before making changes.",
+      "Ignoring multi-tenant fairness when a single 50,000-image batch is added to the queue."
+    ],
+    "unknowns": [
+      "How the 150–400 ms splits between libvips operations and tagging inference.",
+      "How the tagging model runs: an in-process Ruby binding (ONNX Runtime gem), a Python service, or an external API, and whether it is loaded once per process or once per job.",
+      "The current number of Sidekiq processes, threads per process, cores per container and container count, which shows how much parallelism they actually got.",
+      "Whether the libvips and model bindings release the GVL during native calls.",
+      "How much time goes to I/O: downloading originals, uploading outputs and storage latency.",
+      "Memory per worker process, which limits how many workers fit on each instance and therefore cost.",
+      "What autoscaling and spot or preemptible options the cloud provider offers, and how fast instances start.",
+      "How often and how large catalogue bursts are, and whether the one-hour target is a contract or an expectation.",
+      "Whether the pilot customers would accept a managed tagging API's per-image price and data handling."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1386596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 43.678
+  }
+}

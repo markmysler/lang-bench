@@ -1,0 +1,29 @@
+{
+  "scenario": "24-tracking-human",
+  "grade": {
+    "primary_choice": "Spring Boot + Postgres with JdbcTemplate/jOOQ and a JVM tuned for 512 MB, with Postgres on its own VM",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "The 300–400 MB RSS figure for Spring Boot with a 256 MB heap is labelled as a rough estimate to confirm by measurement, so it is acceptable, but no source is given for it.",
+      "The answer says not to run the app and database together on one 512 MB VM, then asks for that single-VM layout to be load-tested anyway. This contradicts itself slightly."
+    ],
+    "overall": 4,
+    "notes": "This is a strong, well-reasoned answer: it keeps the team's stack, uses idempotent scan IDs, acknowledges only after commit, models scan history plus current status, flags the memory contention of sharing a VM, and lists clear checks to run before committing. It never recommends two or more app instances behind a load balancer and leaves out observability (health checks, metrics, alerts); its load test runs at 200/s instead of peak plus margin."
+  },
+  "meta": {
+    "costUSD": 0.11513960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.445
+  }
+}

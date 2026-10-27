@@ -1,0 +1,91 @@
+{
+  "scenario": "20-chat-start",
+  "claims": [
+    {
+      "claim": "Holding 50,000 connections open isn't the hard part. A properly tuned server in almost any modern stack can do that.",
+      "about": "modern server stacks in general",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The most connections any test used was 256, and none of them held long-lived WebSocket connections, so nothing shows whether 50,000 open connections can be held."
+    },
+    {
+      "claim": "One Reverb process handles many thousands of connections without a worker per connection.",
+      "about": "Laravel Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb was not benchmarked, and no test held thousands of connections."
+    },
+    {
+      "claim": "Elixir/Phoenix is technically the best fit for this kind of product, but at 50k connections you don't need it.",
+      "about": "Elixir/Phoenix vs Laravel Reverb",
+      "measured": "elixir-phoenix I/O wait at 256 connections: 18,711 req/s, p99 19.16 ms, 160 MB",
+      "verdict": "not_covered",
+      "why": "Neither Phoenix nor Reverb was measured holding persistent connections at large scale, so the claim that Phoenix fits best and Reverb is enough at 50k cannot be checked."
+    },
+    {
+      "claim": "Node.js or Go for the whole product: you'd give up speed in Laravel and gain nothing.",
+      "about": "Node.js / Go vs Laravel (PHP-FPM)",
+      "measured": "php-laravel 681 req/s plaintext and 149 req/s single DB query, vs go-gin 53,941 and 22,138, node-fastify 40,730 and 9,423",
+      "verdict": "off",
+      "why": "For the normal-request part of the product, Go and Node measured roughly 25–150× the throughput of Laravel, so saying they 'gain nothing' points the wrong way on performance."
+    },
+    {
+      "claim": "Soketi is Pusher-compatible and very efficient.",
+      "about": "Soketi",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Soketi was not benchmarked."
+    },
+    {
+      "claim": "Centrifugo (Go) is very fast and proven at scale.",
+      "about": "Centrifugo",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Centrifugo was not benchmarked."
+    },
+    {
+      "claim": "Standard PHP ties up one worker for every open connection, so it can't hold thousands at once (SSE or long-polling from Laravel).",
+      "about": "Laravel on PHP-FPM",
+      "measured": "php-laravel I/O wait (10 ms per request, 256 connections): 591 req/s, p50 412.91 ms, p99 458.02 ms",
+      "verdict": "consistent",
+      "why": "With only 256 connections each waiting 10 ms, Laravel's median latency rose to about 413 ms, so only a handful of requests were being served at once; thousands of held connections are out of reach."
+    },
+    {
+      "claim": "Out of the box, Reverb's PHP event loop can't go past about 1,024 connections without ext-uv.",
+      "about": "Laravel Reverb / PHP event loop",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb was not measured, and no test went above 256 connections."
+    },
+    {
+      "claim": "In a reconnect storm, tens of thousands of widgets hitting the Laravel channel-auth endpoint within seconds can overwhelm PHP.",
+      "about": "Laravel (PHP-FPM)",
+      "measured": "php-laravel 681–705 req/s (plaintext/JSON) and 149 req/s with one DB query, per core",
+      "verdict": "consistent",
+      "why": "At about 150–700 req/s per core, tens of thousands of auth requests within a few seconds would need dozens of cores, so overwhelming PHP is consistent with the measurements."
+    },
+    {
+      "claim": "Managed Pusher/Ably gets expensive at 10k–50k connections while the same load fits on a few VMs.",
+      "about": "self-hosted Reverb",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither the connection capacity of Reverb nor that of any server at 10k–50k connections was measured."
+    },
+    {
+      "claim": "For the first year (2,000 widgets), one modest VM can run everything, and the load test should hold up at these numbers.",
+      "about": "Laravel + Reverb on one VM",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Reverb's connection capacity was not measured, and the request rate per widget is unknown, so whether one VM is enough cannot be checked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1833846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 33.177
+  }
+}

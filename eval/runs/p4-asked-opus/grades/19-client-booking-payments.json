@@ -1,0 +1,29 @@
+{
+  "scenario": "19-client-booking-payments",
+  "grade": {
+    "primary_choice": "Hosted class/workshop booking tool (e.g. Bookwhen) connected to the client's own Stripe account and embedded in Webflow",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 6,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Calendly-style schedulers are dismissed as one-to-one tools with weak or missing group places, but Calendly group event types do cap places per session",
+      "It says the site will be collecting customers' payment details, which blurs the fact that the hosted checkout keeps card data off the site"
+    ],
+    "overall": 5,
+    "notes": "A strong answer that fits the team: no back end, accounts held by the client, a reuse playbook, capacity and deposit checks, cost and fee warnings, a clear decision on how the balance is collected, and good caveats about checking vendors' current plans. It never says outright that hosted checkout keeps card data and PCI duties off the designer, it says little about how the studio adds about 30 workshops each month, and it dismisses Calendly too quickly."
+  },
+  "meta": {
+    "costUSD": 0.10906460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.608
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "scenario": "17-membership-site",
+  "claims": [
+    {
+      "claim": "Ghost handles this scale (4,000 to 20,000 subscribers) without redesign",
+      "about": "Ghost (Node.js publishing platform), self-hosted on a small VPS",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Ghost was not benchmarked; the closest entries are generic Node.js servers (node-express, node-fastify), and the measurements say nothing about subscriber counts or Ghost's workload."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1212996,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 8.324
+  }
+}

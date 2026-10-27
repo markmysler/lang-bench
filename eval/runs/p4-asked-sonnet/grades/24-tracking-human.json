@@ -1,0 +1,30 @@
+{
+  "scenario": "24-tracking-human",
+  "grade": {
+    "primary_choice": "Spring Boot (JDBC, no JPA) on a tuned JVM with Postgres on its own VM",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 10,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Virtual threads wouldn't help on one vCPU' is too strong: virtual threads help with blocking I/O whatever the core count, though the small connection pool makes the gain small here",
+      "'At sustained peak, scans could reach hundreds of millions of rows a year' is inconsistent: 200/s sustained is about 6 billion a year, so the figure must assume a much lower average rate without saying so",
+      "Native image '~100 MB' and OS '~100 MB' are rough estimates, though the answer marks its numbers as unmeasured"
+    ],
+    "overall": 5,
+    "notes": "This closely matches the reference: it stays on Spring Boot and Postgres, uses lean JDBC, gives Postgres its own VM, makes writes idempotent, runs two instances with tested restores, keeps customer reads away from ingestion, plans partitioning, and requires a load test on the real VM. It also orders the fallbacks sensibly, ending with native image or a 1 GB VM. Gaps: it gives no concrete JVM flags (SerialGC, metaspace or thread stack limits), doesn't mention batched inserts, and doesn't say outright that the API should confirm a scan only after it is durably stored."
+  },
+  "meta": {
+    "costUSD": 0.1121596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.002
+  }
+}

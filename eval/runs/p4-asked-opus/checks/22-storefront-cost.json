@@ -1,0 +1,77 @@
+{
+  "scenario": "22-storefront-cost",
+  "claims": [
+    {
+      "claim": "A sync worker waiting on I/O holds its slot while using almost no CPU, so a pod runs out of free workers long before it runs out of CPU",
+      "about": "python-flask (sync gunicorn workers)",
+      "measured": "I/O wait: 276 req/s, p50 915 ms, p99 932 ms at 18% CPU",
+      "verdict": "consistent",
+      "why": "Sync Flask stalled at 18% CPU with latency of about 900 ms, which is a worker limit and not a CPU limit."
+    },
+    {
+      "claim": "Go would mostly make that waiting cheaper; Go fixes concurrency because concurrency is built in",
+      "about": "go-gin / go-nethttp vs python-flask",
+      "measured": "I/O wait: go-gin 20,235 req/s at 47% CPU and go-nethttp 18,905 req/s, vs python-flask 276 and python-flask-gthread 374",
+      "verdict": "consistent",
+      "why": "Go handled the waiting workload about 50–70 times better than the Flask variants, using far less CPU per request."
+    },
+    {
+      "claim": "With threaded workers, the same CPU gives you several times as many slots",
+      "about": "python-flask-gthread vs python-flask",
+      "measured": "I/O wait: gthread 374 req/s (p99 686 ms) vs sync 276 req/s (p99 932 ms), about 1.35x",
+      "verdict": "off",
+      "why": "Threaded workers measured only about 1.35 times the sync throughput on the waiting workload, not several times."
+    },
+    {
+      "claim": "Python releases the GIL while waiting, so threads work well for this load; gthread is expected to remove most of the queueing",
+      "about": "python-flask-gthread",
+      "measured": "I/O wait: 374 req/s, p50 678 ms, p99 686 ms at 19% CPU for a 10 ms wait",
+      "verdict": "off",
+      "why": "Under gthread a 10 ms wait still had a p50 of 678 ms, so queueing stayed heavy and was not mostly removed."
+    },
+    {
+      "claim": "gthread gets most of Go's concurrency benefit for free",
+      "about": "python-flask-gthread vs go-gin",
+      "measured": "I/O wait: gthread 374 req/s, p99 686 ms vs go-gin 20,235 req/s, p99 17.5 ms",
+      "verdict": "off",
+      "why": "gthread reached about 2% of Go's throughput on the waiting workload, nowhere near most of its benefit."
+    },
+    {
+      "claim": "gevent workers give more concurrency per pod than threads",
+      "about": "python-flask-gevent vs python-flask-gthread",
+      "measured": "I/O wait: gevent 2,956 req/s (p50 71 ms) vs gthread 374 req/s (p50 678 ms)",
+      "verdict": "consistent",
+      "why": "gevent handled about 8 times as many waiting requests as gthread, which matches the claim's direction."
+    },
+    {
+      "claim": "Async Django (ASGI) gives little gain over gthread",
+      "about": "Django ASGI vs gunicorn gthread",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Django ASGI was not benchmarked; the only async Python server measured is FastAPI, which is a different framework."
+    },
+    {
+      "claim": "Go's CPU efficiency only saves money when CPU is the cost",
+      "about": "go-gin / go-nethttp vs Python",
+      "measured": "CPU fib(20): go-gin 18,218 and go-nethttp 15,093 req/s vs python-flask-gthread 1,149 and python-flask 1,078",
+      "verdict": "consistent",
+      "why": "The claim implies Go is much more CPU-efficient than Python, and the CPU test shows it about 13–17 times faster."
+    },
+    {
+      "claim": "Django REST Framework serializers are often CPU-heavy, and faster JSON encoding (orjson) fixes this more cheaply than a new language",
+      "about": "Django REST Framework / orjson",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Django REST Framework nor orjson was benchmarked."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1706046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 27.405
+  }
+}

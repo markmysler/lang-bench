@@ -1,0 +1,91 @@
+{
+  "scenario": "25-tracking-review",
+  "claims": [
+    {
+      "claim": "200 small writes a second is modest for Spring MVC; I expect this to fit on the single vCPU",
+      "about": "java-spring (Spring Boot MVC) on 1 vCPU",
+      "measured": "java-spring: 7,668 req/s single-row Postgres query at 100% CPU; java-spring-vt 12,731 req/s",
+      "verdict": "consistent",
+      "why": "One CPU handled about 38 times the 200 req/s target, so calling the load modest and expecting it to fit matches the data."
+    },
+    {
+      "claim": "Memory is the tightest limit; the JVM has to share 512 MB, and a mis-sized heap gets the process OOM-killed",
+      "about": "java-spring on a 512 MB machine",
+      "measured": "java-spring peak memory: 491 MB (I/O wait), 499 MB (single query), 500 MB (20 queries) in a 512 MB container; CPU need at 200 req/s is only about 3% of one core",
+      "verdict": "consistent",
+      "why": "Spring Boot peaked within about 12 MB of the 512 MB limit while CPU had large headroom, so memory really is the binding limit."
+    },
+    {
+      "claim": "Go or Rust have the best footprint",
+      "about": "go-gin, go-nethttp, rust-actix, rust-axum vs java-spring",
+      "measured": "Go 7–16 MB peak, 2 MB idle; Rust 3–10 MB peak, 1 MB idle; java-spring 220–500 MB peak, 134 MB idle",
+      "verdict": "consistent",
+      "why": "Go and Rust are among the smallest measured, roughly 30 to 100 times smaller than Spring Boot."
+    },
+    {
+      "claim": "The footprint savings of Go/Rust aren't needed for 200 writes a second",
+      "about": "java-spring vs Go/Rust",
+      "measured": "java-spring 7,668 req/s on single-row DB, peak 499 MB within 512 MB",
+      "verdict": "consistent",
+      "why": "Spring Boot's measured throughput and memory both fit the 200 req/s, 512 MB requirement, though memory is close to the limit."
+    },
+    {
+      "claim": "Node.js has less performance headroom than Spring on one vCPU",
+      "about": "node-express / node-fastify vs java-spring",
+      "measured": "Single-row DB: express 9,034, fastify 9,423 vs java-spring 7,668 req/s; plaintext: express 17,601, fastify 40,730 vs 13,653; Node peak memory 55–77 MB vs Spring 220–500 MB",
+      "verdict": "off",
+      "why": "On the DB-write-like and plaintext tests both Node servers beat Spring MVC, and they use far less memory, so the claim points the wrong way for this workload."
+    },
+    {
+      "claim": "Python has less performance headroom than Spring on one vCPU",
+      "about": "python-fastapi / python-flask vs java-spring",
+      "measured": "Single-row DB: fastapi 3,706, flask 1,529–2,119 vs java-spring 7,668 req/s",
+      "verdict": "consistent",
+      "why": "Every Python variant measured slower than Spring Boot on the DB and most other tests."
+    },
+    {
+      "claim": "Using JdbcClient/JdbcTemplate instead of JPA/Hibernate saves memory and startup time",
+      "about": "Spring JDBC vs JPA/Hibernate",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Only one Spring data-access setup was measured, so JDBC and JPA can't be compared."
+    },
+    {
+      "claim": "Quarkus or Micronaut are lighter than Spring",
+      "about": "Quarkus, Micronaut vs Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor Micronaut was benchmarked."
+    },
+    {
+      "claim": "Spring Boot native image (GraalVM) cuts memory and startup time",
+      "about": "Spring Boot GraalVM native",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image build was measured; only JVM Spring Boot, with 5.9–6.2 s start-up and 131–134 MB idle."
+    },
+    {
+      "claim": "Use a single-CPU-friendly GC (Serial, or G1 with a small heap)",
+      "about": "JVM GC choice",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't vary or report GC settings."
+    },
+    {
+      "claim": "A shared reverse proxy or load balancer costs less than running nginx on the same small VM",
+      "about": "nginx alongside the API",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No setup with nginx running next to the app on the same machine was measured."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1755996,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 31.262
+  }
+}

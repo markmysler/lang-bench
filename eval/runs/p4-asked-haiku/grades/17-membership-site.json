@@ -1,0 +1,30 @@
+{
+  "scenario": "17-membership-site",
+  "grade": {
+    "primary_choice": "Self-hosted Ghost on a small VPS with Stripe and a dedicated bulk email provider",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Paid subscribers generally can't be moved with their payment details intact' is wrong as a general rule. Platforms such as Substack and Ghost(Pro) bill through the owner's own Stripe account (Stripe Connect), so subscriptions can often be kept.",
+      "Putting beehiiv with platforms that 'take a percentage of paid revenue' is misleading, because beehiiv charges flat plan fees and takes no revenue share.",
+      "It says 20,000 subscribers 'should fit under $50 a month' without pricing the email line, although it does add a caveat about send volume. Self-hosted Ghost's bulk sending is also tied to Mailgun, so SES and Postmark are not drop-in alternatives."
+    ],
+    "overall": 4,
+    "notes": "This is a strong, well-reasoned Ghost recommendation that follows from the owner's constraints and covers payments, deliverability, legal, ownership and backups. Its weak points: it gives wrong guidance on migrating paid subscriptions, never mentions uptime or error alerts, has no git repo or runbook, and gives no concrete email cost figures."
+  },
+  "meta": {
+    "costUSD": 0.12050459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 20.099
+  }
+}

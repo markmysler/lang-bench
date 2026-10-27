@@ -1,0 +1,100 @@
+{
+  "scenario": "25-tracking-review",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Spring Boot (Spring MVC, Java 21+ with virtual threads) with JDBC or JPA, a small HikariCP pool, and the existing Postgres",
+        "why": "It is the stack the three developers already know and can review, and about 200 small inserts a second is a modest load that a single tuned Spring Boot instance can handle within 1 vCPU / 512 MB."
+      },
+      {
+        "choice": "Spring Boot tuned for the small VM: -Xmx around 200–300 MB or MaxRAMPercentage, SerialGC, capped thread and connection pools, lazy init and only the starters it needs",
+        "why": "The JVM's default settings are what make Java look memory-hungry; with explicit limits the service fits safely in 512 MB."
+      },
+      {
+        "choice": "Plain JDBC (JdbcTemplate or jOOQ) with batched inserts and a simple index on parcel ID for status lookups",
+        "why": "It keeps write cost and memory low and stays easy for reviewers to read."
+      },
+      {
+        "choice": "Spring Boot built as a GraalVM native image (Spring AOT), as an optional optimisation",
+        "why": "It cuts memory use and startup time, but adds build complexity and reflection quirks. Use it only if measurement shows the JVM version doesn't fit."
+      },
+      {
+        "choice": "Quarkus or Micronaut on Java, as a secondary option",
+        "why": "Same language and a smaller footprint, but a new framework for a three-person team. Only justified if tuned Spring Boot fails a load test on the real VM."
+      },
+      {
+        "choice": "Spring WebFlux / R2DBC, acceptable but not preferred",
+        "why": "It works within the resource limits, but reactive code is harder to review and debug than MVC with virtual threads, and this load doesn't need it."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Go, Rust, Node.js, Python, Elixir or another non-Java back end",
+        "why": "Nobody in IT can review or maintain it, which breaks the 'IT can keep everything running' and 'review every change' requirements; any resource saving isn't needed at this load."
+      },
+      {
+        "choice": "Kafka, RabbitMQ or another message broker in front of the database",
+        "why": "It won't fit comfortably on a 512 MB VM, adds infrastructure three people must run, and 200 writes a second doesn't need it."
+      },
+      {
+        "choice": "Kubernetes or another container orchestration platform",
+        "why": "Too much operational overhead for three developers, and a poor match for the standard small VMs at a local host."
+      },
+      {
+        "choice": "Public-cloud managed or serverless services (AWS Lambda, DynamoDB, Firebase, etc.)",
+        "why": "Company policy says it runs on VMs at the local hosting company."
+      },
+      {
+        "choice": "Switching the database to NoSQL or a time-series store (MongoDB, Cassandra, InfluxDB)",
+        "why": "It adds a new system to operate and new skills to learn; Postgres handles this write rate easily."
+      },
+      {
+        "choice": "Adding Redis or another cache layer from the start",
+        "why": "Another component to run and keep consistent, with no evidence yet that status reads need it."
+      },
+      {
+        "choice": "Untuned Spring Boot with default JVM settings and a heavy dependency set",
+        "why": "It risks running out of memory or swapping on a 512 MB VM."
+      }
+    ],
+    "must_mention": [
+      "Recommend staying with Java and Spring Boot because the team's skills and review responsibility outweigh small performance gains elsewhere.",
+      "About 200 small writes a second is modest for one tuned Spring Boot instance and for Postgres; no exotic technology is needed.",
+      "Give explicit memory tuning for 512 MB: heap cap or MaxRAMPercentage, SerialGC on 1 vCPU, bounded thread and connection pools, lean dependencies.",
+      "Load-test on an actual 1 vCPU / 512 MB VM at peak rate and above before going live.",
+      "Scan ingestion must be idempotent (client-generated scan ID plus a unique constraint), because handheld scanners retry on poor connections.",
+      "For reliability, run at least two instances behind the hosting company's load balancer or a reverse proxy, with health checks.",
+      "Plan Postgres sizing and growth: scan history grows by millions of rows a day, so add indexes for status lookups and a retention or partitioning plan.",
+      "Keep the code conventional and boring (Spring MVC, JDBC or JPA, Flyway migrations, standard actuator metrics) so three Java developers can review changes written by the agent."
+    ],
+    "red_flags": [
+      "Recommending Go, Rust, Node or another language the team can't review, justified by performance or memory.",
+      "Claiming Java or Spring Boot can't run in 512 MB, or that the VM policy must change, without measuring.",
+      "Adding Kafka, Redis, Kubernetes, microservice splits or other infrastructure the team would have to run.",
+      "Suggesting cloud or serverless hosting despite the local-hosting policy.",
+      "Ignoring duplicate or retried scans, offline buffering on the scanners, or data loss when the single VM restarts.",
+      "Making reactive programming (WebFlux) or native image mandatory, which adds complexity the load doesn't call for.",
+      "Ignoring the database side (connection limits, indexes, table growth) while focusing only on the API process.",
+      "Giving no way to verify the choice, such as a load test on the real VM size."
+    ],
+    "unknowns": [
+      "Where Postgres runs and how big it is: shared with other services or on its own VM, and its connection limits and disk speed.",
+      "How many status queries customers make at peak, and whether they come through a public website (which affects security and caching).",
+      "How long the high peak lasts, the total scans per day, and how long scan history must be kept.",
+      "Whether the scanners buffer and retry when offline, and what payload, protocol and authentication they use.",
+      "Whether the host provides a load balancer or allows several VMs for this service, and how VM failures are handled.",
+      "Which Java version and Spring Boot version the company has standardised on (virtual threads need Java 21+).",
+      "Latency and availability targets (SLA) for scan acceptance and status lookups.",
+      "Whether a tuned JVM actually stays within 512 MB under peak load, which only a load test on the real VM can show."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.12250459999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 35.742
+  }
+}

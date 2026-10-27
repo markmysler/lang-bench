@@ -1,0 +1,26 @@
+{
+  "scenario": "29-mobile-framework",
+  "grade": {
+    "primary_choice": "React Native with Expo, in TypeScript",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "The answer gives a clear React Native with Expo recommendation that follows from the team's skills, hiring and code sharing. It treats offline sync as the main risk and covers conflicts, append-only comments, change feeds, push through the Redis queues, EAS and cost checks. It only partly says that Next.js components, CSS and web UI do not carry over, and it never asks how deep offline support needs to go."
+  },
+  "meta": {
+    "costUSD": 0.1041096,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.29
+  }
+}

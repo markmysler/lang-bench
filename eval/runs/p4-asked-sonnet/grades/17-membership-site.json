@@ -1,0 +1,26 @@
+{
+  "scenario": "17-membership-site",
+  "grade": {
+    "primary_choice": "Self-hosted Ghost on a small VPS with Stripe and Mailgun",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "A strong, well-reasoned choice of Ghost over custom code, with honest caveats about Mailgun costs, payment migration, deliverability, tax and account ownership, and a sensible trial run before committing. It never mentions uptime or error alerts that reach the owner, a git repo or README for handover, Stripe's hosted checkout and customer portal, a privacy policy, or cleaning the imported list."
+  },
+  "meta": {
+    "costUSD": 0.1129146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 15.852
+  }
+}

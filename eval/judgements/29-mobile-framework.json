@@ -1,0 +1,90 @@
+{
+  "scenario": "29-mobile-framework",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "React Native with Expo (managed workflow, Expo Router, EAS Build/Submit/Update, expo-notifications) — the recommended answer",
+        "why": "It keeps the team in TypeScript and React. They can share types, validation schemas such as zod, and the API client with the Express/Prisma backend in one monorepo. They keep hiring from the TypeScript pool. Expo also takes on most of the native build, signing and store work that a team with no mobile experience would otherwise have to learn first."
+      },
+      {
+        "choice": "Bare React Native (no Expo, or Expo modules inside a bare project)",
+        "why": "It keeps the same language and hiring benefits, but the team has to run Xcode and Gradle themselves from day one, which slows down developers who have never shipped a mobile app; it is only worth it if a specific native need shows up."
+      },
+      {
+        "choice": "Capacitor wrapping a mobile-optimised React web app, or a PWA as a short-term validation step",
+        "why": "It reuses the most web code and skills, so it is a defensible stopgap. But offline storage, background behaviour, push on iOS (PWA push only works once the user installs the app to the home screen) and native feel are weaker than React Native for an offline-first task app."
+      },
+      {
+        "choice": "Local-first sync layer on the existing Postgres: SQLite on the device (expo-sqlite with Drizzle, WatermelonDB, or op-sqlite) plus a sync API, or a Postgres sync engine such as PowerSync or ElectricSQL",
+        "why": "Offline support is the hardest part of this app whichever framework they pick, and these options add offline support without replacing the managed Postgres and Prisma backend."
+      },
+      {
+        "choice": "Simpler offline: TanStack Query with a persisted cache and a queue of pending changes (offline mutation queue)",
+        "why": "If 'offline' turns out to mean reading cached data and queuing a few writes rather than full offline editing, this is the cheapest option that fits React developers."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Flutter",
+        "why": "It is a capable framework, but it needs Dart, a language nobody on the team knows. It shares no code or types with the TypeScript backend and front end, and it splits hiring away from the TypeScript pool. That works against 'ship fast' and 'hire TypeScript developers'."
+      },
+      {
+        "choice": "Fully native apps (Swift/SwiftUI and Kotlin/Jetpack Compose)",
+        "why": "Two codebases and two new languages for four developers with no mobile experience: the slowest route to features, and it needs specialist hires."
+      },
+      {
+        "choice": "Kotlin Multiplatform / Compose Multiplatform",
+        "why": "It brings in Kotlin and a Gradle/JVM toolchain the team has never run, and it breaks the TypeScript-everywhere hiring strategy."
+      },
+      {
+        "choice": ".NET MAUI or other non-TypeScript cross-platform stacks",
+        "why": "A new language and ecosystem with no overlap with the team's skills or code."
+      },
+      {
+        "choice": "MongoDB Realm / Atlas Device Sync for offline",
+        "why": "Atlas Device Sync has been deprecated and is being shut down, and it would also need a second database next to the managed Postgres."
+      },
+      {
+        "choice": "Moving the backend to Firebase/Firestore to get offline sync",
+        "why": "It means rewriting a working Express/Prisma/Postgres backend and accepting usage-based costs that can grow faster than revenue, all for one feature."
+      }
+    ],
+    "must_mention": [
+      "Give a clear recommendation: React Native, preferably with Expo. Don't present it as a coin toss.",
+      "The deciding factors are the team's existing TypeScript/React skills, the TypeScript hiring pool, and sharing code and types with the backend. Raw runtime performance is not the deciding factor; both frameworks are fast enough for task lists and comments.",
+      "React knowledge carries over (components, hooks, state, TypeScript), but React Native is not the web. Next.js components, the DOM, CSS and web UI libraries do not carry over directly. Navigation, styling, gestures, lists and the app-store release process are new ground and will take ramp-up time.",
+      "Offline support is the real difficulty, not the framework choice. Choose a local store and sync strategy early: decide what the source of truth is, how conflicts are handled (for example, comments only ever get added, while task edits are last-write-wins or merged per field), how deletes are recorded (tombstones), and how the API supports pulling only what changed since the last sync.",
+      "Push notifications go through APNs and FCM, for example with expo-notifications or a direct integration. The backend can send them from the existing Redis queue workers on Fly.io, so no new infrastructure is needed.",
+      "EAS Build/Submit takes care of iOS builds and signing without a dedicated Mac build setup. EAS Update allows over-the-air JavaScript fixes within app-store rules. The team still needs Apple Developer and Google Play accounts and must plan for app review.",
+      "Cost stays modest: Expo's free tier or a low-cost EAS plan, free Expo push, and no new servers apart from sync endpoints on the existing API. If they consider a hosted sync engine, compare its pricing against user growth."
+    ],
+    "red_flags": [
+      "Recommending Flutter because of benchmark or rendering-performance claims while ignoring the team's skills, hiring and code-sharing constraints.",
+      "Claiming that React Native lets them reuse their Next.js UI components or CSS more or less directly.",
+      "Repeating outdated objections to React Native, such as the old 'bridge' bottleneck (the New Architecture is now the default), or objections to Expo such as 'Expo can't use native modules' (development builds and config plugins solve this).",
+      "Treating offline support as a checkbox the framework provides, without discussing sync, conflict resolution and data modelling.",
+      "Recommending Realm/Atlas Device Sync, or a backend rewrite to Firebase or another BaaS, to get offline support.",
+      "Recommending separate native iOS and Android apps, or hiring a separate mobile team before starting, for a four-person seed-stage start-up.",
+      "Saying 'both are great, it depends' with no recommendation for this team.",
+      "Suggesting a monorepo or code sharing so aggressively (for example forcing react-native-web onto the Next.js app) that it slows down shipping."
+    ],
+    "unknowns": [
+      "How deep offline support must go: read-only cached data, queued writes, or full offline editing with several users changing the same tasks. This decides between TanStack Query persistence, a custom SQLite sync, or a sync engine like PowerSync or ElectricSQL.",
+      "How tasks and comments are shared (personal, team or real-time collaborative), which sets how complex conflict resolution has to be.",
+      "Whether they need native features beyond push, such as background sync, widgets, deep OS integration or rich notification actions, which might need custom native modules.",
+      "Design expectations: platform-native look, or one custom brand UI shared across both platforms.",
+      "Timeline and launch scope: whether a PWA or Capacitor stopgap is worth it before building a proper React Native app.",
+      "Expected user and push volume and data size, which affect EAS plan choice, sync-engine pricing and sync endpoint load on Fly.io.",
+      "Whether they want a monorepo (for example Turborepo or pnpm workspaces) shared between Next.js, the API and the app, and how much they actually gain from sharing code."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1457546,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 46.672
+  }
+}

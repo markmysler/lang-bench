@@ -1,0 +1,91 @@
+{
+  "scenario": "24-tracking-human",
+  "claims": [
+    {
+      "claim": "Spring Boot fits in 512 MB if configured with care",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak memory 220–500 MB across tests in a 512 MB container (499 MB on single-row DB, 500 MB on 20-query DB); java-spring-vt 209–444 MB",
+      "verdict": "consistent",
+      "why": "Spring Boot completed every test inside a 512 MB container, but it peaked at about 500 MB, so 'with care' is a fair warning."
+    },
+    {
+      "claim": "Go, Node.js or Rust use less memory than the Spring Boot stack",
+      "about": "go-gin/go-nethttp, node-express/node-fastify, rust-actix/rust-axum vs java-spring",
+      "measured": "Go 7–16 MB, Rust 3–10 MB, Node 55–77 MB peak vs java-spring 220–500 MB peak; idle 1–43 MB vs 134 MB",
+      "verdict": "consistent",
+      "why": "All three use much less memory than Spring Boot in every test, so the claim points the right way."
+    },
+    {
+      "claim": "A simple 'parse JSON and insert one row' request on warmed-up Java should use well under 5 ms of CPU",
+      "about": "java-spring",
+      "measured": "java-spring single-row DB 7,668 req/s at 100% of 1 CPU (~0.13 ms CPU/request); java-spring-vt 12,731 req/s; JSON 27,264 req/s",
+      "verdict": "consistent",
+      "why": "The measured cost is about 0.1–0.15 ms of CPU per request, which is well under 5 ms."
+    },
+    {
+      "claim": "At 200 requests/s one Spring Boot instance on one CPU might cope, but without much spare room",
+      "about": "java-spring on 1 vCPU",
+      "measured": "java-spring 7,668 req/s single-row DB, 1,254 req/s even with 20 queries per request, on 1 CPU",
+      "verdict": "off",
+      "why": "One CPU handled about 38 times the stated peak for a one-row query, and over 6 times it with 20 queries per request, so headroom is large, not small."
+    },
+    {
+      "claim": "Expect Spring Boot start-up on one CPU to take from several seconds to tens of seconds",
+      "about": "java-spring",
+      "measured": "java-spring start-up 5,939 ms; java-spring-vt 6,224 ms",
+      "verdict": "consistent",
+      "why": "The measured ~6 s start-up is 'several seconds', the low end of the claimed range."
+    },
+    {
+      "claim": "Expect the first minutes to be slower while Java optimises the code",
+      "about": "java-spring (JVM warm-up)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark leaves out a 5 s warm-up and does not report performance during warm-up."
+    },
+    {
+      "claim": "Newer Java versions (Java 25) use less memory per object and start faster",
+      "about": "JVM versions",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements do not compare Java versions."
+    },
+    {
+      "claim": "Plain JDBC uses less memory and CPU per request than JPA/Hibernate",
+      "about": "Spring JDBC vs JPA/Hibernate",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark does not say which data-access layer Spring used and does not compare JDBC with JPA."
+    },
+    {
+      "claim": "Quarkus or Micronaut have lower memory use and faster startup than Spring Boot",
+      "about": "Quarkus / Micronaut",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor Micronaut was measured."
+    },
+    {
+      "claim": "GraalVM native image gives much less memory and almost instant startup",
+      "about": "GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image Java server was measured."
+    },
+    {
+      "claim": "By default Java gives itself only a quarter of RAM (about 128 MB) on a 512 MB machine",
+      "about": "JVM default heap sizing",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements report total peak memory, not JVM heap settings."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1677396,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 24.23
+  }
+}

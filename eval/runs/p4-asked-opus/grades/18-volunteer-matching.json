@@ -1,0 +1,29 @@
+{
+  "scenario": "18-volunteer-matching",
+  "grade": {
+    "primary_choice": "Try off-the-shelf volunteer SaaS first, otherwise build Django and managed Postgres on a managed platform in a UK/EU region",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 8,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Estimate of 40–80 USD a month is above the reference's roughly 20–50 USD, though still plausible and under budget",
+      "'Python is the most widely taught programming language' is a debatable generalisation"
+    ],
+    "overall": 5,
+    "notes": "A strong answer: it says to buy before building even though it was asked to build, covers special-category data, the DPIA and minimisation, charity-owned accounts, credit expiry, and treating the volunteer's approval as checking behaviour rather than reviewing code, backed by an independent review. Gaps: no secrets manager, no audit log of who viewed or changed data, no safeguarding or DBS checks, and no data sharing agreements with partners."
+  },
+  "meta": {
+    "costUSD": 0.11780960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.836
+  }
+}

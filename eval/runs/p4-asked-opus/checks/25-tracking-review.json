@@ -1,0 +1,98 @@
+{
+  "scenario": "25-tracking-review",
+  "claims": [
+    {
+      "claim": "A warmed-up Spring MVC endpoint that parses a small JSON body and does one insert uses roughly 0.5–1 ms of CPU per request",
+      "about": "java-spring (Spring Boot MVC)",
+      "measured": "java-spring: 7,668 req/s at 100% CPU for one Postgres row (~0.13 ms CPU/request); java-spring-vt: 12,731 req/s at 99% (~0.08 ms); JSON: 27,264 req/s at 98% (~0.04 ms)",
+      "verdict": "off",
+      "why": "One measured query costs about 0.08–0.13 ms of CPU, so 0.5–1 ms is roughly 4–12 times too high."
+    },
+    {
+      "claim": "At 200 requests a second that's about 20–30% CPU at peak",
+      "about": "java-spring (Spring Boot MVC)",
+      "measured": "200 / 7,668 req/s ≈ 2.6% of one core (java-spring); 200 / 12,731 ≈ 1.6% (java-spring-vt), single-row DB test",
+      "verdict": "off",
+      "why": "The measurements suggest about 2–3% CPU at 200 req/s, nearly 10 times less than claimed."
+    },
+    {
+      "claim": "The real limits are memory and the database, not Java's speed",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring 7,668 req/s and java-spring-vt 12,731 req/s on the single-row DB test, against a 200/s need; peak memory 307–499 MB in a 512 MB container",
+      "verdict": "consistent",
+      "why": "Throughput is far above the need while peak memory comes close to 512 MB, so memory is the tighter limit."
+    },
+    {
+      "claim": "A lean Spring Boot app (web, JDBC, actuator) typically uses about 200–300 MB of memory",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak 220 MB (plaintext), 312 MB (JSON), 499 MB (DB); java-spring-vt 209–444 MB; idle 131–134 MB",
+      "verdict": "consistent",
+      "why": "Measured peaks of 209–499 MB are all within a factor of 2 of the 200–300 MB range."
+    },
+    {
+      "claim": "Go is technically the easiest fit for 512 MB (about 30 MB of memory)",
+      "about": "go-gin / go-nethttp",
+      "measured": "go-gin peak 8–16 MB (12 MB on DB), go-nethttp 7–15 MB (11 MB on DB); idle 2 MB",
+      "verdict": "off",
+      "why": "The direction is right, but measured Go memory is 7–16 MB (11–12 MB on the DB test), so 30 MB overstates it by more than 2 times for the relevant workload."
+    },
+    {
+      "claim": "Go has quick startup",
+      "about": "go-gin / go-nethttp",
+      "measured": "go-gin 293 ms, go-nethttp 238 ms vs java-spring 5,939 ms",
+      "verdict": "consistent",
+      "why": "Go starts in under 0.3 s, about 20 times faster than Spring Boot."
+    },
+    {
+      "claim": "Python is also slow on 1 vCPU",
+      "about": "python-fastapi / python-flask",
+      "measured": "DB single row: python-fastapi 3,706, flask 1,529–2,119 req/s vs java-spring 7,668 and java-spring-vt 12,731; fib: Python 1,047–1,257 vs java-spring 14,258",
+      "verdict": "consistent",
+      "why": "The Python servers measured several times slower than Spring Boot on every test."
+    },
+    {
+      "claim": "Slow startup on 1 vCPU (roughly 10–20 seconds plus JIT warm-up)",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring 5,939 ms, java-spring-vt 6,224 ms start-up on 1 CPU",
+      "verdict": "off",
+      "why": "Measured start-up was about 6 s, so 10–20 s is 1.7–3.4 times too high, and most of that range is more than 2 times too high."
+    },
+    {
+      "claim": "Quarkus or Micronaut have lower memory and are built for small machines",
+      "about": "Quarkus / Micronaut",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither framework was benchmarked."
+    },
+    {
+      "claim": "GraalVM native image cuts memory to about 100 MB and starts instantly",
+      "about": "Spring Boot / GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image build was measured."
+    },
+    {
+      "claim": "JPA/Hibernate uses more memory than plain SQL",
+      "about": "Spring Boot with JPA/Hibernate",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements don't compare data-access layers."
+    },
+    {
+      "claim": "Spring's class-data-sharing / AOT cache speeds up startup",
+      "about": "java-spring (Spring Boot)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Start-up was measured only for one configuration, without a CDS/AOT comparison."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1864496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 32.048
+  }
+}

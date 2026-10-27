@@ -1,0 +1,32 @@
+{
+  "scenario": "19-client-booking-payments",
+  "grade": {
+    "primary_choice": "Hosted workshop-booking tool with built-in payments (Square Appointments, Acuity, Checkfront/Bookeo), embedded in or linked from Webflow",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 1,
+    "must_mention_covered": 4,
+    "red_flags_hit": [
+      "Leans toward over-engineering for reuse: it calls a custom build 'worth doing once if you'll reuse it for several clients' and says to revisit the custom route later, instead of recommending a documented, repeatable no-code setup"
+    ],
+    "unsupported_claims": [
+      "Says Stripe Payment Links can't enforce capacity, but Payment Links can be capped at a set number of payments",
+      "Says Eventbrite generally can't take deposits, yet a deposit-priced ticket works fine",
+      "Says 'with Stripe underneath' for every tool, though Square Appointments uses Square's own payments"
+    ],
+    "overall": 4,
+    "notes": "The answer gets the main call right: no custom back end, a hosted booking tool, the client owns the account, and it checks capacity, deposits, refunds and total fees, with sensible caveats about checking vendor features. It never mentions PCI or hosted checkout, gives no fee ranges, leaves out confirmation emails and monthly workshop admin, and treats reuse as a reason to build custom later instead of standardising one tool."
+  },
+  "meta": {
+    "costUSD": 0.11173960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 19.157
+  }
+}

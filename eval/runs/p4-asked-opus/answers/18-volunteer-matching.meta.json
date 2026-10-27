@@ -1,0 +1,9 @@
+{
+  "costUSD": 0.2776782,
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "turns": 3,
+  "billing": "api-key",
+  "seconds": 109.032
+}

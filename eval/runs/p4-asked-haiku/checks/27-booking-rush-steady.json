@@ -1,0 +1,42 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "claims": [
+    {
+      "claim": "Sync workers each hold one request for the whole insurer call, so by Little's law 40 req/s at about 400 ms keeps about 16 of 17 workers busy (about 95% utilisation), and a slowdown to 1.5 s would need about 60 workers",
+      "about": "python-flask (sync gunicorn workers)",
+      "measured": "python-flask I/O-wait test (10 ms wait, 256 connections): 276 req/s, p50 915 ms, CPU 18%",
+      "verdict": "not_covered",
+      "why": "The I/O test shows that sync Flask stalls on waits, but it used a 10 ms wait and an unknown worker count, so it cannot check worker counts or utilisation at 200–600 ms insurer latency, which is plain arithmetic on the team's figures."
+    },
+    {
+      "claim": "Switching to gthread workers raises concurrency with the existing stack and is the first thing to try",
+      "about": "python-flask-gthread vs python-flask",
+      "measured": "I/O wait: gthread 374 req/s (p50 678 ms) vs sync 276 req/s (p50 915 ms), about 1.35x",
+      "verdict": "consistent",
+      "why": "Throughput did go up under I/O wait, so the direction is right, but the measured gain is small (about 1.35x) and far below gevent's."
+    },
+    {
+      "claim": "gevent workers are well suited to this I/O-wait pattern",
+      "about": "python-flask-gevent",
+      "measured": "I/O wait: gevent 2,956 req/s (p50 71 ms) vs sync 276 req/s and gthread 374 req/s",
+      "verdict": "consistent",
+      "why": "gevent gave about 10.7x the sync Flask throughput and about 8x gthread's on the I/O-wait test."
+    },
+    {
+      "claim": "Async Flask / ASGI is a large migration that doesn't pay off for this problem",
+      "about": "Python ASGI (python-fastapi) vs Flask",
+      "measured": "I/O wait: python-fastapi 5,901 req/s vs flask-gevent 2,956 and sync flask 276",
+      "verdict": "not_covered",
+      "why": "Measured ASGI throughput under I/O wait is the best Python result (about 2x gevent, 21x sync), but 'doesn't pay off' weighs migration cost against need at 40 req/s, and the measurements don't cover migration cost."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1515496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 22.982
+  }
+}

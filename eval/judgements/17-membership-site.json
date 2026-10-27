@@ -1,0 +1,97 @@
+{
+  "scenario": "17-membership-site",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Self-hosted Ghost (open-source) on a managed one-click host such as PikaPods, or a small VPS (DigitalOcean/Hetzner) set up by the agent, with Stripe for payments and Mailgun for sending the newsletter",
+        "why": "It already has sign-up, monthly and yearly paid memberships, member-only posts and newsletter sending built in, so the agent configures a widely used product instead of writing payment and email code the owner can't review. Any buyer's developer will know it, and hosting plus email fits under 50 USD a month at 4,000 subscribers."
+      },
+      {
+        "choice": "Ghost(Pro), the official managed Ghost hosting",
+        "why": "It needs the least maintenance and is just as easy to sell, but its price rises with member count, so it is fine at 4,000 members and will probably pass the 50 USD budget as the list nears 20,000. Moving to self-hosted Ghost later is straightforward."
+      },
+      {
+        "choice": "Another hosted newsletter platform that charges a flat fee and lets you connect your own Stripe account (for example beehiiv or Kit)",
+        "why": "This is a legitimate 'don't build it' option for an owner who wants it to just work: no code to maintain, and the business is sold as an account transfer. The trade-off is less ownership and a monthly price that grows with the list."
+      },
+      {
+        "choice": "A conventional custom monolith (Rails, Django or Laravel) with Postgres, Stripe Checkout and Billing plus the Stripe Customer Portal, and a transactional email service (Postmark, Amazon SES or Resend), deployed on a managed PaaS (Render, Railway or Fly.io) with a managed database",
+        "why": "This is acceptable only if the answer explains why custom beats Ghost here. It uses a mainstream stack a buyer can hire for and keeps billing logic inside Stripe, but it leaves the agent as the only maintainer of payment and email-deliverability code nobody can review."
+      },
+      {
+        "choice": "WordPress with an established membership plugin and Stripe, sending through an email service rather than the web server",
+        "why": "It is takeover-friendly and widely known, but plugin licence costs, the plugin update and security burden, and plugin sprawl make it weaker than Ghost for a non-technical owner."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Writing card handling or a custom billing engine instead of using Stripe (or Paddle or Lemon Squeezy) hosted checkout and subscriptions",
+        "why": "It brings PCI exposure and fragile billing logic that the owner can't review and a buyer would have to audit."
+      },
+      {
+        "choice": "Sending the newsletter from the app's own mail server (Postfix on the VPS) or a Gmail/Workspace SMTP account",
+        "why": "Mail will land in spam, sending limits get hit, and the domain risks being blacklisted; bulk mail needs a dedicated sending provider."
+      },
+      {
+        "choice": "Microservices, Kubernetes, or a spread of serverless functions across many vendors",
+        "why": "It is far more moving parts and cost than the scale needs, it is hard for one agent to keep running, and a buyer's developer would have a hard time taking it over."
+      },
+      {
+        "choice": "An exotic or very new stack chosen because the agent likes it (niche languages, bleeding-edge frameworks, a custom CMS)",
+        "why": "It breaks the requirement that a buyer's developer can take the code over."
+      },
+      {
+        "choice": "A chain of no-code tools (Webflow + Memberstack + Zapier + Mailchimp and similar)",
+        "why": "The combined subscriptions pass 50 USD as the list grows, the glue between tools breaks silently, and there is no single codebase or data model to hand to a buyer."
+      },
+      {
+        "choice": "A heavy JavaScript-only frontend (SPA) with a separate custom backend for what is essentially a content site",
+        "why": "It is more code to maintain, member-only posts are worse for SEO, and it gives no benefit at this scale."
+      },
+      {
+        "choice": "A self-managed database on a VPS with no automated, tested off-site backups",
+        "why": "The subscriber and member list is the business; losing it breaks both 'it just works' and sellability."
+      }
+    ],
+    "must_mention": [
+      "Recommend an existing open-source membership/newsletter platform (Ghost) over bespoke code, or clearly justify custom code. The owner can't review code, so configuring a proven product is lower risk and easier to sell.",
+      "Payments go through Stripe (or a merchant of record) using its hosted checkout and customer portal; card data never touches the app.",
+      "Bulk email goes through a dedicated sending provider, and the domain is authenticated with SPF, DKIM and DMARC. Plan a warm-up and clean the imported list so the move doesn't hurt deliverability.",
+      "Migrating paying members matters most. Whether existing subscriptions can move without members re-entering cards depends on the old platform (for example, Substack and Ghost use Stripe Connect, so subscriptions can stay in or move to the owner's Stripe account). The agent must check this before switching over.",
+      "Every account must be in the owner's name and use the owner's email: domain, DNS, Stripe, hosting, email provider, code repository. That keeps the business transferable and keeps the owner from being locked out.",
+      "Give a realistic monthly cost breakdown (hosting plus email sending plus Stripe fees), and point out that email volume (subscribers × sends per month) is what will push costs toward or past 50 USD as the list grows to 20,000.",
+      "Keep everything in a git repository with a README and runbook (how to deploy, restore a backup and rotate keys), so a buyer's developer or a future agent can take over.",
+      "Set up automated off-site backups and uptime and error alerts that reach the owner in plain language, since the owner won't notice failures any other way.",
+      "Legal and compliance basics: an unsubscribe link in every email, consent records carried over from the old platform, a privacy policy, GDPR and CAN-SPAM compliance, and VAT or sales tax on subscriptions (Stripe Tax or a merchant of record)."
+    ],
+    "red_flags": [
+      "Jumping straight to writing a custom app from scratch without considering Ghost or other existing platforms, or without explaining the maintenance and payment risk to someone who can't review code.",
+      "Building custom payment or card handling, or storing card data.",
+      "Planning to send the newsletter from the web server or a personal SMTP account, or ignoring deliverability and domain authentication.",
+      "Ignoring how existing paid subscriptions migrate, which could lose paying members or bill them twice.",
+      "Opening accounts (Stripe, hosting, domain) under the agent's or someone else's control, or not making sure the owner holds all credentials.",
+      "Quoting costs that leave out email sending, or promising the setup stays under 50 USD at 20,000 subscribers without a caveat about send volume.",
+      "Picking a niche or trendy stack, or a complex architecture, that a buyer's developer would struggle to take over.",
+      "Giving no backup, monitoring or recovery plan.",
+      "Burying the owner in technical choices or jargon when they asked the agent to decide, or failing to tell them the few things only they can do (create accounts, check the migration, approve the cutover)."
+    ],
+    "unknowns": [
+      "Which hosted platform they are leaving (Substack, Ghost(Pro), Patreon, Mailchimp, beehiiv and so on), and whether paid subscriptions there run through a Stripe account that can be migrated or must be recreated.",
+      "How many of the 4,000 are paying members, and the price points (this affects Stripe fees, migration risk and how important zero-loss billing migration is).",
+      "How often the newsletter goes out (for example weekly or daily), which decides email volume and whether the email provider fits the budget as the list grows.",
+      "Where subscribers are (EU/UK VAT, US sales tax), which decides whether Stripe Tax is enough or a merchant of record such as Paddle or Lemon Squeezy is better.",
+      "Whether the owner actually needs code ownership, or would accept a hosted platform with flat pricing that meets the 'sellable' goal through account transfer.",
+      "Needs beyond the brief: custom design, comments, gifts or discounts, multiple tiers, a podcast, analytics. These could tip the choice between Ghost's built-ins and custom code.",
+      "Whether the owner's current domain and sending reputation can be kept, and the list's current bounce and complaint rates."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1555146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 61.994
+  }
+}

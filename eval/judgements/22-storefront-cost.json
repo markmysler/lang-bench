@@ -1,0 +1,113 @@
+{
+  "scenario": "22-storefront-cost",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Stay on Python/Django and fix the I/O-bound concurrency model first",
+        "why": "The requests are I/O-bound and queue behind blocked sync workers, so the problem is the concurrency model, not the language, and the team's Django skills stay fully usable."
+      },
+      {
+        "choice": "Call the recommendations (80 ms) and pricing (40 ms) services concurrently instead of one after the other",
+        "why": "If the calls are independent, running them in parallel cuts per-request wall time by about 40 ms and shortens how long each worker is held."
+      },
+      {
+        "choice": "Gunicorn gthread workers (threads per worker), sized against the Postgres connection limit",
+        "why": "A config-level change that lets each pod overlap many I/O waits with almost no code change, which is the cheapest first experiment."
+      },
+      {
+        "choice": "Gunicorn with gevent workers (and psycogreen/gevent-compatible DB driver)",
+        "why": "Gives high concurrency for I/O-bound sync Django code with little rewriting, provided libraries are monkeypatch-safe."
+      },
+      {
+        "choice": "Incremental migration of hot storefront endpoints to async Django views (ASGI on uvicorn/gunicorn+uvicorn workers) with httpx for outbound calls",
+        "why": "Native async lets one process handle many in-flight requests and run the downstream calls concurrently, while keeping the same framework and team skills."
+      },
+      {
+        "choice": "Autoscale on concurrency/queue depth or latency (e.g., in-flight requests via KEDA or custom metrics HPA) instead of CPU",
+        "why": "CPU stays low while requests queue, so a CPU-based HPA scales on the wrong signal and leaves pods both over-provisioned and saturated."
+      },
+      {
+        "choice": "Right-size pod CPU/memory requests and reduce pod count once per-pod concurrency rises",
+        "why": "This is where the hosting savings actually come from: fewer, better-utilized pods instead of 40 mostly idle ones."
+      },
+      {
+        "choice": "Caching of recommendations/pricing responses and hot queries (Redis/in-process with short TTLs)",
+        "why": "Removes downstream waits from many requests entirely, which helps both p99 and capacity if staleness rules allow."
+      },
+      {
+        "choice": "Timeouts, budgets, and graceful degradation for the recommendations call (e.g., render without recs if over ~100 ms)",
+        "why": "Recommendations are non-critical for a storefront response, so capping their tail protects the 300 ms p99 budget."
+      },
+      {
+        "choice": "Postgres connection pooling (PgBouncer or Django 5.1+ native pool) and query optimization (N+1, indexes)",
+        "why": "More concurrency per pod raises the connection count, and DB time is a large share of each request."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Full rewrite of the storefront API in Go",
+        "why": "The workload is I/O-bound, so Go's CPU speed buys little. A rewrite takes many months for a 20-person Python/Django team, adds operational risk, and the latency and cost gains can be had in Python with much less effort."
+      },
+      {
+        "choice": "Adding more pods / raising HPA replica floor to absorb peak",
+        "why": "It treats the symptom and makes the hosting bill, already growing faster than revenue, worse."
+      },
+      {
+        "choice": "Simply raising the number of sync gunicorn workers per pod without checking memory or DB connections",
+        "why": "Each sync worker is a full process, so this burns memory and Postgres connections linearly and is a costly half-measure compared with threads, gevent, or async."
+      },
+      {
+        "choice": "Rewriting in another language or framework for speed (Rust, Node, FastAPI rewrite) as the primary fix",
+        "why": "Same problem as Go: a big migration cost aimed at CPU throughput, which is not the bottleneck."
+      },
+      {
+        "choice": "Vertical scaling to bigger nodes / more CPU per pod",
+        "why": "CPU is already underused, so more CPU fixes nothing and costs more."
+      },
+      {
+        "choice": "Moving the downstream calls into Celery tasks on the request path",
+        "why": "Celery is for background work. Waiting synchronously on task results adds broker latency and still blocks the worker."
+      }
+    ],
+    "must_mention": [
+      "The bottleneck is I/O wait with sync workers (concurrency per pod), not CPU or language speed, so moving to Go is not the necessary fix",
+      "Queueing at peak is what drives p99 from about 300 ms to 900 ms, and raising per-pod concurrency (threads, gevent, or async) attacks it directly",
+      "Parallelize the independent recommendations and pricing calls (and add timeouts/fallbacks), because serial downstream waits are a fixed latency floor",
+      "Scaling on CPU is the wrong signal for this workload; scale on in-flight requests, queue depth, or latency",
+      "Cost savings come from higher utilization per pod, which allows fewer pods and right-sized requests, not from a faster language",
+      "Higher concurrency raises Postgres connection pressure, so pooling (PgBouncer or the native pool) and DB tuning must come with it",
+      "Measure first: profile or trace a request's time breakdown and peak queue time before and after changes",
+      "Give leadership a direct answer: Go is unlikely to pay off here compared with fixing the concurrency model in the existing stack"
+    ],
+    "red_flags": [
+      "Recommending a Go rewrite as the main answer, or claiming Go will cut costs by some large factor, without addressing that the workload is I/O-bound",
+      "Recommending more pods, bigger nodes, or more CPU as the fix",
+      "Claiming Python is inherently too slow, or blaming the GIL for this I/O-bound problem",
+      "Recommending gevent, threads, or async without warning about Postgres connection exhaustion or blocking/non-cooperative libraries (e.g., sync ORM calls inside async views without sync_to_async, C extensions under gevent)",
+      "Saying async Django is a drop-in switch, while ignoring that the ORM's async support is partial, middleware must be async-compatible, and sync code in async views blocks the event loop",
+      "Ignoring the CPU-based autoscaling mismatch",
+      "Proposing a big-bang migration without incremental rollout, load testing, or before/after p99 and cost measurement",
+      "Suggesting the downstream calls be made asynchronous through Celery on the request path"
+    ],
+    "unknowns": [
+      "Whether the recommendations and pricing calls are independent (can run in parallel) or one needs the other's output",
+      "The actual per-request time breakdown (DB vs. downstream vs. CPU/serialization) and how much of p99 is queue wait vs. service time",
+      "Current gunicorn worker count per pod, pod resource requests/limits, and memory per worker",
+      "How much of the hosting bill is the storefront pods vs. Postgres, Celery workers, the downstream services, egress, or other items (the API may not be the main cost driver)",
+      "Postgres max connections, whether a pooler exists, and how much headroom the DB has for more concurrent queries",
+      "Whether the libraries in use (DB driver, HTTP clients, SDKs) are gevent/async-safe",
+      "Tolerated staleness for recommendations and pricing, which decides how much caching is allowed",
+      "Whether the recommendations and pricing services can absorb the higher concurrent load once callers stop being throttled by sync workers",
+      "Django version (affects native async ORM coverage and built-in connection pooling)"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1146296,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 30.523
+  }
+}

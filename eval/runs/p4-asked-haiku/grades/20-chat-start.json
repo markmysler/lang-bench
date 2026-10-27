@@ -1,0 +1,28 @@
+{
+  "scenario": "20-chat-start",
+  "grade": {
+    "primary_choice": "Laravel app plus Laravel Reverb as a separate WebSocket process, scaled with Redis",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 6,
+    "red_flags_hit": [
+      "Leaving out the ~1,024-connection stream_select limit and file-descriptor tuning, so the first deploy quietly caps out."
+    ],
+    "unsupported_claims": [],
+    "overall": 4,
+    "notes": "The answer gets the main call right: keep Laravel, run Reverb outside PHP-FPM, use Redis, reject Octane and polling, and warn about managed-service cost at 50,000 connections. It covers load testing, reconnect storms, tenant isolation and keeping typing indicators ephemeral, but it misses ext-uv and the stream_select/ulimit cap, and it never says to send broadcasts through Horizon queues."
+  },
+  "meta": {
+    "costUSD": 0.1081146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.287
+  }
+}

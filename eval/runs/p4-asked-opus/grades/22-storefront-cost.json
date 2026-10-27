@@ -1,0 +1,29 @@
+{
+  "scenario": "22-storefront-cost",
+  "grade": {
+    "primary_choice": "Stay on Django; switch to gthread workers, run downstream calls in parallel, add pooling, autoscale on in-flight requests, right-size pods",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 8,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "The guess that the minimum pod count is pinned at about 40 is speculation, though the answer marks it as likely rather than known",
+      "'Weeks rather than a year' and 'several times as many slots' are rough estimates, not measured figures"
+    ],
+    "overall": 5,
+    "notes": "The answer covers all eight must-mention points. It ties the 900 ms p99 to queueing behind sync workers and CPU-based scaling, and it tells leadership plainly that a Go rewrite isn't worth it. It warns about Postgres connections, thread safety, gevent and async limits, measures before changing anything, and rolls out through load tests and canaries, without hitting any red flag."
+  },
+  "meta": {
+    "costUSD": 0.1065596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 11.974
+  }
+}

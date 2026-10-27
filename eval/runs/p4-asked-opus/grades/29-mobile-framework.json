@@ -1,0 +1,29 @@
+{
+  "scenario": "29-mobile-framework",
+  "grade": {
+    "primary_choice": "React Native with Expo",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'2–4 weeks before people feel productive' is a guess presented as an estimate",
+      "'roughly one Expo SDK upgrade a year' understates Expo's release pace of about three SDKs a year, though the answer hedges with 'more if you want to stay current'"
+    ],
+    "overall": 5,
+    "notes": "The answer recommends React Native with Expo clearly and bases it on the team's TypeScript/React skills, code sharing and hiring. It treats offline sync as the real problem, covering conflicts, soft deletes, change cursors and idempotency, and it also covers ramp-up, app-store admin, push through the Redis workers, and cost, with no red flags."
+  },
+  "meta": {
+    "costUSD": 0.10565959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.749
+  }
+}

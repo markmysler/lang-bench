@@ -1,0 +1,49 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "claims": [
+    {
+      "claim": "With one sync worker per request, that's 400–500 Python processes; at a typical 80–150 MB each, that's 40–75 GB of RAM",
+      "about": "python-flask (sync Gunicorn workers)",
+      "measured": "python-flask peak memory 117–123 MB across tests, idle 115 MB (per container)",
+      "verdict": "consistent",
+      "why": "The measured Flask sync figure of about 115–123 MB falls inside the claimed 80–150 MB range, so the 40–75 GB total for 400–500 processes is the right order."
+    },
+    {
+      "claim": "Gunicorn gthread workers: threads release the GIL while waiting on network I/O, so one process can wait on dozens of insurer calls (25–50 threads each)",
+      "about": "python-flask-gthread",
+      "measured": "I/O wait test: 374 req/s, p50 678 ms, 19% CPU (only about 3.7 requests waiting at once with the benchmark's thread count)",
+      "verdict": "not_covered",
+      "why": "The benchmark's gthread setup was clearly limited by its thread count, not by CPU, and it did not use the 25–50 threads proposed, so the measurements can't confirm or refute dozens of waits per process."
+    },
+    {
+      "claim": "gevent: very high concurrency, a reasonable next step if gthread isn't enough",
+      "about": "python-flask-gevent",
+      "measured": "I/O wait test: 2,956 req/s vs gthread 374 and sync 276 (about 30 requests waiting at once)",
+      "verdict": "consistent",
+      "why": "gevent handled about 8–10× more throughput than the measured gthread and sync setups when requests wait on I/O, which supports 'very high concurrency' compared with them."
+    },
+    {
+      "claim": "Async (Quart, FastAPI) is the right model on paper",
+      "about": "python-fastapi",
+      "measured": "I/O wait test: 5,901 req/s, the highest of the Python servers (gevent 2,956, gthread 374, sync 276)",
+      "verdict": "consistent",
+      "why": "FastAPI had the best I/O-wait throughput of the Python options measured, although its p99 of 807 ms shows a long tail."
+    },
+    {
+      "claim": "More sync workers means 15–20× the memory and connection count",
+      "about": "python-flask (sync workers)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "This is arithmetic on the team's worker counts, and the benchmark doesn't measure how memory or connections scale with the number of workers."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1640496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 25.845
+  }
+}

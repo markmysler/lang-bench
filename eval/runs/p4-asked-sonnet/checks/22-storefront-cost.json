@@ -1,0 +1,56 @@
+{
+  "scenario": "22-storefront-cost",
+  "claims": [
+    {
+      "claim": "Go would make the CPU part faster, but that part is small.",
+      "about": "Go vs Python (sync Flask-style workers)",
+      "measured": "CPU fib(20): go-gin 18,218 req/s, go-nethttp 15,093 vs python-flask 1,078, gthread 1,149, gevent 1,047, fastapi 1,257 (about 14-17x)",
+      "verdict": "consistent",
+      "why": "The claim gives no number, only a direction, and Go was measured about 15x faster than Python on CPU-bound work."
+    },
+    {
+      "claim": "The saving would come from Go's cheap concurrency, and you can get that in Python without a rewrite.",
+      "about": "Go vs Python concurrency models (gthread/gevent/ASGI)",
+      "measured": "I/O wait, 256 conns: go-gin 20,235 req/s (p99 17.5 ms), go-nethttp 18,905 vs python-fastapi 5,901 (p99 807 ms), flask-gevent 2,956 (p99 183 ms), flask-gthread 374 (p99 686 ms)",
+      "verdict": "off",
+      "why": "The best Python concurrency option measured, FastAPI, got about 3.4x less throughput than Go on the wait-heavy test with far worse p99, and gthread got about 54x less, so Python doesn't get Go-level concurrency."
+    },
+    {
+      "claim": "Move from sync workers to gunicorn gthread... One pod then handles many waiting requests at once. Pod count can often drop several-fold.",
+      "about": "Python Flask sync vs Flask gthread",
+      "measured": "I/O wait: python-flask (sync) 276 req/s, p99 932 ms vs python-flask-gthread 374 req/s, p99 686 ms (about 1.36x)",
+      "verdict": "off",
+      "why": "gthread was measured only about 1.4x faster than sync workers on the wait-heavy test, which is far short of a several-fold cut in pods."
+    },
+    {
+      "claim": "Memory per request drops too, because threads share one process.",
+      "about": "Python Flask sync vs Flask gthread",
+      "measured": "I/O wait peak memory: python-flask 122 MB vs gthread 57 MB; idle 115 MB vs 52 MB; gthread also serves more req/s",
+      "verdict": "consistent",
+      "why": "gthread used about half the memory of sync Flask while serving more requests, so memory per request went down."
+    },
+    {
+      "claim": "gevent: Very efficient.",
+      "about": "Python Flask gevent",
+      "measured": "I/O wait: flask-gevent 2,956 req/s vs sync flask 276 and gthread 374; peak memory 67 MB",
+      "verdict": "consistent",
+      "why": "On the wait-heavy test gevent got about 8-11x the throughput of sync and gthread Flask with modest memory."
+    },
+    {
+      "claim": "gthread: Least invasive, and probably enough. My first pick (over gevent or ASGI).",
+      "about": "Python Flask gthread vs gevent / ASGI (FastAPI)",
+      "measured": "I/O wait: flask-gthread 374 req/s, p50 678 ms, p99 686 ms vs flask-gevent 2,956 req/s and python-fastapi 5,901 req/s",
+      "verdict": "off",
+      "why": "On the wait-heavy test gthread was measured about 8x slower than gevent and 16x slower than ASGI, and its p99 stayed near 690 ms, so the data doesn't show it as enough or the best pick on performance."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.15993459999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 23.6
+  }
+}

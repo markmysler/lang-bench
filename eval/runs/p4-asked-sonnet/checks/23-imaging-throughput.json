@@ -1,0 +1,63 @@
+{
+  "scenario": "23-imaging-throughput",
+  "claims": [
+    {
+      "claim": "A rewrite in Go, Rust or Node would run the same libvips and the same model; I'd expect it to save a few percent per image at most",
+      "about": "Ruby (Sidekiq) vs Go/Rust/Node for libvips- and model-heavy image processing",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks only measure work done inside each runtime (for example fib(20), where Ruby is 3,068 req/s and Go Gin is 18,218), not work that is mostly native libvips and model inference called from the runtime."
+    },
+    {
+      "claim": "Rewriting in Go or Rust gives little speedup because the heavy work is already native",
+      "about": "Go/Rust vs Ruby for the processing worker",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Nothing in the measurements tests a workload where most CPU time is spent in shared native libraries, so the size of any language-level speedup can't be checked."
+    },
+    {
+      "claim": "Use libvips shrink-on-load (thumbnail rather than load-then-resize); it is often a several-fold win on large photos",
+      "about": "libvips",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "libvips image operations are not benchmarked."
+    },
+    {
+      "claim": "Without VIPS_CONCURRENCY=1, vips threads and Sidekiq threads oversubscribe the CPU and slow each other down",
+      "about": "libvips threading inside Sidekiq workers",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Thread oversubscription between libvips and Sidekiq is not measured."
+    },
+    {
+      "claim": "Long-running Sidekiq processes can bloat",
+      "about": "Ruby/Sidekiq memory over time",
+      "measured": "ruby-rails peak memory 175–192 MB, idle 99 MB",
+      "verdict": "not_covered",
+      "why": "The measurements give peak and idle memory over short runs, not memory growth in long-running worker processes."
+    },
+    {
+      "claim": "Serverless fan-out adds cold starts",
+      "about": "Lambda / Cloud Run jobs",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Serverless platforms' cold-start behaviour is not measured; only container start-up time per server is."
+    },
+    {
+      "claim": "Moving the tagging model to a Python or ONNX service is the one place a different runtime can pay off",
+      "about": "Python/ONNX Runtime vs Ruby for model inference",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Model inference performance is not part of the benchmarks."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1449996,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.035
+  }
+}

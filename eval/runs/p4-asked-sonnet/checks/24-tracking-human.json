@@ -1,0 +1,84 @@
+{
+  "scenario": "24-tracking-human",
+  "claims": [
+    {
+      "claim": "200 small writes a second is easy for a lean Spring Boot service, even on one vCPU",
+      "about": "java-spring (Spring Boot)",
+      "measured": "Single Postgres row query on 1 CPU: java-spring 7,668 req/s, java-spring-vt 12,731 req/s",
+      "verdict": "consistent",
+      "why": "On one CPU, Spring Boot handled 38 to 64 times the 200 req/s target in the single-row database test."
+    },
+    {
+      "claim": "Each request gets a CPU budget of a few milliseconds, and parsing a small JSON payload and doing one insert fits well inside that",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring ran 7,668 req/s at 100% CPU on the single-row database test (about 0.13 ms CPU per request) and 27,264 req/s on JSON",
+      "verdict": "consistent",
+      "why": "The measured CPU cost per request is far below the 5 ms budget that 200 req/s on one core allows."
+    },
+    {
+      "claim": "The real constraint is memory, not throughput; a 512 MB VM leaves Spring Boot a heap of roughly 200–250 MB, which is workable only with discipline",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak memory: 220–374 MB (plaintext, JSON, CPU), 491–500 MB (I/O wait and database) in a 512 MB container; idle 134 MB; throughput far above 200 req/s",
+      "verdict": "consistent",
+      "why": "Peak memory came close to the 512 MB limit while throughput had a lot of headroom, so memory is the binding constraint, as claimed."
+    },
+    {
+      "claim": "The JVM can be killed by the OS if native memory isn't accounted for (memory creep risk)",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak memory 499–500 MB in the database tests, against a 512 MB limit",
+      "verdict": "consistent",
+      "why": "Measured resident memory under database load came within about 12 MB of the container limit, which supports the risk."
+    },
+    {
+      "claim": "Use JdbcClient/JdbcTemplate rather than JPA/Hibernate because Hibernate's memory and startup overhead buys little",
+      "about": "Spring Boot with Hibernate vs plain JDBC",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark has no JPA vs JDBC comparison."
+    },
+    {
+      "claim": "Virtual threads wouldn't help on one vCPU at this scale",
+      "about": "java-spring-vt vs java-spring",
+      "measured": "Single row on 1 CPU: VT 12,731 vs 7,668 req/s, p99 12.39 vs 77.87 ms, peak 307 vs 499 MB; 20 queries: VT 1,699 vs 1,254 req/s, p99 94 vs 236 ms",
+      "verdict": "off",
+      "why": "On one CPU, virtual threads gave about 1.7 times the throughput on database work, about 6 times lower p99 and about 40% less peak memory, so they did help."
+    },
+    {
+      "claim": "TLS handshakes are costly on one vCPU",
+      "about": "TLS termination",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No TLS tests were run."
+    },
+    {
+      "claim": "GraalVM native image uses far less memory (~100 MB) and starts fast",
+      "about": "Spring Boot on GraalVM native image",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No native-image variant was measured."
+    },
+    {
+      "claim": "Quarkus / Micronaut are somewhat leaner, but the gain is marginal compared with a well-tuned Spring Boot",
+      "about": "Quarkus / Micronaut vs Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor Micronaut was benchmarked."
+    },
+    {
+      "claim": "Go, Rust, Node are very light and fast",
+      "about": "go-gin/go-nethttp, rust-actix/rust-axum, node-express/node-fastify vs java-spring",
+      "measured": "Peak memory: Go 7–16 MB, Rust 3–10 MB, Node 55–77 MB vs Spring 209–500 MB. Single row: Go 19,543–22,138, Rust 13,238–15,071, Node 9,034–9,423 vs Spring 7,668–12,731 req/s",
+      "verdict": "consistent",
+      "why": "All three used much less memory than Spring and matched or beat its throughput, though Node's database throughput was only close to Spring's."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.18415959999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 34.538
+  }
+}

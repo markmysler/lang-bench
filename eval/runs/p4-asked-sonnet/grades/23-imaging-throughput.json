@@ -1,0 +1,28 @@
+{
+  "scenario": "23-imaging-throughput",
+  "grade": {
+    "primary_choice": "Keep Ruby/Sidekiq, profile, scale workers out with queue-depth autoscaling, and make libvips and the tagging model cheaper per image",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 8,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Minor muddle: it suggests 'one job per image, or per small batch of 20–50, so Redis and the database don't take 50k tiny writes', but one job per image would produce those 50k writes"
+    ],
+    "overall": 5,
+    "notes": "The answer does the CPU-hours against wall-clock arithmetic, rejects a rewrite because the heavy work is already native code and the founder needs to review the agent's code, and proposes process-level scale-out, VIPS_CONCURRENCY tuning, queue-depth autoscaling, per-customer fairness and model optimisation. Its profiling and scaling-experiment plan names the right unknowns, though it never explicitly asks whether the model is reloaded on every job."
+  },
+  "meta": {
+    "costUSD": 0.1071646,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.312
+  }
+}

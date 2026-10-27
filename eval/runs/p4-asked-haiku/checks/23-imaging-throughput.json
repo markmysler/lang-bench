@@ -1,0 +1,35 @@
+{
+  "scenario": "23-imaging-throughput",
+  "claims": [
+    {
+      "claim": "Ruby only issues the calls to libvips; Ruby overhead per image is likely a few milliseconds",
+      "about": "Ruby (Sidekiq workers calling libvips)",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements cover Rails HTTP request handling. They do not cover the per-job overhead of a Sidekiq worker issuing libvips calls, so the per-image Ruby cost can't be checked."
+    },
+    {
+      "claim": "Rewriting in Go or Rust would speed up the thin layer around libvips, not the 150–400 ms of image work; the gains are small because the work is in libvips and the model",
+      "about": "Go/Rust vs Ruby for the image-processing worker",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The CPU test shows Rust and Go far ahead of Ruby on pure-language fib(20) (about 27–29k and 15–18k req/s vs 3,068), but nothing measures a workload where the time goes to C libraries or ML inference, so the claim can't be checked either way."
+    },
+    {
+      "claim": "A faster runtime such as ONNX Runtime is a lever for speeding up the tagging model",
+      "about": "ONNX Runtime for model inference",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of the benchmarks include ML inference runtimes."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1361046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 14.176
+  }
+}

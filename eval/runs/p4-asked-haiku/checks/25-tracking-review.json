@@ -1,0 +1,49 @@
+{
+  "scenario": "25-tracking-review",
+  "claims": [
+    {
+      "claim": "The main risk is memory on a 512 MB VM, not language choice",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak memory 220–500 MB across tests (499 MB single-query DB, 500 MB 20-query DB, 491 MB I/O wait) in a 512 MB container; idle 134 MB",
+      "verdict": "consistent",
+      "why": "Spring Boot's measured peak memory reaches about 500 MB of the 512 MB limit under load, so memory really is the tight constraint."
+    },
+    {
+      "claim": "200 small writes per second is a modest workload... Most of the work is HTTP handling and JDBC, which Java does well",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring 7,668 req/s single-row DB query (java-spring-vt 12,731); 1,254 req/s even with 20 queries per request, on 1 CPU",
+      "verdict": "consistent",
+      "why": "Measured Spring Boot database throughput on 1 CPU is far above 200 requests/s, so this load is modest for it."
+    },
+    {
+      "claim": "Quarkus or Micronaut typically use noticeably less memory than Spring Boot on the JVM, and can produce native images",
+      "about": "Quarkus / Micronaut vs Spring Boot",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "Neither Quarkus nor Micronaut was benchmarked."
+    },
+    {
+      "claim": "Go, Rust, or Node: lighter at runtime",
+      "about": "go-gin/go-nethttp, rust-actix/rust-axum, node-express/node-fastify vs java-spring",
+      "measured": "Peak memory: Go 7–16 MB, Rust 3–10 MB, Node 55–77 MB vs Spring Boot 209–500 MB; idle memory 1–43 MB vs 131–134 MB",
+      "verdict": "consistent",
+      "why": "All three used several times less memory than Spring Boot in every test, so they are lighter."
+    },
+    {
+      "claim": "On a 512 MB VM the kernel can kill the JVM under load without a clean Java error",
+      "about": "java-spring (Spring Boot)",
+      "measured": "java-spring peak 499–500 MB in the database tests under a 512 MB limit",
+      "verdict": "consistent",
+      "why": "Measured peak resident memory came within a few MB of the 512 MB limit, so an OOM kill under load is a realistic risk."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1483846,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.397
+  }
+}

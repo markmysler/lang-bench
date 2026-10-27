@@ -1,0 +1,29 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "grade": {
+    "primary_choice": "Switch to gunicorn gthread workers, add insurer timeouts, a circuit breaker and PgBouncer, load-test, then build cancellations",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "'Eligibility usually doesn't change within a day' is an assumption, though the answer does tie caching to contract and compliance approval",
+      "The 80–150 MB per worker and 40–75 GB RAM figures are rough estimates given without saying they are guesses, though the answer later asks for memory per worker to be measured"
+    ],
+    "overall": 5,
+    "notes": "The answer does the Little's-law math and explicitly reopens the written decision without dismissing it. It recommends gthread, with gevent caveats including psycogreen, and covers PgBouncer, insurer protection, load testing and careful cancellation design (idempotency, races, audit trail, insurer call kept out of the cancel path), all while staying in Python."
+  },
+  "meta": {
+    "costUSD": 0.10602959999999999,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.336
+  }
+}

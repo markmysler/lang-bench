@@ -1,0 +1,28 @@
+{
+  "scenario": "29-mobile-framework",
+  "claims": [
+    {
+      "claim": "Flutter ... strong performance",
+      "about": "Flutter (Dart) mobile UI framework",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements only cover HTTP servers, such as dart-shelf, and say nothing about how Flutter renders mobile UI."
+    },
+    {
+      "claim": "React Native performance on long lists and animations needs care (use FlashList or similar, avoid unnecessary re-renders)",
+      "about": "React Native mobile runtime",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "No mobile client or UI rendering was benchmarked, so React Native list and animation performance can't be checked against this data."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.12170960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 8.347
+  }
+}

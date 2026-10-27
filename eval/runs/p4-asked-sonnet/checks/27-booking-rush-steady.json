@@ -1,0 +1,42 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "claims": [
+    {
+      "claim": "At 40 requests/s and a mean insurer call of about 400 ms, bookings alone keep roughly 16 of 17 sync workers busy at peak",
+      "about": "Flask on gunicorn sync workers",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "This is Little's-law arithmetic on the team's own figures; the benchmark has no 400 ms upstream wait and no 17-worker setup to check it against."
+    },
+    {
+      "claim": "If the insurer goes from 400 ms to 2 s, capacity drops about 5x and every endpoint stalls",
+      "about": "Flask on gunicorn sync workers",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmark measured only one upstream wait (10 ms), so it cannot show how sync-worker capacity changes as the wait grows."
+    },
+    {
+      "claim": "gevent doesn't help cancellations much, because cancellation is mostly a database state change rather than a long wait",
+      "about": "python-flask-gevent vs python-flask (sync)",
+      "measured": "One-row DB query: gevent 1,905 req/s vs sync 1,529 (gthread 2,119); 20 queries: gevent 369 vs sync 441. In contrast, 10 ms I/O wait: gevent 2,956 vs sync 276",
+      "verdict": "consistent",
+      "why": "On database work gevent was within about 1.25x of sync Flask and sometimes slower; its big gain (about 10x) appeared only in the I/O-wait test."
+    },
+    {
+      "claim": "Adding sync workers or containers costs more per request than gevent",
+      "about": "python-flask (sync) vs python-flask-gevent",
+      "measured": "I/O wait: sync 276 req/s at 122 MB peak vs gevent 2,956 req/s at 67 MB; idle memory 115 MB vs 60 MB",
+      "verdict": "consistent",
+      "why": "Sync Flask used more memory and handled far fewer waiting requests than gevent, so it does cost more per request when requests wait on I/O."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.14646959999999998,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.52
+  }
+}

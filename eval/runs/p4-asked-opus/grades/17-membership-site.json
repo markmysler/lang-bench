@@ -1,0 +1,26 @@
+{
+  "scenario": "17-membership-site",
+  "grade": {
+    "primary_choice": "Ghost on a specialist managed Ghost host (PikaPods/Magic Pages) with Stripe and Mailgun",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "6",
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "The answer picks Ghost over custom code because the owner can't review code and wants to sell the business, puts every account in the owner's name, flags paid-member migration and the 20k-subscriber email cost, lists the right unknowns and plans a browser trial run. It misses unsubscribe, consent and GDPR, and has no git repository or plain-language uptime alerts; the handover doc and backups only partly cover the runbook and monitoring points."
+  },
+  "meta": {
+    "costUSD": 0.11688960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 18.135
+  }
+}

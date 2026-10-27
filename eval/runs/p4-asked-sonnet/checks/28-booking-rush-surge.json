@@ -1,0 +1,42 @@
+{
+  "scenario": "28-booking-rush-surge",
+  "claims": [
+    {
+      "claim": "300 worker processes at 60–100 MB each is 18–30 GB of containers, mostly idle and waiting on the network",
+      "about": "python-flask (sync gunicorn workers)",
+      "measured": "python-flask peak memory 117–123 MB per container (115 MB idle); 18% CPU in the 10 ms I/O-wait test",
+      "verdict": "consistent",
+      "why": "Each sync Flask container measured about 115–123 MB, within a factor of 2 of 60–100 MB per worker, and it sat mostly idle (18% CPU) while waiting on I/O."
+    },
+    {
+      "claim": "gunicorn gthread workers (e.g. 8 processes × 32 threads) are the first choice for the capacity problem because threads release the GIL during network waits",
+      "about": "python-flask-gthread",
+      "measured": "I/O wait: gthread 374 rps (p50 678 ms, 19% CPU) vs sync flask 276 rps vs gevent 2,956 rps",
+      "verdict": "not_covered",
+      "why": "The benchmark doesn't give the thread count it used, and its gthread setup gained only about 1.35× over sync under I/O wait, so the proposed 8×32 configuration can't be checked against it."
+    },
+    {
+      "claim": "gevent workers are viable and efficient",
+      "about": "python-flask-gevent",
+      "measured": "I/O wait: gevent 2,956 rps vs sync flask 276 rps and gthread 374 rps",
+      "verdict": "consistent",
+      "why": "Under the I/O-wait load, gevent handled about 8–10× the throughput of the sync and gthread Flask servers."
+    },
+    {
+      "claim": "Scaling out sync workers works but is expensive and fragile when the insurer slows down",
+      "about": "python-flask (sync)",
+      "measured": "I/O wait: 276 rps, p50 915 ms, 18% CPU, 122 MB per container",
+      "verdict": "consistent",
+      "why": "A sync Flask container managed only 276 rps under a 10 ms wait while using 122 MB and leaving most of its CPU idle, so you would need many containers."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.16635460000000002,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 28.075
+  }
+}

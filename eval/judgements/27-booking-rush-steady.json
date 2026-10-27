@@ -1,0 +1,94 @@
+{
+  "scenario": "27-booking-rush-steady",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Add cancellations as new endpoints in the existing Flask app on the current gunicorn sync workers",
+        "why": "Peak load is unchanged at about 40 req/s, so the documented decision to keep sync workers still holds, and the feature needs no runtime change."
+      },
+      {
+        "choice": "Treat cancellation as a status change in Postgres (booked -> cancelled, with cancelled_at, cancelled_by and a reason), not a row delete",
+        "why": "A healthcare booking system needs an audit trail, and the slot has to be released atomically in the same transaction."
+      },
+      {
+        "choice": "Use a row lock (SELECT ... FOR UPDATE) or a conditional UPDATE ... WHERE status='booked', plus an idempotency key or idempotent semantics",
+        "why": "This stops double-cancels, cancel-versus-rebook races on the freed slot and client retries from corrupting state during the rush."
+      },
+      {
+        "choice": "Keep any slow side effects (patient notifications, insurer or clinic notification) off the request path, using an outbox table or the team's existing background job mechanism if they have one",
+        "why": "A fast cancel endpoint doesn't take worker capacity away from bookings, and the change stays inside skills the team already has."
+      },
+      {
+        "choice": "Set an explicit timeout and clear error handling on the existing insurer eligibility call, and on any new outbound call cancellations make",
+        "why": "This is the cheapest protection for sync workers when an upstream slows down, and it doesn't reopen the async decision."
+      },
+      {
+        "choice": "Check worker headroom against the new traffic mix and adjust the gunicorn worker count or container replicas if needed",
+        "why": "Scaling sync workers horizontally is the low-risk lever that matches their container deployment and their earlier decision."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Switching to gevent workers as part of this feature",
+        "why": "The team looked at this and documented a decision against it, the load that drove that decision hasn't changed, and monkey-patching brings reliability risk (DB drivers, C extensions) just before the rush they care about."
+      },
+      {
+        "choice": "Rewriting to async (FastAPI, Quart, asyncio) or making async a prerequisite for cancellations",
+        "why": "It goes against a recorded decision with no new evidence, it's a large change for six developers, and it puts the reliability of the morning rush at risk to solve a problem they don't have."
+      },
+      {
+        "choice": "Moving the service or the cancellation feature off Python or Flask",
+        "why": "The team explicitly wants to stay in Python, and its skills are Flask."
+      },
+      {
+        "choice": "A separate cancellation microservice",
+        "why": "It adds a second deployable, a distributed transaction around releasing the slot, and more operational load for a small team, with no scaling need behind it."
+      },
+      {
+        "choice": "Bringing in Kafka or new queue infrastructure just for cancellations",
+        "why": "It's operational overhead out of proportion to the feature, when a Postgres outbox or an existing job runner is enough."
+      },
+      {
+        "choice": "Hard-deleting booking rows on cancellation",
+        "why": "It loses the audit trail needed in a healthcare context and makes disputes, reporting and no-show or cancellation-fee policies impossible."
+      }
+    ],
+    "must_mention": [
+      "Cancellations can be built on the current Flask/gunicorn sync stack. The earlier decision not to adopt gevent or async still stands because peak load is still about 40 req/s, and the agent should say this rather than reopen the decision.",
+      "Ask whether a cancellation needs a synchronous call to the insurer or another slow external service. If it doesn't, it's a cheap DB request and has little effect on worker capacity.",
+      "Headroom check: by Little's law, 40 req/s at 200-600 ms needs roughly 8-24 workers busy at once, so 17 workers is already tight when the insurer is slow. Cancellations at peak, or a slow insurer, could take that margin away, so confirm it from metrics and scale workers or replicas if needed, not the concurrency model.",
+      "Concurrency correctness: make cancellation idempotent, guard it with a row lock or conditional update, and release the slot atomically so it can be rebooked safely.",
+      "Business rules must be clarified first: the cancellation window or cutoff, who can cancel (patient, clinic, admin), any fees or penalties, and whether the insurer or clinic must be told.",
+      "Use a soft cancel with an audit trail, not a delete, because this is healthcare data.",
+      "Put a timeout on the outbound insurer call, and on any new external calls, so a slow upstream can't tie up every sync worker.",
+      "Name the conditions that would justify revisiting the decision: a real rise in load, or new slow synchronous calls in the request path. Neither is true today."
+    ],
+    "red_flags": [
+      "Telling the team to switch to gevent or async before or alongside cancellations without new load evidence, which overrides their documented decision on the reviewer's old reasoning.",
+      "Presenting async or gevent as required for correctness or as best practice when the measured load is handled fine.",
+      "Proposing a rewrite, a new framework, a non-Python service or a microservice split for a single CRUD-style feature.",
+      "Ignoring the decision record completely and also not checking whether cancellations add slow external calls or peak traffic.",
+      "Implementing cancellation as a hard delete, or without locking or idempotency, which allows double-cancel or double-booking of a freed slot.",
+      "Adding a synchronous notification, email or insurer call inside the cancel request with no timeout, which takes sync worker capacity during the rush.",
+      "Starting to code without asking about cancellation policy (cutoffs, roles, fees, insurer notification) in a regulated domain.",
+      "Claiming big performance gains or making capacity claims without referring to the team's actual numbers."
+    ],
+    "unknowns": [
+      "Whether cancellation requires a synchronous call to the insurer, or to another slow external service such as a clinic system or payment refund.",
+      "How much cancellation traffic to expect, and whether it lands in the morning booking rush.",
+      "Current worker utilisation and queueing at peak, plus the insurer's real p95/p99 latency, to know how much headroom 17 workers actually has.",
+      "Business rules: the cancellation cutoff window, who may cancel, fees or penalties, and what happens to the freed slot (immediate rebooking, waitlist).",
+      "Whether the team already runs a background job system (Celery, RQ, cron) that notifications could use.",
+      "Regulatory or audit requirements for retaining cancellation records and any notifications to the patient or insurer."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1197596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 33.999
+  }
+}

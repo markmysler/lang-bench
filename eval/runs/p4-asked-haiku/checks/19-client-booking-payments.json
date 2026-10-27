@@ -1,0 +1,13 @@
+{
+  "scenario": "19-client-booking-payments",
+  "claims": [],
+  "meta": {
+    "costUSD": 0.11226960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 7.657
+  }
+}

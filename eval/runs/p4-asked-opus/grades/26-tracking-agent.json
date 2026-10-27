@@ -1,0 +1,26 @@
+{
+  "scenario": "26-tracking-agent",
+  "grade": {
+    "primary_choice": "Tuned Spring Boot (Java 21/25, virtual threads, plain JDBC) on existing Postgres, two instances behind a load balancer",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 7,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "This is a strong answer that matches the reference. It recommends tuned Spring Boot with explicit memory settings, idempotent scan IDs, two instances, monthly partitions, no broker or cache tier, and a clear bus-factor case against Go, with native image and Quarkus as measured fallbacks. Minor gaps: it never says to acknowledge a scan only after it is durably committed, it doesn't name an index on parcel ID, and it doesn't mention reducing thread stack size."
+  },
+  "meta": {
+    "costUSD": 0.1072046,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.563
+  }
+}

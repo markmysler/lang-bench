@@ -1,0 +1,99 @@
+{
+  "scenario": "19-client-booking-payments",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "A hosted booking and class-scheduling service with built-in card payments, embedded in the Webflow site, such as Bookwhen, SimplyBook.me, Acuity Scheduling or Square Appointments/Classes",
+        "why": "It covers capacity limits, deposits, confirmations, reminders, cancellations and secure card checkout without any back end, at about 30×8 bookings a month, for a monthly fee the client can pay and own."
+      },
+      {
+        "choice": "Square (bookings plus payments), if the studio already uses or wants a Square till for in-person sales",
+        "why": "One account covers studio sales, workshop bookings and deposits, so there's less to hand over and the client already knows the tool."
+      },
+      {
+        "choice": "Calendly group event types with Stripe or PayPal payment, charging the deposit amount",
+        "why": "It's cheap, familiar and easy to embed, and it caps places per session; a good fit if the studio's needs are simple."
+      },
+      {
+        "choice": "Ticketing platforms such as Eventbrite or Tito, with a 'deposit' ticket price",
+        "why": "They take no setup work and enforce capacity; acceptable if the client accepts per-ticket fees and the platform's branding."
+      },
+      {
+        "choice": "Stripe Payment Links (one per workshop, with a payment limit of 8) linked from Webflow CMS pages",
+        "why": "It's the cheapest no-code option with no subscription and no server, but it's only a fallback: it needs manual setup every month and has no rescheduling, waitlist or customer emails."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "A custom back end (Node/Express, Django, Laravel, Rails) on a VPS or PaaS with its own database",
+        "why": "The designer has never written a back end, so they couldn't hand it over or maintain it safely. It brings security, payment-webhook and uptime duties, and it costs more than the problem justifies."
+      },
+      {
+        "choice": "Custom serverless functions plus Stripe Checkout plus Supabase/Firebase/Airtable, built by the coding agent",
+        "why": "It looks cheap, but it is still a payment system the designer must debug, secure and support. Overbooking races, refunds and webhook failures would land on someone who can't diagnose them, and other freelancers couldn't take it over."
+      },
+      {
+        "choice": "Building a reusable multi-tenant booking SaaS of their own to resell to clients",
+        "why": "It turns a freelancer into a software vendor with ongoing payment-security responsibility. The reuse goal is better met by a repeatable setup of an existing tool."
+      },
+      {
+        "choice": "Moving the site to WordPress with WooCommerce Bookings or similar plugins",
+        "why": "It throws away the Webflow site and the designer's workflow, and adds hosting, plugin updates and security patching that the client can't handle."
+      },
+      {
+        "choice": "Webflow Ecommerce with each workshop as a product limited to 8 in stock",
+        "why": "It isn't a booking system: there are no session dates, reminders, cancellations, rescheduling or proper deposit handling, it needs manual product setup each month, and it requires a more expensive plan with transaction fees."
+      },
+      {
+        "choice": "Zapier/Make glue between forms, a spreadsheet and Stripe",
+        "why": "It breaks easily, can overbook under concurrent bookings, stacks several subscriptions, and is hard for the client or another freelancer to understand when something breaks."
+      },
+      {
+        "choice": "Any setup where card details pass through or are stored on the site or the designer's code",
+        "why": "It breaks PCI rules and creates liability for both the designer and the client."
+      },
+      {
+        "choice": "Enterprise studio-management platforms (Mindbody and similar)",
+        "why": "The cost and complexity are far beyond what a single small ceramics studio needs."
+      }
+    ],
+    "must_mention": [
+      "They very likely don't need a custom back end at all. A hosted booking tool with integrated payments, embedded or linked from Webflow, is the right default at this size (about 240 places a month).",
+      "Card payments should go through a hosted checkout (Stripe, Square, PayPal) so card data never touches the site, which keeps PCI compliance out of the designer's hands.",
+      "The client should own the payment account (Stripe/Square) and the booking-tool subscription in their own name, with the designer added as a collaborator. That's what makes handover clean.",
+      "Check that the chosen tool supports group or class sessions with a capacity limit (8 places) and deposits or part-payment, and decide how the balance is collected (online later or in the studio).",
+      "Costs: a monthly subscription (roughly free to tens of dollars) plus card processing fees (around 1.5–3% plus a fixed amount per transaction). Compare these against the client's budget.",
+      "Reuse comes from picking one tool and documenting a standard setup and embed process to repeat for each client, not from writing shared code.",
+      "Cancellation and refund policy, confirmation and reminder emails, and how the studio adds the roughly 30 workshops each month should be settled as part of the setup."
+    ],
+    "red_flags": [
+      "Recommending that they write and host their own booking or payment back end, even 'with the coding agent's help', without clearly saying this is unnecessary and risky for them.",
+      "Any design that collects or stores raw card numbers, or builds card forms outside a provider's hosted or embedded elements.",
+      "Setting up the Stripe or booking account under the designer's own name, or routing client money through the designer.",
+      "Ignoring capacity and overbooking, for example a plain form plus a payment link with no seat limit.",
+      "Suggesting the client leave Webflow or rebuild the site just to get bookings.",
+      "Implying payments are free, or leaving out processing and subscription fees.",
+      "Presenting specific features (deposits, group classes, regional availability, prices) as definite without telling the designer to check the vendor's current plans.",
+      "Over-engineering for 'reuse', such as building a multi-client platform, instead of a repeatable no-code setup."
+    ],
+    "unknowns": [
+      "The client's country and currency, which affect which booking tools and payment providers are available and whether strong customer authentication (SCA) applies.",
+      "Exactly how the deposit works: a fixed or percentage amount, whether the balance is charged online later or paid in the studio, and the refund or cancellation terms.",
+      "The client's budget for a monthly subscription versus per-booking fees.",
+      "Whether the studio already uses a till or payment system (such as Square or SumUp) that would make one tool the obvious choice.",
+      "Whether they need extras: waitlists, gift vouchers, multi-week courses, private group bookings, discount codes, or calendar sync for staff.",
+      "The current Webflow site plan, and whether it allows custom-code embeds, or whether an external booking page link is acceptable.",
+      "Who will add workshops and handle changes day to day (the studio or the designer), which affects how simple the admin side must be.",
+      "How similar the other clients' needs are, which determines whether one standard tool can really be reused for all of them."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1396696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 53.832
+  }
+}

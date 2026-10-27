@@ -1,0 +1,29 @@
+{
+  "scenario": "24-tracking-human",
+  "grade": {
+    "primary_choice": "Spring Boot (Spring MVC, JdbcTemplate/JdbcClient) on Postgres, tuned for 512 MB, two or more instances",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 10,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "A 250–300 MB heap on a 512 MB VM is at the top of a safe range; 300 MB leaves little room for metaspace, thread stacks, code cache and the OS (the reference suggests about 200–256 MB). The answer does say to keep 100 MB or more spare, which partly makes up for this.",
+      "'Batching on the device could cut the request rate by 10×' is a guess, though the answer says it depends on what the scanners can do."
+    ],
+    "overall": 5,
+    "notes": "This is a strong answer that matches the reference: it stays on Spring Boot and Postgres, tunes the JVM explicitly, makes scans idempotent, runs two instances, keeps customer reads away from scan writes, load-tests at twice peak on the real VM, and keeps Quarkus or native image as measured fallbacks. Small gaps: it doesn't mention limiting metaspace or thread stacks, dropping unused starters, a tested restore, or giving Postgres its own VM, and its heap ceiling is a little generous."
+  },
+  "meta": {
+    "costUSD": 0.11771960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 16.433
+  }
+}

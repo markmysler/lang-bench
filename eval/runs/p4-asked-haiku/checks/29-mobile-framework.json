@@ -1,0 +1,35 @@
+{
+  "scenario": "29-mobile-framework",
+  "claims": [
+    {
+      "claim": "Flutter: \"Rendering is excellent and it's a strong choice for heavy custom UI or animation\"",
+      "about": "Flutter (Dart) mobile UI rendering",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The measurements only cover HTTP server throughput, latency and resources (including dart-shelf), not how fast mobile UI frameworks render."
+    },
+    {
+      "claim": "Capacitor or Ionic carries \"a ceiling on performance\" and a web-view feel",
+      "about": "Capacitor/Ionic web-view apps",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "None of the benchmarked servers is a mobile web-view wrapper, and no client-side app performance was measured."
+    },
+    {
+      "claim": "Low-end Android performance is a risk for the React Native app and should be tested on a cheap device",
+      "about": "React Native (Expo) on low-end Android devices",
+      "measured": null,
+      "verdict": "not_covered",
+      "why": "The benchmarks ran server workloads in Docker on an Intel CPU and say nothing about React Native on mobile hardware."
+    }
+  ],
+  "meta": {
+    "costUSD": 0.1248696,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 10.336
+  }
+}
