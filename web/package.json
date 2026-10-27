@@ -17,7 +17,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "build:static": "tsc -b && vite build --mode static && node scripts/static-data.mjs ../published dist/data",
+    "build:e2e": "vite build --outDir dist-e2e/app && vite build --mode static --outDir dist-e2e/static && node scripts/static-data.mjs e2e/fixtures dist-e2e/static/data",
+    "test:e2e": "npm run build:e2e && playwright test"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
@@ -26,7 +29,9 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",

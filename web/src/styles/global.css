@@ -173,6 +173,7 @@ table.data td {
 }
 
 .table-scroll {
+  outline-offset: 2px;
   overflow-x: auto;
 }
 

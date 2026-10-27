@@ -235,7 +235,7 @@ export function LineChart({
       )}
       <details className={css.tableToggle}>
         <summary>Show as table</summary>
-        <div className="table-scroll">
+        <div className="table-scroll" role="region" aria-label={`${title} as a table`} tabIndex={0}>
           <table className="data">
             <thead>
               <tr>

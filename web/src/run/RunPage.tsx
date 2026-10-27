@@ -106,6 +106,7 @@ export function RunPage() {
 
   return (
     <div className={css.layout}>
+      <h1 className="visually-hidden">Run a benchmark</h1>
       <SettingsPanel
         app={app}
         images={images}

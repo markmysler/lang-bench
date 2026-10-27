@@ -26,7 +26,12 @@ function RunList() {
           No runs yet. <a href={href({ page: 'run' })}>Start one</a>.
         </p>
       ) : (
-        <div className={`panel table-scroll ${css.list}`}>
+        <div
+          className={`panel table-scroll ${css.list}`}
+          role="region"
+          aria-label="Saved runs"
+          tabIndex={0}
+        >
           <table className="data">
             <thead>
               <tr>

@@ -151,7 +151,7 @@ export function LiveView({ live, servers }: Props) {
       </div>
 
       {workload && (
-        <div className="panel table-scroll">
+        <div className="panel table-scroll" role="region" aria-label="Latest figures" tabIndex={0}>
           <h3 style={{ marginBottom: 8 }}>{WORKLOAD_NAMES[workload]}: latest</h3>
           <table className="data">
             <thead>

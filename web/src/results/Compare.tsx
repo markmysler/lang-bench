@@ -160,7 +160,7 @@ export function Compare({ result }: { result: Result }) {
         </div>
       </div>
 
-      <div className="panel table-scroll">
+      <div className="panel table-scroll" role="region" aria-label="All figures" tabIndex={0}>
         <h2 style={{ marginBottom: 8 }}>{WORKLOAD_NAMES[picked]}: all figures</h2>
         <table className="data">
           <thead>
@@ -245,7 +245,7 @@ export function Compare({ result }: { result: Result }) {
           />
         </div>
       </div>
-      <div className="panel table-scroll">
+      <div className="panel table-scroll" role="region" aria-label="Server details" tabIndex={0}>
         <table className="data">
           <thead>
             <tr>

@@ -7,6 +7,7 @@ import type {
   RunEvent,
   RunSummary,
 } from './types';
+import { STATIC } from './mode';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);
@@ -30,8 +31,14 @@ export const startRun = (cfg: RunConfig) => request<void>('/api/runs', post(cfg)
 export const cancelRun = () => request<void>('/api/runs/current', { method: 'DELETE' });
 export const currentRun = () =>
   request<{ running: boolean; id?: string; error?: string }>('/api/runs/current');
-export const listRuns = () => request<RunSummary[]>('/api/runs');
-export const getRun = (id: string) => request<Result>(`/api/runs/${encodeURIComponent(id)}`);
+// The static viewer reads published runs from files next to the page instead of the API.
+const data = (file: string) => `${import.meta.env.BASE_URL}data/${file}`;
+
+export const listRuns = () => request<RunSummary[]>(STATIC ? data('index.json') : '/api/runs');
+export const getRun = (id: string) =>
+  request<Result>(
+    STATIC ? data(`${encodeURIComponent(id)}.json`) : `/api/runs/${encodeURIComponent(id)}`,
+  );
 
 /** Follows the current run's events, from its start. Returns a function that stops following. */
 export function followRun(onEvent: (e: RunEvent) => void, onEnd: () => void): () => void {

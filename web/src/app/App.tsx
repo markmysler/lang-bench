@@ -1,6 +1,8 @@
+import { STATIC } from '../api/mode';
 import { LearnPage } from '../learn/LearnPage';
 import { ResultsPage } from '../results/ResultsPage';
 import { RunPage } from '../run/RunPage';
+import { StaticRunPage } from '../run/StaticRunPage';
 import { href, useRoute } from './routes';
 import { useTheme, type Theme } from './theme';
 import css from './App.module.css';
@@ -38,7 +40,7 @@ export function App() {
         </label>
       </header>
       <main className={css.main}>
-        {route.page === 'run' && <RunPage />}
+        {route.page === 'run' && (STATIC ? <StaticRunPage /> : <RunPage />)}
         {route.page === 'results' && <ResultsPage id={route.id} />}
         {route.page === 'learn' && <LearnPage slug={route.slug} />}
       </main>

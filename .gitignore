@@ -21,3 +21,8 @@ Thumbs.db
 orchestrator/webdist/*
 !orchestrator/webdist/.gitkeep
 !orchestrator/webdist/webdist.go
+
+# Web test output
+web/dist-e2e/
+web/playwright-report/
+web/test-results/
