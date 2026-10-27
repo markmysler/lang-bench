@@ -41,17 +41,35 @@ number.
 
 ## Servers
 
-| Language   | Framework             | Server             |
-| ---------- | --------------------- | ------------------ |
-| Go         | Gin                   | `go-gin`           |
-| Rust       | Axum                  | `rust-axum`        |
-| JavaScript | Express (Node.js)     | `node-express`     |
-| Python     | FastAPI (uvicorn)     | `python-fastapi`   |
-| Java       | Spring Boot (threads) | `java-spring`      |
-| Java       | Spring Boot (virtual) | `java-spring-vt`   |
+| Language   | Framework    | Runtime                                                                    | Server                 |
+| ---------- | ------------ | -------------------------------------------------------------------------- | ---------------------- |
+| C#         | ASP.NET Core | .NET 10 CoreCLR (tiered JIT)                                               | `csharp-aspnet`        |
+| C++        | Drogon       | Native binary                                                              | `cpp-drogon`           |
+| Dart       | Shelf        | Dart AOT (dart compile exe)                                                | `dart-shelf`           |
+| Elixir     | Phoenix      | BEAM (Erlang/OTP 29, JIT)                                                  | `elixir-phoenix`       |
+| Go         | Gin          | Native binary                                                              | `go-gin`               |
+| Go         | net/http     | Native binary                                                              | `go-nethttp`           |
+| Java       | Spring Boot  | HotSpot JVM 25 (JIT)                                                       | `java-spring`          |
+| Java       | Spring Boot  | HotSpot JVM 25 (JIT)                                                       | `java-spring-vt`       |
+| JavaScript | Express      | Node.js 24 (V8 JIT)                                                        | `node-express`         |
+| JavaScript | Fastify      | Node.js 24 (V8 JIT)                                                        | `node-fastify`         |
+| Kotlin     | Ktor         | HotSpot JVM 25 (JIT)                                                       | `kotlin-ktor`          |
+| Lua        | OpenResty    | LuaJIT 2.1 in nginx (OpenResty)                                            | `lua-openresty`        |
+| PHP        | Laravel      | PHP-FPM + nginx (OPcache, no JIT)                                          | `php-laravel`          |
+| PHP        | Laravel      | Octane + FrankenPHP (OPcache, no JIT)                                      | `php-laravel-octane`   |
+| Python     | FastAPI      | CPython 3.14 (interpreter)                                                 | `python-fastapi`       |
+| Python     | Flask        | CPython 3.14 (interpreter), gunicorn 26.2.0 sync workers                   | `python-flask`         |
+| Python     | Flask        | CPython 3.14 (interpreter), gunicorn 26.2.0 gevent workers (gevent 26.9.0) | `python-flask-gevent`  |
+| Python     | Flask        | CPython 3.14 (interpreter), gunicorn 26.2.0 gthread workers                | `python-flask-gthread` |
+| Ruby       | Rails        | CRuby 4.0 (YJIT)                                                           | `ruby-rails`           |
+| Rust       | Actix Web    | Native binary                                                              | `rust-actix`           |
+| Rust       | Axum         | Native binary                                                              | `rust-axum`            |
+| Swift      | Vapor        | Native binary (static Swift stdlib)                                        | `swift-vapor`          |
+| TypeScript | Elysia       | Bun 1.4.4 (JavaScriptCore JIT)                                             | `bun-elysia`           |
+| TypeScript | Hono         | Deno 2.9.8 (V8 JIT)                                                        | `deno-hono`            |
+| Zig        | Zap          | Native binary                                                              | `zig-zap`              |
 
-More languages are on the way: PHP, Ruby, C#, C++, Lua, Kotlin, Scala, Elixir, Swift, Zig, Dart,
-Bun and Deno, with several frameworks each. Each server's README says how it is tuned.
+Each server's README says how it is tuned, and why where a choice could favour or penalise it.
 
 ## Fair, and reproducible
 
