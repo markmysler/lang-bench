@@ -55,7 +55,7 @@ func TestIDMustMatchFolder(t *testing.T) {
 func TestRequiredFields(t *testing.T) {
 	root := t.TempDir()
 	write(t, root, "go-gin", `{"id":"go-gin","language":"Go"}`)
-	if _, err := Load(root); err == nil || !strings.Contains(err.Error(), "framework") {
+	if _, err := Load(root); err == nil || !strings.Contains(err.Error(), "languageVersion is required") {
 		t.Fatalf("err = %v", err)
 	}
 }

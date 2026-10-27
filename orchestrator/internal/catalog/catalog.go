@@ -52,13 +52,13 @@ func Load(root string) ([]Server, error) {
 		if s.ID != e.Name() {
 			return nil, fmt.Errorf("%s/server.json: id %q must match the folder name %q", e.Name(), s.ID, e.Name())
 		}
-		for field, v := range map[string]string{
-			"language": s.Language, "languageVersion": s.LanguageVersion, "framework": s.Framework,
-			"frameworkVersion": s.FrameworkVersion, "runtime": s.Runtime, "concurrency": s.Concurrency,
-			"tuning": s.Tuning,
+		for _, f := range []struct{ name, value string }{
+			{"language", s.Language}, {"languageVersion", s.LanguageVersion}, {"framework", s.Framework},
+			{"frameworkVersion", s.FrameworkVersion}, {"runtime", s.Runtime}, {"concurrency", s.Concurrency},
+			{"tuning", s.Tuning},
 		} {
-			if v == "" {
-				return nil, fmt.Errorf("%s/server.json: %s is required", e.Name(), field)
+			if f.value == "" {
+				return nil, fmt.Errorf("%s/server.json: %s is required", e.Name(), f.name)
 			}
 		}
 		s.Dir = dir

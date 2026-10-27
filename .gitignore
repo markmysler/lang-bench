@@ -16,3 +16,8 @@ results/*
 .vscode/
 .DS_Store
 Thumbs.db
+
+# The dashboard is built into the orchestrator image
+orchestrator/webdist/*
+!orchestrator/webdist/.gitkeep
+!orchestrator/webdist/webdist.go
