@@ -14,6 +14,7 @@ interface Props {
 
 export function LiveView({ live, servers }: Props) {
   const [picked, setPicked] = useState<WorkloadName | null>(null);
+  const [metric, setMetric] = useState('Throughput');
   const workload = picked ?? live.workload;
   const colors = seriesColors(live.order);
   const def = (id: string) => servers.find((s) => s.id === id);
@@ -38,6 +39,38 @@ export function LiveView({ live, servers }: Props) {
     live.order.map((id) => ({ id, ...label(id), color: '', points: pick(id) }));
   const warmup = live.config?.warmupSlices ?? 0;
   const band = warmup > 0 ? { from: 0, to: warmup - 0.5, label: 'warm-up' } : undefined;
+  const charts = [
+    {
+      title: 'Throughput',
+      hint: 'requests per second',
+      series: series((id) => slices(id).map((p) => ({ x: p.i, y: p.rps }))),
+      yFormat: rate,
+      xLabel: 'Second of load',
+      band,
+    },
+    {
+      title: 'p99 latency',
+      hint: '99% of requests were faster',
+      series: series((id) => slices(id).map((p) => ({ x: p.i, y: p.p99 }))),
+      yFormat: ms,
+      xLabel: 'Second of load',
+      band,
+    },
+    {
+      title: 'CPU',
+      hint: '% of one core, whole run',
+      series: series((id) => live.servers[id]!.stats.map((p) => ({ x: p.t, y: p.cpu }))),
+      yFormat: percent,
+      xLabel: 'Second of the run',
+    },
+    {
+      title: 'Memory',
+      hint: 'resident, whole run',
+      series: series((id) => live.servers[id]!.stats.map((p) => ({ x: p.t, y: p.mem }))),
+      yFormat: bytes,
+      xLabel: 'Second of the run',
+    },
+  ];
   const elapsed = Math.max(
     0,
     ...live.order.flatMap((id) => live.servers[id]!.stats.map((s) => s.t)),
@@ -113,41 +146,27 @@ export function LiveView({ live, servers }: Props) {
         </div>
       )}
 
+      {colors.size === 0 && (
+        <div className={css.tabs} role="group" aria-label="Metric">
+          {charts.map((c) => (
+            <button
+              key={c.title}
+              type="button"
+              aria-pressed={c.title === metric}
+              onClick={() => setMetric(c.title)}
+            >
+              {c.title}
+            </button>
+          ))}
+        </div>
+      )}
       <div className={css.charts}>
-        <MultiLine
-          title="Throughput"
-          hint="requests per second"
-          colors={colors}
-          series={series((id) => slices(id).map((p) => ({ x: p.i, y: p.rps })))}
-          yFormat={rate}
-          xLabel="Second of load"
-          band={band}
-        />
-        <MultiLine
-          title="p99 latency"
-          hint="99% of requests were faster"
-          colors={colors}
-          series={series((id) => slices(id).map((p) => ({ x: p.i, y: p.p99 })))}
-          yFormat={ms}
-          xLabel="Second of load"
-          band={band}
-        />
-        <MultiLine
-          title="CPU"
-          hint="% of one core, whole run"
-          colors={colors}
-          series={series((id) => live.servers[id]!.stats.map((p) => ({ x: p.t, y: p.cpu })))}
-          yFormat={percent}
-          xLabel="Second of the run"
-        />
-        <MultiLine
-          title="Memory"
-          hint="resident, whole run"
-          colors={colors}
-          series={series((id) => live.servers[id]!.stats.map((p) => ({ x: p.t, y: p.mem })))}
-          yFormat={bytes}
-          xLabel="Second of the run"
-        />
+        {charts
+          // Past eight servers each chart is a grid of small ones, so show one metric at a time.
+          .filter((c) => colors.size > 0 || c.title === metric)
+          .map((c) => (
+            <MultiLine key={c.title} colors={colors} {...c} />
+          ))}
       </div>
 
       {workload && (
