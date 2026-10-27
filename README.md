@@ -95,7 +95,6 @@ scripts/langbench.sh run settings.json    # run headless; settings as in the das
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how a run works.
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md): tests, and how to add a server.
-- [docs/DESIGN.md](docs/DESIGN.md): where the project is going, as a decision tool for coding agents.
 
 ## License
 

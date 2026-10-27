@@ -3,7 +3,6 @@ import asyncio
 import os
 import random
 import re
-import time
 from contextlib import asynccontextmanager
 
 import asyncpg
@@ -88,12 +87,7 @@ async def cpu(request: Request):
 @app.get("/io")
 async def io(request: Request):
     ms = param(request, "ms", 10, 0, 1000)
-    # The event loop's timers can fire about a millisecond early, and the spec forbids answering
-    # before the wait is over, so sleep again for any shortfall.
-    end = time.monotonic() + ms / 1000
     await asyncio.sleep(ms / 1000)
-    while (left := end - time.monotonic()) > 0:
-        await asyncio.sleep(left)
     return {"ms": ms}
 
 

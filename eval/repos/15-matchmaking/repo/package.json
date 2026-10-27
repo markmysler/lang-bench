@@ -1,6 +1,0 @@
-{
-  "name": "skyforge-backend",
-  "private": true,
-  "dependencies": { "express": "^4.21.1", "pg": "^8.13.1", "jsonwebtoken": "^9.0.2" },
-  "devDependencies": { "typescript": "^5.6.3" }
-}
