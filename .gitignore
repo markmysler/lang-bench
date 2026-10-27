@@ -2,7 +2,6 @@
 node_modules/
 dist/
 target/
-build/
 *.class
 __pycache__/
 .venv/
