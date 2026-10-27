@@ -122,6 +122,7 @@ type Event struct {
 	Message        string          `json:"message,omitempty"`
 	Plan           *plan.Plan      `json:"plan,omitempty"`
 	Host           *HostInfo       `json:"host,omitempty"`
+	Config         *Config         `json:"config,omitempty"`
 	StartupMs      float64         `json:"startupMs,omitempty"`
 	Stats          *docker.Sample  `json:"stats,omitempty"`
 	Slice          *SlicePoint     `json:"slice,omitempty"`

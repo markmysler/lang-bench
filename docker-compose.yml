@@ -1,0 +1,22 @@
+# docker compose up --build, then open http://localhost:7070
+#
+# The orchestrator drives Docker through its socket to start the servers, Postgres and the load
+# generators as sibling containers on the langbench network. The repository is mounted so it can
+# build server images and save results in ./results.
+name: langbench
+
+services:
+  dashboard:
+    build: .
+    image: langbench/dashboard:latest
+    ports:
+      - '7070:7070'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/work
+    networks:
+      - langbench
+
+networks:
+  langbench:
+    name: langbench

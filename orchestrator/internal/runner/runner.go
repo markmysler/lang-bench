@@ -218,7 +218,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config, emit func(Event)) (res Res
 	}
 
 	rn := &run{Runner: r, ctx: ctx, cfg: cfg, preset: preset, emit: emit}
-	rn.send(Event{Type: EventPlan, Plan: &res.Plan, Host: &res.Host})
+	rn.send(Event{Type: EventPlan, Plan: &res.Plan, Host: &res.Host, Config: &res.Config})
 
 	// Remove leftovers from a run that was interrupted, and everything from this one at the end.
 	r.removeAll()

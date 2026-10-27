@@ -1,0 +1,10 @@
+{
+  "id": "python-fastapi",
+  "language": "Python",
+  "languageVersion": "3.14",
+  "framework": "FastAPI",
+  "frameworkVersion": "0.162.0",
+  "runtime": "CPython 3.14 (interpreter)",
+  "concurrency": "asyncio event loop (uvloop) per process; CPUS uvicorn worker processes",
+  "tuning": "uvicorn --workers CPUS; asyncpg pool of max(1, DB_POOL / CPUS) connections per worker"
+}

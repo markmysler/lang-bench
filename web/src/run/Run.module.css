@@ -1,0 +1,231 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings {
+  display: grid;
+  gap: 16px;
+}
+
+.settings fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.settings legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.group {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  flex-wrap: wrap;
+}
+
+.check input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.check .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.serverId {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.image {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.missing {
+  font-size: 12px;
+  color: var(--critical);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.field {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.field input,
+.field select,
+.workload input {
+  min-height: 36px;
+  padding: 0 8px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  width: 100%;
+}
+
+.field input[type='range'] {
+  padding: 0;
+  border: 0;
+}
+
+.workload {
+  display: grid;
+  grid-template-columns: 18px 1fr 72px 72px;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.workload input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.workloadHead {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.plan {
+  font-size: 13px;
+  display: grid;
+  gap: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.buildLog {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Live view */
+
+.live {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.liveHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 8px 10px;
+  background: var(--panel);
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  border-left-width: 4px;
+}
+
+.cardName {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.cardName span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.state {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stateFailed {
+  font-size: 12px;
+  color: var(--critical);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tabs button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 13px;
+}
+
+.tabs button[aria-pressed='true'] {
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+  border-color: var(--primary-bg);
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+}
+
+.empty {
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+}

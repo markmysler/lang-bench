@@ -1,0 +1,10 @@
+{
+  "id": "rust-axum",
+  "language": "Rust",
+  "languageVersion": "1.99.1",
+  "framework": "Axum",
+  "frameworkVersion": "0.8.9",
+  "runtime": "Native binary",
+  "concurrency": "Tokio work-stealing async tasks on CPUS worker threads",
+  "tuning": "Tokio multi-thread runtime with worker_threads = CPUS; sqlx pool of DB_POOL connections"
+}
