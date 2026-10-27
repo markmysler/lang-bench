@@ -1,0 +1,93 @@
+{
+  "scenario": "04-pdf-reports",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Move report rendering out of the API request path into a background job queue on the Redis they already run (BullMQ), processed by a separate TypeScript/Node worker",
+        "why": "This fixes the real problem: CPU-bound rendering blocks the API's single Node event loop. It also reuses their existing stack, skills and infrastructure."
+      },
+      {
+        "choice": "Run the worker as a separate Fly.io process group or app, built from the same repo and image, that scales on its own and has its own CPU allocation",
+        "why": "Separate machines mean month-end report load can't take CPU from the API. Fly process groups make this a small config change, not a new service to run."
+      },
+      {
+        "choice": "Store the finished PDFs in object storage (S3, R2 or Tigris on Fly) and serve them through signed URLs, with job status shown by polling, an email, or a 'your report is ready' notification",
+        "why": "Each report is rendered once and then downloaded at no extra CPU cost. The API only hands out links, so it stays fast."
+      },
+      {
+        "choice": "Pre-generate monthly reports in a batch as soon as the month's data is final, before customers come to download them",
+        "why": "Total work is about 3,000 × 0.4 s ≈ 20 CPU-minutes. Spreading that out ahead of time removes the month-end spike altogether and costs almost nothing."
+      },
+      {
+        "choice": "As a short-term stopgap, move rendering into Node worker_threads (e.g. Piscina) inside the API process",
+        "why": "It unblocks the event loop quickly with little code change. It still shares the machine's CPU and memory with the API, though, so treat it as a bridge to a separate worker."
+      },
+      {
+        "choice": "Serverless functions (AWS Lambda, or Vercel functions if the renderer fits their limits) triggered from the queue",
+        "why": "Bursty month-end load fits pay-per-use well. The trade-off is a second compute platform and cold-start or bundle-size limits, especially with headless Chromium."
+      },
+      {
+        "choice": "Keep TypeScript for the report service",
+        "why": "The bottleneck is architecture, not language speed. Staying in TypeScript keeps one hiring profile, shared Prisma models and types, and quick shipping."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the report service in Go",
+        "why": "Only one developer has some Go. A second language splits a four-person team's skills, the hiring pipeline and shared types/Prisma code, and it doesn't fix the cause (blocking in the request path). About 20 CPU-minutes a month doesn't justify it."
+      },
+      {
+        "choice": "Rewriting in Rust, or in Java/Kotlin on the JVM",
+        "why": "Nobody on the team knows these or has run them in production. That's high operational and hiring cost for a workload too small to need the speed."
+      },
+      {
+        "choice": "Just scaling the API vertically or horizontally and leaving rendering inline",
+        "why": "Rendering still blocks the event loop on whichever instance runs it. They'd be paying for capacity that sits idle most of the month, which works against a bill that should grow slower than revenue."
+      },
+      {
+        "choice": "Kubernetes, Kafka, or a full microservices split with its own repo, gRPC contracts and separate deploy pipeline",
+        "why": "Far too much operational overhead for four developers on Fly/Vercel. Redis and a worker process already cover the need."
+      },
+      {
+        "choice": "Using cluster mode or adding more Node processes on the same machine as the whole fix",
+        "why": "It helps a little, but renders still compete with API requests for the same CPU. It also doesn't isolate failures or memory spikes, especially with Chromium."
+      }
+    ],
+    "must_mention": [
+      "Name the root cause: synchronous CPU-bound work blocks the Node.js event loop, so every other request waits. This is an architecture problem, not a language problem.",
+      "Do the maths: 3,000 × 400 ms ≈ 1,200 CPU-seconds ≈ 20 CPU-minutes spread over a few hours. That's a small load that one or two worker machines handle easily.",
+      "Make rendering asynchronous with a queue. They already have Redis for queues, so use it (e.g. BullMQ) instead of adding new infrastructure.",
+      "Run the workers on separate compute from the API so report load can't slow down other endpoints.",
+      "Store generated PDFs and serve them as files or signed URLs. Render each report once instead of on every download, and consider pre-generating before month end.",
+      "Advise against switching languages: stay in TypeScript for hiring, speed and shared code. Revisit only if measurement shows the renderer itself is the bottleneck, and even then try a faster TS/JS library before a rewrite.",
+      "Set worker concurrency, retries/idempotency and timeouts, and watch queue depth so a month-end backlog shows up and can be fixed by scaling workers."
+    ],
+    "red_flags": [
+      "Recommending a rewrite in Go, Rust or a JVM language as the main fix, or implying the language is the cause",
+      "Ignoring the event-loop blocking explanation and only suggesting bigger or more API instances",
+      "Proposing new heavy infrastructure (Kubernetes, Kafka, RabbitMQ, a separate service mesh) when Redis queues already exist",
+      "Keeping rendering synchronous in the HTTP request while only tuning the code, leaving the API at risk at every month end",
+      "Running headless Chromium/Puppeteer inside the API process without noting its memory and CPU footprint",
+      "Recommending always-on large dedicated machines sized for the month-end peak without mentioning scale-to-zero or autoscaling of workers (bill concern)",
+      "Claiming specific performance gains from a language switch without any measurement"
+    ],
+    "unknowns": [
+      "Which rendering approach the prototype uses (headless Chromium/Puppeteer, react-pdf, pdfkit plus a chart library). This drives memory per job, worker sizing and whether serverless is practical.",
+      "Whether the 400 ms is really CPU in rendering, or includes database queries and chart data aggregation that could be optimised or cached separately",
+      "Whether report data is final at a known time, which decides whether pre-generating ahead of month end is possible",
+      "What download experience customers expect: instant download, or acceptable to wait seconds or minutes or get an email",
+      "Peak memory per render and the right worker concurrency on their Fly machine sizes",
+      "Whether month-end report queries also put noticeable load on the managed Postgres (may need a read replica or query tuning)",
+      "Whether reports must be rendered fresh on each download (e.g. live data, permissions) or can be cached and stored"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1213146,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 35.85
+  }
+}

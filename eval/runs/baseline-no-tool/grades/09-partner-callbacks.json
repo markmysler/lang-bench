@@ -1,0 +1,26 @@
+{
+  "scenario": "09-partner-callbacks",
+  "grade": {
+    "primary_choice": "Stay on Java 21 and Spring Boot, using Spring MVC DeferredResult with Kafka-driven correlation; virtual threads as second choice",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [],
+    "overall": 5,
+    "notes": "The answer correctly traces the 200 ceiling to Tomcat's thread pool, keeps the team on the approved stack, and covers nearly every must-mention point: route timeouts, max-connections, holding JDBC connections or open-session-in-view during the wait, pinning, cross-pod and cross-DC correlation, Little's law and load testing. Minor gaps are that it doesn't mention accept-count, JFR pinning detection or the HAProxy timeout annotation by name, and it ranks virtual threads below DeferredResult; that ordering is still defensible and both options are acceptable."
+  },
+  "meta": {
+    "costUSD": 0.1201796,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 13.88
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "scenario": "16-friend-recommendations",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep the relationship data in Postgres and precompute each user's top-N recommendations in a background job (using the existing Redis/BullMQ queues), storing them in a Postgres table or a per-user array/jsonb row that is read by primary key",
+        "why": "Serving becomes a single indexed lookup that easily stays under 300 ms, and it adds no new datastore, language or vendor."
+      },
+      {
+        "choice": "Recompute incrementally: when a membership, team or project changes, enqueue recomputation for the affected users, and run a periodic full or partial rebuild as a safety net",
+        "why": "People-you-may-know tolerates minutes-to-hours of staleness, so event-driven recomputation keeps compute cost proportional to activity rather than to total users."
+      },
+      {
+        "choice": "Compute on demand with a 2-hop SQL query (self-joins or a recursive CTE with a depth limit, deduplication and GROUP BY candidate ORDER BY shared-count), cache the result in Redis with a TTL, and precompute only for active users",
+        "why": "This is the cheapest version to ship first and works well when per-user fan-out is bounded by indexes and degree caps."
+      },
+      {
+        "choice": "Run the heavy traversal queries against a Postgres read replica, or during off-peak batches",
+        "why": "The fan-out queries then don't compete with the transactional workload on the primary."
+      },
+      {
+        "choice": "Write the traversal as raw SQL through Prisma ($queryRaw or TypedSQL) or a thin query builder such as Kysely, inside the existing TypeScript code base",
+        "why": "Prisma's model API can't express recursive or aggregate graph queries well, but raw SQL keeps the work in the team's language and tooling."
+      },
+      {
+        "choice": "If batch SQL turns out to be too slow, run an in-memory adjacency graph (CSR in typed arrays, a few hundred MB for 40M edges) in a dedicated Node/TypeScript worker that writes results back to Postgres",
+        "why": "This is a measured escalation that stays in TypeScript and avoids a second system of record."
+      },
+      {
+        "choice": "Stop at 2 hops for ranking, and use hop 3 only as a fallback for users with few 2-hop candidates",
+        "why": "3-hop neighbourhoods in team/project graphs cover a large part of the graph and rank poorly, so limiting hops cuts cost and often improves relevance."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Migrating relationship data to Neo4j (self-hosted on Fly.io)",
+        "why": "Nobody on the team has run a JVM in production, and it adds a stateful cluster to operate plus a dual-write/CDC sync problem, for a 40M-edge graph that Postgres handles."
+      },
+      {
+        "choice": "Managed graph DB now (Neo4j Aura, Memgraph Cloud, TigerGraph Cloud)",
+        "why": "It adds a second source of truth to keep consistent, a new query language (Cypher/GSQL), a significant fixed monthly cost and cross-provider latency from Fly.io, without any measurement showing Postgres plus precomputation is insufficient."
+      },
+      {
+        "choice": "Amazon Neptune",
+        "why": "The team isn't on AWS, so it means cross-cloud latency and egress, VPC setup and a cost floor that conflicts with keeping the bill growing slower than revenue."
+      },
+      {
+        "choice": "Rewriting the API or the recommendation service in Go (or Java/Rust) for performance",
+        "why": "The bottleneck is the data access pattern and the fan-out, not language speed, and a rewrite hurts shipping speed and the TypeScript-only hiring plan; one dev's Go experience doesn't justify a second production language."
+      },
+      {
+        "choice": "Live, unbounded 3-hop recursive CTE executed on every page load",
+        "why": "Fan-out from high-degree users and large teams (supernodes) makes latency unpredictable and can blow far past 300 ms while also loading the primary database."
+      },
+      {
+        "choice": "Storing the full adjacency graph in Redis (sets/sorted sets with SUNION/ZUNIONSTORE) as the primary graph store",
+        "why": "It needs several GB of RAM-priced storage and a second copy of the data to keep in sync; Redis belongs as a cache for results, not as the graph."
+      },
+      {
+        "choice": "Apache AGE or similar graph extensions on Postgres",
+        "why": "They usually aren't available on managed Postgres providers and offer no real advantage over plain SQL for a bounded 2–3-hop count query."
+      },
+      {
+        "choice": "Spark GraphX / distributed graph processing frameworks",
+        "why": "This is massive operational overkill for 2M nodes and 40M edges, and the stack is outside the team's skills."
+      }
+    ],
+    "must_mention": [
+      "Recommendation: stay on Postgres. 2M users and 40M edges is small, and a graph database is not needed at this scale.",
+      "The 300 ms target is best met by precomputing or caching recommendations rather than traversing the graph on every request; this matters more than the choice of database.",
+      "PYMK can be slightly stale, so asynchronous recomputation through the existing Redis queues is a good fit.",
+      "Supernodes (large teams or projects, highly connected users) dominate the cost; cap fan-out, sample, or down-weight big groups (for example, Adamic-Adar-style weighting).",
+      "3 hops explodes combinatorially (an average degree of ~20–40 gives tens of thousands of paths per user, and far more for hubs); suggest 2 hops as the primary signal.",
+      "Need the right indexes on the edge/membership table (e.g. composite (user_id, team_id) and (team_id, user_id)), and exclude existing connections and the user themself.",
+      "Language: no. TypeScript/Node is fine because the work is I/O- and query-bound; a rewrite in Go would hurt hiring and velocity for no measured gain.",
+      "Prisma's model API won't express this well, so use raw SQL or TypedSQL for the traversal query.",
+      "Measure first: prototype the query with EXPLAIN ANALYZE on production-shaped data, and look at p95/p99 latency for the highest-degree users, not the average.",
+      "Name the conditions that would justify revisiting a graph DB later, such as many varied deep-traversal features, real-time freshness requirements, or graph size orders of magnitude larger."
+    ],
+    "red_flags": [
+      "Recommending Neo4j or another graph DB as the default answer because 'it's a graph problem', ignoring the scale, the team's lack of JVM experience, sync complexity and cost",
+      "Suggesting a Go/Rust/Java rewrite or a polyglot microservice for speed, without evidence that the CPU is the bottleneck",
+      "Proposing live recursive 3-hop queries per request with no depth limit, deduplication, degree caps or caching, and claiming they will meet 300 ms",
+      "Ignoring supernode/high-degree users and quoting only average-case latency",
+      "Proposing dual-writes between Postgres and a new store without addressing consistency, backfill and failure handling",
+      "Recommending infrastructure that grows the fixed cloud bill substantially (dedicated graph clusters, large Redis instances holding the whole graph) for a seed-stage company",
+      "Claiming that Postgres 'can't do graphs' or that a graph DB is needed above some small edge count",
+      "Precomputing the full top-K for all 2M users nightly without considering the storage size (e.g. 2M × 100 rows) or incremental and active-user-only strategies",
+      "Using Prisma's nested relation queries or N+1 traversal in application code to walk hops"
+    ],
+    "unknowns": [
+      "Shape of the data: is it user↔team/project membership (bipartite) or direct user↔user edges, and is the 40M figure memberships or derived pairs?",
+      "Degree distribution: the size of the largest teams and projects and the most-connected users, which sets worst-case fan-out",
+      "Freshness requirement: whether a new teammate must show up in recommendations within seconds, or whether hours is fine",
+      "Read traffic (QPS for the PYMK widget) and the share of users who are active, which decides between precompute-all, precompute-active and compute-on-demand",
+      "Measured latency of a 2-hop and 3-hop query on production-shaped data at p95/p99, using EXPLAIN ANALYZE",
+      "The managed Postgres provider and plan: whether read replicas are available, extensions, memory and IOPS headroom",
+      "Whether product truly needs 3 hops, or whether 2 hops plus fallbacks gives equal or better relevance",
+      "Expected graph growth and whether other graph-heavy features are planned, which could later change the case for a dedicated graph store",
+      "Privacy and visibility rules (blocked users, private projects, cross-tenant boundaries) that must be applied during candidate generation"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1565596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 51.346
+  }
+}

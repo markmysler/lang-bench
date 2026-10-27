@@ -1,0 +1,127 @@
+{
+  "scenario": "11-simulation-service",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Flask (which the research software engineer already knows) with a small HTML upload form, plus a background job queue on the existing VM",
+        "why": "It uses the team's current skills, and the CPU need is tiny: a few dozen runs of at most 90 seconds is roughly one CPU-hour a day, which 4 vCPUs handle easily with 2–3 workers."
+      },
+      {
+        "choice": "RQ + Redis, or Huey (Redis- or SQLite-backed) as the job queue",
+        "why": "These are the simplest Python task queues that keep 20–90 second runs out of the web request, and they have very few parts to maintain."
+      },
+      {
+        "choice": "A job table in SQLite or plain files, with a worker managed by systemd that runs jobs through a ProcessPoolExecutor or subprocess",
+        "why": "At this load, a database-backed queue with no extra infrastructure is enough and is the least work to keep running."
+      },
+      {
+        "choice": "FastAPI or Django instead of Flask",
+        "why": "Either is a fine Python choice; Django's built-in admin and user accounts can help, but neither is needed, and Flask keeps the advantage of being familiar."
+      },
+      {
+        "choice": "Celery with Redis",
+        "why": "It works and is well documented, but it has more moving parts and configuration than this load needs; acceptable, not preferred."
+      },
+      {
+        "choice": "Gradio with its built-in queue and a concurrency limit, behind authentication",
+        "why": "Pure Python, almost no web code, and its queueing handles long jobs; good for a quick start, though storing results and an audit trail take extra work."
+      },
+      {
+        "choice": "Have the web app submit Slurm jobs to the HPC cluster through a service account",
+        "why": "Only acceptable if cluster policy allows automated submission from the VM; it adds queue waits and failure points that this load doesn't need."
+      },
+      {
+        "choice": "Package the simulation as a versioned container (Apptainer/Docker) or a pip/conda package with a command-line tool, so collaborators can run it on their own HPC",
+        "why": "Very good for reproducibility and needs no service upkeep; it can sit alongside the web service or replace it if the collaborators have compute and skills."
+      },
+      {
+        "choice": "Run the app with Docker Compose or systemd, behind gunicorn and nginx/Caddy with HTTPS",
+        "why": "A standard setup on one VM that rarely needs attention between grants."
+      },
+      {
+        "choice": "Wrap the tool for an existing Galaxy server (institutional or usegalaxy.*)",
+        "why": "Reasonable if a Galaxy server the collaborators already use will host it, because someone else does the upkeep; hosting their own Galaxy is not reasonable."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Writing the web layer in Go, Rust, Node.js, Java or another 'faster' language",
+        "why": "The web layer only takes uploads and serves results, so speed there doesn't matter; a new language breaks the team's skills and doubles what they have to maintain."
+      },
+      {
+        "choice": "Rewriting the simulation in a faster language in order to put it online",
+        "why": "20–90 seconds a run is fine for asynchronous jobs at this volume; speeding up the simulation is a separate decision and doesn't block going online (they already have C++ for hot loops)."
+      },
+      {
+        "choice": "Running the simulation inside the HTTP request handler",
+        "why": "60–90 second requests hit proxy and worker timeouts, tie up the server, and lose the work when the browser disconnects."
+      },
+      {
+        "choice": "Kubernetes, microservices or autoscaling setups",
+        "why": "Far more operations work than one VM, about 20 users and a lab with little time for upkeep can carry."
+      },
+      {
+        "choice": "Moving to a commercial cloud (AWS Batch/Lambda, GCP, etc.)",
+        "why": "Adds billing, accounts, data-governance questions and upkeep, when the university VM already has more than enough capacity."
+      },
+      {
+        "choice": "A React/Vue single-page app front end",
+        "why": "A server-rendered upload form with a status page does the job; a JavaScript build chain is a new skill to learn and more to maintain."
+      },
+      {
+        "choice": "Running a web server on the HPC login nodes",
+        "why": "Usually against cluster policy, and login nodes are not built to host services."
+      },
+      {
+        "choice": "A shared JupyterHub, or giving collaborators notebooks on the VM",
+        "why": "Lets collaborators run arbitrary code on the lab VM, is heavy to maintain and secure, and makes results less reproducible than a fixed pipeline."
+      },
+      {
+        "choice": "Keeping the manual run-by-hand-and-email process",
+        "why": "Takes researcher time for every run and doesn't reliably record which code and parameters produced each result."
+      }
+    ],
+    "must_mention": [
+      "Answer the question directly: no, they don't need a faster language. The web part is light glue code and Python is plenty; the time goes into the simulation, which runs the same wherever it is called from.",
+      "Use an asynchronous job pattern: submit, get a job ID, check status (or get an email), download results. Never run the simulation inside the request.",
+      "Capacity estimate: a few dozen runs × 20–90 seconds is about an hour of CPU a day, so the 4 vCPU / 16 GB VM is enough. Cap workers at 2–3 so the web server stays responsive and memory stays within 16 GB.",
+      "Limit NumPy/BLAS threads per worker (OMP_NUM_THREADS / OPENBLAS_NUM_THREADS) so workers running at the same time don't oversubscribe the 4 vCPUs.",
+      "Reproducibility: pin the environment (lockfile or container image), and store with every result the code version (git commit or image tag), the input file, all parameters and the random seed.",
+      "Access control: collaborators only, through university SSO / federated login if available, or simple per-user accounts or tokens; HTTPS required.",
+      "Check uploads: allowed formats, size limits, parameter ranges, and a per-job timeout. Never unpickle or execute anything a user uploads.",
+      "Keep it small and low-maintenance: reuse the existing Python simulation code unchanged as a function or command the worker calls, deploy with Docker Compose or systemd, and write a short runbook.",
+      "Plan where results are stored, how long they are kept, and how they are backed up, so jobs aren't lost on restart."
+    ],
+    "red_flags": [
+      "Telling them to learn Go, Rust, Node or another language for the web part, or saying Python is too slow for serving",
+      "Running the 20–90 second simulation synchronously inside a web request, or using the Flask development server in production",
+      "Recommending Kubernetes, microservices, a service mesh or a multi-cloud setup for about 20 users",
+      "A public endpoint with no authentication that accepts arbitrary uploads, or one that runs user-supplied code or pickles",
+      "Leaving out reproducibility (no environment pinning, no record of code version, parameters or seed with results)",
+      "Assuming the web app can freely submit to the HPC cluster without checking cluster policy",
+      "Letting unlimited workers or BLAS threads run at once on the VM, which leads to memory exhaustion or CPU thrashing",
+      "Proposing a large, multi-month custom platform build that the lab can't maintain between grants",
+      "Sending unpublished research data to third-party hosting (e.g. public Hugging Face Spaces) without considering data sensitivity"
+    ],
+    "unknowns": [
+      "Peak memory per run, and whether a run is single-threaded or uses several cores through BLAS; this decides the safe worker count",
+      "How input size affects runtime, and whether any inputs could run much longer than 90 seconds (sets timeouts and limits)",
+      "Whether HPC policy allows automated or service-account job submission from the VM",
+      "What authentication the university can offer external collaborators (SSO federation such as eduGAIN/InCommon, guest accounts)",
+      "University IT rules on exposing the VM to the internet, TLS certificates, firewalls and backups",
+      "Whether collaborator inputs or results are sensitive or unpublished, which affects storage, retention and where it may be hosted",
+      "Whether the simulation is deterministic given a seed and fixed library versions",
+      "Whether collaborators would rather run a container on their own clusters than use a hosted service",
+      "Expected growth in users or runs once the service exists"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1559496,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 51.953
+  }
+}

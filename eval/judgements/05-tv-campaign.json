@@ -1,0 +1,133 @@
+{
+  "scenario": "05-tv-campaign",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep the Laravel API and do not rewrite it",
+        "why": "The bottleneck is uncached work per request, not PHP; a rewrite would not finish before the advert, would break the fixed price and would leave code only the two seniors could maintain."
+      },
+      {
+        "choice": "A CDN or edge cache (Cloudflare, Bunny, CloudFront or Fastly) in front of the public read endpoints such as the product list",
+        "why": "The data changes only a few times a day, so a short s-maxage plus stale-while-revalidate lets the edge absorb almost all of the 3,000 req/s while the origin sees a handful."
+      },
+      {
+        "choice": "Correct Cache-Control headers on public endpoints, and a purge or short TTL when products change",
+        "why": "Edge caching only works, and only stays correct, if responses are marked cacheable, carry no cookies or auth variation, and are refreshed when the client edits products."
+      },
+      {
+        "choice": "Laravel application caching with Redis (Cache::remember for product queries, cached Sanctum or token lookups, Redis for cache, sessions and the rate limiter)",
+        "why": "This is plain Laravel the whole team already knows, and it cuts MySQL work for the per-user endpoints that cannot be cached at the edge."
+      },
+      {
+        "choice": "Standard Laravel and PHP production tuning: OPcache, config/route/event cache, composer --optimize-autoloader, and pm.max_children sized to fit in RAM",
+        "why": "These are cheap, low-risk gains that can be done in Forge in an afternoon."
+      },
+      {
+        "choice": "Checking database queries and indexes for the profile and basket endpoints (removing N+1 queries, adding missing indexes, eager loading)",
+        "why": "Per-user endpoints reach MySQL on every request, so slow queries there become the real limit once reads are cached."
+      },
+      {
+        "choice": "Load testing with k6, Locust, JMeter or similar against a staging copy that matches production, using a realistic mix of endpoints",
+        "why": "It is the only way to know the actual capacity and prove the fix works before the advert, not during it."
+      },
+      {
+        "choice": "Temporarily resizing the VPS or adding a second app server behind a Forge-managed load balancer for the advert window",
+        "why": "It is a known, bounded, billable cost with tools the team already uses, and it adds headroom for the dynamic endpoints."
+      },
+      {
+        "choice": "Giving the API its own server for the event, away from other clients' sites",
+        "why": "It stops other client sites and the API from slowing each other down."
+      },
+      {
+        "choice": "Nginx FastCGI cache or Varnish on the server, as a fallback if a CDN is not possible",
+        "why": "Forge already manages Nginx, so a micro-cache of public GET responses is a small, understandable step."
+      },
+      {
+        "choice": "A runbook and someone scheduled to watch during the advert (uptime check, server metrics, Laravel logs, a rollback or static-fallback plan)",
+        "why": "The advert is at a known time, so planned staffing replaces surprise night-time alerts."
+      },
+      {
+        "choice": "A degradation plan, such as serving a static product JSON from the CDN or object storage, or temporarily switching off non-essential features",
+        "why": "It keeps the core of the app up even if the per-user endpoints struggle."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the API in Go, Node.js, Rust, Elixir or similar",
+        "why": "Nobody knows another back-end language, it cannot be done safely before the advert, it breaks the fixed-price budget and maintainability, and it would not remove the database and uncached-work bottleneck."
+      },
+      {
+        "choice": "Moving to Kubernetes, microservices or a new cloud autoscaling platform for this event",
+        "why": "Too complex for an eight-person agency with mostly junior developers, risky to adopt just before a fixed date, and nobody could maintain it afterwards."
+      },
+      {
+        "choice": "Migrating to Laravel Vapor or serverless right before the advert",
+        "why": "It is still Laravel, but the platform migration, cold starts, cost model and new failure modes are too risky on a deadline, and caching makes it unnecessary."
+      },
+      {
+        "choice": "Adopting Laravel Octane (Swoole, RoadRunner or FrankenPHP) as the main fix",
+        "why": "State leaking between requests is a new class of bug for a mostly junior team, it is risky to introduce under time pressure, and once responses are cached it is not needed."
+      },
+      {
+        "choice": "Replacing MySQL with a NoSQL store or adding read replicas or sharding",
+        "why": "Large change for a load problem that caching solves; adds infrastructure the team cannot easily run."
+      },
+      {
+        "choice": "Running the API on shared hosting",
+        "why": "No control over PHP-FPM, caching or resources, and noisy neighbours."
+      },
+      {
+        "choice": "Simply raising PHP-FPM workers or pm.max_children until it copes",
+        "why": "On 2 vCPU / 4 GB, uncached Laravel tops out at roughly 100–300 req/s; extra workers mostly add contention or exhaust memory (out-of-memory kills)."
+      },
+      {
+        "choice": "Caching per-user responses (profile, basket) at a shared CDN or proxy",
+        "why": "It would serve one user's personal data to another, a serious privacy and GDPR failure."
+      }
+    ],
+    "must_mention": [
+      "No rewrite is needed: the fix is caching plus measurement, not a faster language, and the team's Laravel skills are enough.",
+      "A rough capacity estimate: an uncached Laravel API on 2 vCPU handles hundreds of requests per second at best, far short of 3,000, so most traffic must never reach PHP.",
+      "Split the endpoints: the product list is public and rarely changes, so cache it at the edge; profile and basket are per-user and dynamic, so they need app-level caching, query tuning and server headroom, never shared caching.",
+      "Make public responses actually cacheable: Cache-Control with s-maxage and stale-while-revalidate, no Set-Cookie, no Authorization header from the app on those calls (or a CDN rule that ignores it), and a purge or TTL plan for when products change.",
+      "Load test before the advert with a realistic endpoint mix, both at origin and through the CDN, then fix what breaks and test again.",
+      "Check Laravel's API rate limiter: the default throttle (around 60 per minute per user or IP) plus mobile carrier NAT, where many users share one IP, can return HTTP 429 to genuine users, and file or database cache drivers for the limiter become a bottleneck, so move it to Redis and tune the limits.",
+      "Size PHP-FPM workers and MySQL max_connections to the 4 GB of RAM and to each other.",
+      "Have temporary extra capacity and a fallback or degradation plan, plus planned monitoring at the known airtime.",
+      "Keep costs bounded and explicit for the fixed-price contract: CDN free or low tier, temporary server resize charged to the client."
+    ],
+    "red_flags": [
+      "Recommending a rewrite in another language or framework, or claiming PHP or Laravel cannot handle this.",
+      "Suggesting CDN or proxy caching of authenticated or per-user responses such as basket or profile, which leaks personal data.",
+      "Adding a CDN without checking cache headers, cookies or auth headers, so nothing is actually cached and the origin still takes the full load.",
+      "No load test, or promising it will survive without measuring.",
+      "Proposing Kubernetes, microservices, Octane or other complex infrastructure that the junior developers cannot maintain, especially adopted just before the advert.",
+      "Open-ended autoscaling or pay-per-request setups without a cost cap, which put the fixed-price budget at risk.",
+      "Raising pm.max_children beyond what 4 GB of RAM can hold, leading to out-of-memory kills.",
+      "Ignoring cache invalidation, so stale prices or out-of-stock products are shown.",
+      "Leaving the default rate limiter in place, or switching it off entirely with no protection.",
+      "Deploying major changes on the day of the advert with no rollback plan."
+    ],
+    "unknowns": [
+      "When the advert airs, which decides how much time there is to change and test things.",
+      "The real request mix: what share is the public product list versus authenticated profile and basket calls.",
+      "Current throughput and latency per endpoint on the existing server, to be measured by profiling and load testing.",
+      "Whether product responses vary per user (personalised prices, locale, currency, stock), which limits edge caching.",
+      "How the mobile app authenticates, whether it sends tokens or cookies on public calls, whether it can be updated before the advert, and how it retries on errors.",
+      "Whether MySQL runs on the same VPS, and how large and well indexed the data is.",
+      "Whether other client sites share the server.",
+      "Whether the 3,000 req/s estimate is realistic, and what it means in concurrent users.",
+      "Whether the client will pay for a CDN or extra or bigger servers, and whether DNS can be changed to put a CDN in front in time.",
+      "Whether any request calls slow third-party services, such as payment, stock or ERP systems."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1643896,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 60.957
+  }
+}

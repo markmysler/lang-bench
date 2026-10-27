@@ -36,13 +36,13 @@ const AGENT = process.env.LANGBENCH_AGENT
  * on Windows, from the user's saved variables (so a key added after the app started still counts).
  * Without one, Claude Code uses whatever account it is signed in with.
  */
-function apiKey() {
-  for (const name of ['ANTHROPIC_API_KEY', 'CLAUDE_API_KEY']) {
+function setting(names) {
+  for (const name of names) {
     if (process.env[name]) return { name, value: process.env[name] };
   }
   if (process.platform !== 'win32') return null;
   for (const scope of ['User', 'Machine']) {
-    for (const name of ['ANTHROPIC_API_KEY', 'CLAUDE_API_KEY']) {
+    for (const name of names) {
       const value = execFileSync(
         'powershell.exe',
         ['-NoProfile', '-Command', `[Environment]::GetEnvironmentVariable('${name}', '${scope}')`],
@@ -54,7 +54,9 @@ function apiKey() {
   return null;
 }
 
-const KEY = apiKey();
+const KEY = setting(['ANTHROPIC_API_KEY', 'CLAUDE_API_KEY']);
+// A key that isn't scoped to a workspace must name one on every request.
+const WORKSPACE = KEY && setting(['ANTHROPIC_WORKSPACE_ID', 'CLAUDE_WORKSPACE_ID']);
 if (process.argv.includes('--require-api-key') && !KEY) {
   console.error('No ANTHROPIC_API_KEY or CLAUDE_API_KEY found; refusing to bill the signed-in account.');
   process.exit(1);
@@ -64,7 +66,10 @@ const AGENT_ENV = KEY
   ? {
       ...process.env,
       ANTHROPIC_API_KEY: KEY.value,
-      WSLENV: [process.env.WSLENV, 'ANTHROPIC_API_KEY'].filter(Boolean).join(':'),
+      ...(WORKSPACE && { ANTHROPIC_CUSTOM_HEADERS: `anthropic-workspace-id: ${WORKSPACE.value}` }),
+      WSLENV: [process.env.WSLENV, 'ANTHROPIC_API_KEY', WORKSPACE && 'ANTHROPIC_CUSTOM_HEADERS']
+        .filter(Boolean)
+        .join(':'),
     }
   : process.env;
 const BILLING = KEY ? 'api-key' : 'signed-in account';
@@ -101,11 +106,16 @@ function ask(prompt) {
     child.on('close', (code) => {
       if (code !== 0) return reject(new Error(`agent exited with ${code}: ${err.slice(0, 500)}`));
       let meta = {};
+      let j;
       try {
-        const j = JSON.parse(out);
-        meta = { costUSD: j.total_cost_usd, models: Object.keys(j.modelUsage ?? {}), turns: j.num_turns };
+        j = JSON.parse(out);
       } catch {
         // plain-text agent: no metadata
+      }
+      if (j) {
+        // Claude Code exits 0 even when the API refuses the request.
+        if (j.is_error) return reject(new Error(`agent error: ${String(j.result).slice(0, 300)}`));
+        meta = { costUSD: j.total_cost_usd, models: Object.keys(j.modelUsage ?? {}), turns: j.num_turns };
       }
       resolve({
         text: replyText(out),
@@ -206,7 +216,10 @@ const opt = (name) => {
 const only = opt('only')?.split(',');
 const jobs = Number(opt('jobs') ?? 4);
 const scenarios = load().filter((s) => !only || only.includes(s.id));
-if (command !== 'summary') console.error(`billing: ${KEY ? `API key from ${KEY.name}` : BILLING}`);
+if (command !== 'summary') {
+  const workspace = WORKSPACE ? `, workspace from ${WORKSPACE.name}` : '';
+  console.error(`billing: ${KEY ? `API key from ${KEY.name}${workspace}` : BILLING}`);
+}
 
 if (command === 'judge') await judge(scenarios, jobs);
 else if (command === 'answer' && run) await answer(run, scenarios, jobs);

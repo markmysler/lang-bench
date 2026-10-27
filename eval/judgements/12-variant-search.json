@@ -1,0 +1,103 @@
+{
+  "scenario": "12-variant-search",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "A long-running Python service (FastAPI, or Flask since the RSE already knows it) that loads the index once at startup and answers lookups from memory",
+        "why": "The 3-minute cost is paid once per process, not per request, and an in-memory lookup in NumPy/pandas or a sorted-array binary search takes microseconds to a few milliseconds, which fits easily in 50 ms at 100 req/s on 4 vCPUs."
+      },
+      {
+        "choice": "Re-serialise the index into a load-friendly format (NumPy .npy/memmap, Arrow/Parquet, HDF5) and memory-map it",
+        "why": "This turns the 3-minute parse into a load of seconds and lets several worker processes share one 4 GB copy through the OS page cache instead of each holding its own."
+      },
+      {
+        "choice": "Standard bioinformatics indexed files (bgzip + tabix, or BCF/CSI) queried through pysam/htslib",
+        "why": "Region and single-variant lookups take milliseconds from disk with no load time, the format is the field's own standard, and collaborators can download the same files and query them locally, which serves both reproducibility and reuse."
+      },
+      {
+        "choice": "SQLite (or DuckDB) with an index on (chromosome, position), served by a thin Python API",
+        "why": "It is a single file with nothing to administer, starts instantly, does indexed point and range lookups in well under 50 ms, and can be versioned and shared with collaborators."
+      },
+      {
+        "choice": "Keep Python for the service, and move only a measured hot lookup kernel into their existing C++ through pybind11/nanobind",
+        "why": "This uses C++ skill they already have, only if profiling shows it is needed, without moving the web layer into a language the team has never served from."
+      },
+      {
+        "choice": "nginx (or the university's reverse proxy) in front, with HTTP response caching and the app run as a systemd service or in a single container",
+        "why": "It handles TLS and absorbs repeated lookups during a publication spike, and it needs almost no upkeep."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewriting the lookup service as a C++ web server (Drogon, Crow, Pistache, etc.)",
+        "why": "Language speed is not the bottleneck: load time and process lifetime are. A C++ web stack adds upkeep and security work for a team with little web experience and little time between grants."
+      },
+      {
+        "choice": "Rewriting in Go or Rust",
+        "why": "Nobody in the lab knows these languages, the speed gain is not needed for 100 req/s, and the result would be hard to maintain once the people who wrote it leave."
+      },
+      {
+        "choice": "Running the existing script per request (CGI-style, or a subprocess per lookup)",
+        "why": "Every request would pay the 3-minute load, so the 50 ms target is impossible."
+      },
+      {
+        "choice": "Several gunicorn/uWSGI workers, each holding a separately loaded 4 GB copy of the index as Python objects",
+        "why": "Four copies use all 16 GB on the VM, and Python reference counting breaks copy-on-write sharing for object-heavy structures. Use memory-mapped arrays or a single process instead."
+      },
+      {
+        "choice": "Serverless functions (AWS Lambda, Cloud Run scale-to-zero)",
+        "why": "Cold starts would load 4 GB, they don't fit the university VM they already have, and they add cloud cost and accounts to manage."
+      },
+      {
+        "choice": "Kubernetes, microservices, or a message queue",
+        "why": "This is far more operational work than one VM and one lookup endpoint need."
+      },
+      {
+        "choice": "Elasticsearch/OpenSearch, or a server database such as PostgreSQL or Redis as a required part",
+        "why": "Each is a heavy service to run and patch on a 16 GB VM, and it brings no benefit over an embedded index or a tabix/SQLite file for read-only lookups."
+      },
+      {
+        "choice": "Serving from the HPC cluster",
+        "why": "The cluster is for batch jobs, with schedulers and walltime limits; it is not meant to host a persistent public endpoint."
+      }
+    ],
+    "must_mention": [
+      "The 3-minute load is a startup cost, not a per-request cost: in a long-running process, lookups that are already fast in Python will meet 50 ms at 100 req/s.",
+      "C++ is not required to meet the target, and they should measure the per-lookup latency of the loaded index before considering it.",
+      "Watch memory: 4 GB index on a 16 GB VM means they must not duplicate the index across worker processes. Use mmap/shared arrays, a single process with threads or async, or an on-disk index.",
+      "Shorten startup by converting the index to a binary or memory-mappable format, or to tabix/SQLite, so restarts and deploys take seconds instead of minutes.",
+      "For reproducibility, version the index and the code, pin the environment (conda lock file or container), and return the index or data version in every API response.",
+      "Make the service easy for collaborators to use: a simple documented HTTP API, and ideally downloadable index files (e.g. tabix/SQLite) so they can query locally without the server.",
+      "Keep upkeep low: one VM, one process under systemd or a container, a reverse proxy with TLS, and caching for the spike when a paper comes out.",
+      "Load-test at about 100 req/s, including large region queries, before publication."
+    ],
+    "red_flags": [
+      "Recommending a full C++ (or Rust/Go) rewrite of the service for speed without identifying load time as the real problem.",
+      "Advising several Python workers that each load the 4 GB index, which would exhaust memory on the VM.",
+      "Proposing Kubernetes, microservices, cloud managed services, or several databases for a 7-person lab with one VM and little time for upkeep.",
+      "Ignoring that region queries can return large results; without limits or pagination, response size can break the 50 ms target and memory.",
+      "Not mentioning versioning or reproducibility of the index, so results from the web service cannot be tied to a specific dataset or paper.",
+      "Suggesting serving from the HPC cluster or from a Jupyter notebook.",
+      "Claiming performance numbers as certain without recommending they measure the current lookup code once it is loaded."
+    ],
+    "unknowns": [
+      "How long one lookup takes once the index is in memory (single variant vs region), which is what decides whether any C++ is needed.",
+      "What the index structure is (Python dicts/objects vs NumPy arrays vs a custom C++ structure), which affects shared memory and how easily it can be memory-mapped.",
+      "Why the load takes 3 minutes (text parsing vs computation), which decides whether re-serialising fixes it.",
+      "The largest region queries and the size of their results, and whether limits or pagination are acceptable.",
+      "How often the index is rebuilt or updated, and whether several versions must stay available for different papers.",
+      "Whether the VM runs other services that compete for its 16 GB and 4 vCPUs.",
+      "University IT constraints: allowed ports, reverse proxy and TLS provision, containers allowed or not, public exposure rules.",
+      "Whether collaborators mainly want a web UI, an HTTP API, or downloadable data to run locally."
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1308746,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 37.746
+  }
+}

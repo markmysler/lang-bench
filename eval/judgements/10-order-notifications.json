@@ -1,0 +1,104 @@
+{
+  "scenario": "10-order-notifications",
+  "judgement": {
+    "acceptable": [
+      {
+        "choice": "Keep C#/.NET on the isolated worker model, with startup tuning (ReadyToRun, a small deployment package, lazy client creation, reused static HttpClient/ServiceBus/SendGrid/ACS clients, no heavy DI scanning at startup)",
+        "why": "The team is strong in .NET, the isolated worker is the supported model going forward, and these changes cut the part of cold start that the language actually controls, without a rewrite."
+      },
+      {
+        "choice": "Move these functions to the Azure Functions Flex Consumption plan with a small number of always-ready instances (for example 1–2, raised before planned sale days)",
+        "why": "This removes most cold starts at low cost, scales quickly to sale-day bursts with per-instance concurrency, keeps per-execution billing, and is Microsoft's recommended successor to Linux Consumption."
+      },
+      {
+        "choice": "Elastic Premium plan (EP1) with pre-warmed instances, used only for this latency-sensitive app",
+        "why": "It has a guaranteed warm baseline and pre-warmed scale-out, so it is a supported way to meet the 2-second target, at a predictable fixed monthly cost for one small app."
+      },
+      {
+        "choice": "Run the notification worker as a .NET container on their existing AKS cluster with KEDA scaling on the Service Bus queue, minimum replicas ≥ 1",
+        "why": "They already run AKS, there is always a warm replica, and KEDA handles bursts, so this is a sound option if the Functions plan economics don't work out."
+      },
+      {
+        "choice": "Measure first: break down end-to-end latency (Service Bus delivery, scale-out time, host startup, worker startup, email/push provider call) with Application Insights before changing anything",
+        "why": "The 2-second budget may be lost to scale-controller lag or slow downstream providers rather than .NET startup, and only measurement shows which."
+      },
+      {
+        "choice": "Pre-scale or raise the always-ready count on a schedule ahead of known sale events",
+        "why": "Sale days are planned, so capacity can be warmed in advance, which is cheaper than paying for peak warmth all year."
+      }
+    ],
+    "ruled_out": [
+      {
+        "choice": "Rewrite the functions in Go",
+        "why": "Go isn't a first-class Functions language (only via custom handlers, so the Functions host still cold-starts), Microsoft support is thinner, and nobody on the team knows Go. It doesn't remove the platform cold start that dominates."
+      },
+      {
+        "choice": "Rewrite the functions in Node.js/TypeScript as the fix for cold start",
+        "why": "Node cold starts on Consumption are the same order of magnitude as tuned .NET isolated because the platform dominates, so this adds a second backend stack for a 120-engineer .NET org with only a few TypeScript developers, for little or no measured gain."
+      },
+      {
+        "choice": "Moving to AWS Lambda, Cloudflare Workers, or another non-Azure serverless platform",
+        "why": "It breaks the requirement to stay on Azure with Microsoft support."
+      },
+      {
+        "choice": "Staying on the plain Consumption plan and relying on a timer-trigger 'keep-warm' ping",
+        "why": "It keeps at most one instance warm and does nothing for the scale-out cold starts during sale-day spikes, which is when the 2-second target is at risk. It is also unsupported folklore and not a guarantee."
+      },
+      {
+        "choice": "Staying on or starting new work with the .NET in-process model",
+        "why": "In-process support ends on 10 November 2026, so new work must use the isolated worker model."
+      },
+      {
+        "choice": "Native AOT for the Functions isolated worker as the primary fix",
+        "why": "It isn't a fully supported production path for Azure Functions and conflicts with the team's need for Microsoft support. ReadyToRun gets most of the benefit and is supported."
+      },
+      {
+        "choice": "Moving the whole Functions estate to Premium or Dedicated plans",
+        "why": "It breaks their focus on the cost of the Functions estate. Only this latency-sensitive app needs a warm baseline."
+      }
+    ],
+    "must_mention": [
+      "The claim is mostly wrong for this case: on Consumption, most cold-start time comes from the platform (allocating an instance, mounting the package, starting the Functions host), not the language. A tuned .NET isolated app and a Node app have broadly comparable cold starts, and Go via custom handlers still pays for host startup.",
+      "The fix is the hosting plan, not the language: Flex Consumption with always-ready instances, or Premium with pre-warmed instances, removes cold starts for this one app.",
+      "A steady few messages per minute usually keeps one instance warm already. The cold starts that threaten the 2-second target mostly come from scale-out during the 200/s sale-day bursts, so scaling behaviour and per-instance concurrency matter more than single-instance startup.",
+      "Measure the real latency breakdown and current p95/p99 against the 2-second target before deciding anything.",
+      "Stay on .NET because of team skills, the existing stack, and Microsoft support. A second language for 120 .NET engineers has a lasting cost.",
+      "The in-process model's end of support (November 2026) means a move to the isolated worker is needed anyway, and Linux Consumption is being superseded by Flex Consumption, so the plan migration fits work they already have to do.",
+      "Cost trade-off: a small always-ready baseline for this one app costs little compared with a rewrite, and the rest of the Functions estate can stay on pay-per-use.",
+      "Concrete .NET startup tuning: ReadyToRun, a lean package, static/shared SDK clients, avoiding heavy startup work.",
+      "Check the downstream email and push providers (for example Azure Communication Services or SendGrid, and Notification Hubs) for latency and throttling at 200/s, since they can break the 2-second target regardless of language."
+    ],
+    "red_flags": [
+      "Agreeing that .NET is 'too slow' and recommending a rewrite in Node or Go without measurement",
+      "Recommending Go without saying it only runs through custom handlers, has no team skills behind it, and still pays for Functions host startup",
+      "Recommending a platform outside Azure",
+      "Treating cold start as purely a runtime/language property and ignoring the hosting plan (Flex always-ready, Premium pre-warmed)",
+      "Presenting keep-warm timer pings as a reliable fix for burst scale-out",
+      "Recommending Premium or Dedicated for the whole estate without discussing cost",
+      "Recommending Native AOT, or other unsupported or preview options, as the production answer",
+      "Ignoring the sale-day burst-scaling behaviour and focusing only on single-instance startup",
+      "Ignoring the in-process end of support, or advising new in-process functions",
+      "Quoting confident cold-start numbers as fact without saying they depend on plan, OS, package size and dependencies"
+    ],
+    "unknowns": [
+      "Measured cold-start duration and end-to-end p95/p99 notification latency today, and whether the 2-second target is actually being missed",
+      "Whether the apps run in-process or isolated worker, on Windows or Linux Consumption, and on which .NET version",
+      "Where the latency goes: Service Bus delivery, scale-out lag, host startup, app startup, or the email/push provider",
+      "The trigger type and batching/concurrency settings (for example Service Bus trigger with maxConcurrentCalls/prefetch)",
+      "Deployment package size and startup dependencies (DI setup, configuration, Key Vault calls at startup)",
+      "Whether 2 seconds is a hard contractual target or a soft goal, and whether it means enqueue-to-send or ship-event-to-delivery",
+      "Budget for an always-ready or pre-warmed baseline, and whether Flex Consumption is available in their regions with the networking features they need",
+      "Rate limits and latency of the email and push providers at 200/s",
+      "Whether sale-day schedules are known far enough ahead to pre-scale"
+    ]
+  },
+  "meta": {
+    "costUSD": 0.1451596,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 44.905
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "scenario": "11-simulation-service",
+  "grade": {
+    "primary_choice": "Flask + Gunicorn/Caddy on the VM with a SQLite/Huey job queue and systemd-managed worker",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": 9,
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Calls Gradio 'weak at long-running jobs', which undersells Gradio's built-in queue (the reference accepts Gradio with a queue).",
+      "'Cluster queue waits can be hours for a 1-minute job' is stated as a general fact, but it depends on the site."
+    ],
+    "overall": 5,
+    "notes": "The answer says no to a new language right away, recommends an async Flask + SQLite/Huey queue sized to the VM (3 workers, BLAS threads set to 1), and covers reproducibility, auth, upload checks, retention and the policy questions to ask. Its capacity and burst arithmetic is correct, and the only weak spot is a slightly unfair dismissal of Gradio."
+  },
+  "meta": {
+    "costUSD": 0.10969960000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.77
+  }
+}

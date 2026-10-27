@@ -1,0 +1,28 @@
+{
+  "scenario": "08-payment-status-api",
+  "grade": {
+    "primary_choice": "Java 21 + Spring Boot with virtual threads and plain JDBC on the standard platform",
+    "choice": "acceptable",
+    "ruled_out_recommended": [],
+    "needless_rewrite": false,
+    "constraints_cited": 2,
+    "team_fit": 2,
+    "unknowns_stated": 2,
+    "must_mention_covered": "8",
+    "red_flags_hit": [],
+    "unsupported_claims": [
+      "Go ~50–150 MB vs tuned Spring Boot ~300–700 MB per pod and 3–10 s startup are rough estimates with no source, though plausible"
+    ],
+    "overall": 5,
+    "notes": "The answer follows from the approved-list, skills and database-bound constraints. It handles 'lighter' concretely, and it covers replica lag, IDOR, pool sizing, timeouts, two data centres and a 2x-peak load test. The only gaps are that it doesn't mention PII masking in logs or rate limiting, and observability gets only a passing reference."
+  },
+  "meta": {
+    "costUSD": 0.10831460000000001,
+    "models": [
+      "claude-opus-5-5"
+    ],
+    "turns": 1,
+    "billing": "api-key",
+    "seconds": 12.201
+  }
+}
