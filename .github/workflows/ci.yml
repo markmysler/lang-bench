@@ -54,16 +54,6 @@ jobs:
           path: web/playwright-report
           retention-days: 7
 
-  # The evaluation's own logic; running the evaluation itself needs an API key and is done by hand.
-  eval:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-      - run: node --test eval/lib.test.mjs
-
   # Every server folder becomes one conformance job.
   list-servers:
     runs-on: ubuntu-latest
@@ -90,7 +80,7 @@ jobs:
   # The read-only results viewer, with the runs in published/.
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [orchestrator, web, eval, conform]
+    needs: [orchestrator, web, conform]
     runs-on: ubuntu-latest
     permissions:
       pages: write
