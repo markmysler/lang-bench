@@ -114,3 +114,88 @@ back-end code but haven't run servers.
 **Runs on:** a cloud provider's managed Kubernetes.
 **Cares about:** the launch not falling over, player-facing latency, a back end two people can
 run.
+
+## indie-maker
+
+**Who:** a former marketer building a newsletter-and-membership product alone, with a coding agent
+that writes and looks after all of the code.
+**Stack:** none; has never programmed.
+**Skills:** can describe what they want and test it in a browser; cannot review code.
+**Runs on:** whatever the agent chooses; hosting budget under 50 USD a month.
+**Cares about:** it working without them understanding it, low cost, and being able to sell the
+business one day, so a buyer's developer should be able to take the code over.
+
+## charity-agent
+
+**Who:** a small charity with no developers. A volunteer runs a coding agent that builds and
+maintains its systems.
+**Stack:** none.
+**Skills:** the volunteer can follow instructions and approve changes, not review code.
+**Runs on:** donated cloud credits, about 100 USD a month.
+**Cares about:** the trustees' rule that a developer hired later must be able to take over any
+system, data protection, and nothing that needs constant care.
+
+## designer-freelance
+
+**Who:** a freelance web designer who builds sites for small clients.
+**Stack:** HTML, CSS, a little JavaScript; most sites are on Webflow.
+**Skills:** good front-end eye; has never written a back end; uses a coding agent for anything
+beyond markup and maintains client sites with its help.
+**Runs on:** whatever is cheap and simple to hand to clients.
+**Cares about:** projects they can hand over to clients or other freelancers, low running costs.
+
+## chat-founders
+
+**Who:** two founders starting a live customer-support chat product. Nothing is built yet.
+**Stack:** one founder is an experienced Laravel developer and wants to use Laravel; the other is
+a designer.
+**Skills:** strong PHP and Laravel; some JavaScript.
+**Runs on:** planning a few cloud virtual machines.
+**Cares about:** concurrency first: many customers' widgets connected at once, messages delivered
+instantly; then hosting cost; then shipping quickly.
+
+## chat-scaleup
+
+**Who:** the same live-chat company two years on: 12 engineers, paying customers.
+**Stack:** a large Laravel application (about 300,000 lines), MySQL, Redis, Laravel Reverb for
+WebSockets, run on 10 virtual machines.
+**Skills:** strong PHP and Laravel across the team; two engineers know Go.
+**Runs on:** cloud virtual machines with a load balancer.
+**Cares about:** concurrency (8,000 simultaneous chats today, 60,000 expected after a large
+customer signs in three months), reliability, hosting cost.
+
+## django-shop
+
+**Who:** an online retailer with 20 engineers.
+**Stack:** Django on gunicorn with sync workers, Postgres, Celery.
+**Skills:** strong Python and Django.
+**Runs on:** Kubernetes on a cloud provider, 40 pods for the storefront API.
+**Cares about:** p99 latency of the storefront API (budget 300 ms), and a hosting bill that grew
+three times faster than revenue last year.
+
+## rails-imaging
+
+**Who:** a two-person start-up building an image-processing API: resizing, watermarking and
+automatic tagging for e-commerce photos. Early: a working prototype, a few pilot customers.
+**Stack:** Ruby on Rails, because the technical founder knew it; image work through libvips.
+**Skills:** the founder knows Ruby; a coding agent writes and maintains most of the code, the
+founder reviews it.
+**Runs on:** a few containers on a cloud provider.
+**Cares about:** cost per processed image, throughput when a customer uploads a catalogue of
+50,000 photos at once.
+
+## logistics
+
+**Who:** a regional logistics company, 300 employees, with an IT team of three Java developers.
+**Stack:** Spring Boot services, Postgres.
+**Skills:** solid Java; no other back-end language.
+**Runs on:** small virtual machines (1 vCPU, 512 MB) at a local hosting company, by policy.
+**Cares about:** running costs, reliability, and that IT can keep everything running.
+
+## clinic-booking
+
+**Who:** a healthcare booking platform with six developers.
+**Stack:** Flask on gunicorn with sync workers, Postgres.
+**Skills:** good Python and Flask.
+**Runs on:** containers on a cloud provider.
+**Cares about:** reliability during the morning booking rush, staying in Python.

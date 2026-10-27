@@ -4,88 +4,269 @@
     "rule-out": "A constraint rules out the obvious or first-proposed choice.",
     "stay": "The team's existing stack is right; a good answer does not push a rewrite.",
     "gap": "lang-bench's data does not cover what decides this; a good answer says what to measure.",
-    "not-performance": "Performance barely matters; team, maintenance and cost decide."
+    "not-performance": "Performance barely matters; team, maintenance and cost decide.",
+    "no-stack": "The team has no stack; maintainability, agent proficiency and handover decide.",
+    "mismatch": "The stack doesn't fit the project's ranked objectives.",
+    "maintainer": "The same project under a different maintainer setting; the advice should change with it.",
+    "declined-flag": "A flag the team declined earlier; it should stay quiet unless it became critical."
   },
   "scenarios": {
     "01-studio-booking": {
-      "kinds": ["not-performance"],
+      "kinds": [
+        "not-performance"
+      ],
       "covered": "Nothing decisive: tiny load.",
-      "tests": "Whether the agent picks something a non-technical owner can live with (hosted, low upkeep) rather than an interesting stack."
+      "tests": "Whether the agent picks something a non-technical owner can live with (hosted, low upkeep) rather than an interesting stack.",
+      "scope": "out"
     },
     "02-discord-stats": {
-      "kinds": ["stay", "not-performance"],
+      "kinds": [
+        "stay",
+        "not-performance"
+      ],
       "covered": "Idle memory per stack at 512 MB.",
-      "tests": "Python fits; the student's learning goal and the memory limit are the only constraints."
+      "tests": "Python fits; the student's learning goal and the memory limit are the only constraints.",
+      "scope": "partial"
     },
     "03-webhook-fanout": {
-      "kinds": ["stay"],
+      "kinds": [
+        "stay"
+      ],
       "covered": "I/O-wait workload: Node async servers hold thousands of waits per core.",
-      "tests": "Node is fine for I/O-bound fan-out; a rewrite in Go is not needed. Queues and retries matter more."
+      "tests": "Node is fine for I/O-bound fan-out; a rewrite in Go is not needed. Queues and retries matter more.",
+      "scope": "partial"
     },
     "04-pdf-reports": {
-      "kinds": ["rule-out"],
+      "kinds": [
+        "rule-out"
+      ],
       "covered": "CPU workload: a single event loop blocks other requests while computing.",
-      "tests": "CPU work inside the Express event loop is ruled out; moving it to workers or a job queue fixes it, with or without a new language."
+      "tests": "CPU work inside the Express event loop is ruled out; moving it to workers or a job queue fixes it, with or without a new language.",
+      "scope": "partial"
     },
     "05-tv-campaign": {
-      "kinds": ["rule-out", "stay"],
+      "kinds": [
+        "rule-out",
+        "stay"
+      ],
       "covered": "Laravel on PHP-FPM serves a few hundred requests per second per core; Octane about twice that.",
-      "tests": "Plain PHP-FPM on 2 vCPUs can't take 3,000 req/s; caching, a CDN, Octane or more servers fix it without a rewrite."
+      "tests": "Plain PHP-FPM on 2 vCPUs can't take 3,000 req/s; caching, a CDN, Octane or more servers fix it without a rewrite.",
+      "scope": "partial"
     },
     "06-webhook-delivery-rails": {
-      "kinds": ["rule-out", "stay"],
+      "kinds": [
+        "rule-out",
+        "stay"
+      ],
       "covered": "I/O-wait workload: thread-per-request servers hold as many waits as threads.",
-      "tests": "Threads per Sidekiq process cap concurrent slow POSTs; more concurrency (threads, async HTTP, more processes) or a Go service both work. A good answer weighs the Go team's capacity against fixing it in Ruby."
+      "tests": "Threads per Sidekiq process cap concurrent slow POSTs; more concurrency (threads, async HTTP, more processes) or a Go service both work. A good answer weighs the Go team's capacity against fixing it in Ruby.",
+      "scope": "partial"
     },
     "07-admin-reports": {
-      "kinds": ["stay", "not-performance"],
+      "kinds": [
+        "stay",
+        "not-performance"
+      ],
       "covered": "Nothing decisive.",
-      "tests": "Stay in the monolith."
+      "tests": "Stay in the monolith.",
+      "scope": "out"
     },
     "08-payment-status-api": {
-      "kinds": ["stay"],
+      "kinds": [
+        "stay"
+      ],
       "covered": "Spring Boot handles 800 req/s on a database read comfortably per core.",
-      "tests": "Spring Boot meets the requirement; Go would break the approved-technology list for no gain."
+      "tests": "Spring Boot meets the requirement; Go would break the approved-technology list for no gain.",
+      "scope": "in"
     },
     "09-partner-callbacks": {
-      "kinds": ["rule-out"],
+      "kinds": [
+        "rule-out"
+      ],
       "covered": "I/O-wait workload: java-spring (200 platform threads) against java-spring-vt (virtual threads).",
-      "tests": "Platform threads are ruled out at 10,000 waiting connections; virtual threads or a reactive stack fix it within Java."
+      "tests": "Platform threads are ruled out at 10,000 waiting connections; virtual threads or a reactive stack fix it within Java.",
+      "scope": "in"
     },
     "10-order-notifications": {
-      "kinds": ["stay"],
+      "kinds": [
+        "stay"
+      ],
       "covered": "Start-up time per runtime in containers, though not on Azure Functions.",
-      "tests": ".NET meets a 2 s budget with cold starts, especially with ready-to-run or a premium plan; a rewrite isn't needed. Partly a gap: serverless cold starts aren't measured."
+      "tests": ".NET meets a 2 s budget with cold starts, especially with ready-to-run or a premium plan; a rewrite isn't needed. Partly a gap: serverless cold starts aren't measured.",
+      "scope": "partial"
     },
     "11-simulation-service": {
-      "kinds": ["gap", "not-performance"],
+      "kinds": [
+        "gap",
+        "not-performance"
+      ],
       "covered": "Nothing: the work is NumPy, not request handling.",
-      "tests": "The web framework doesn't matter; a job queue in Python does. A good answer doesn't send them to learn a new language."
+      "tests": "The web framework doesn't matter; a job queue in Python does. A good answer doesn't send them to learn a new language.",
+      "scope": "out"
     },
     "12-variant-search": {
-      "kinds": ["gap"],
+      "kinds": [
+        "gap"
+      ],
       "covered": "Nothing about large in-memory indexes or Python lookup cost.",
-      "tests": "Whether the agent recommends measuring a lookup first (loaded once, served by workers sharing memory) before a C++ rewrite."
+      "tests": "Whether the agent recommends measuring a lookup first (loaded once, served by workers sharing memory) before a C++ rewrite.",
+      "scope": "out"
     },
     "13-gateway-api": {
-      "kinds": ["rule-out", "gap"],
+      "kinds": [
+        "rule-out",
+        "gap"
+      ],
       "covered": "Idle memory and start-up per stack, on x86-64 only.",
-      "tests": "JVM and most interpreted stacks are ruled out by 20 MB and 1 s; Rust or C++ fit the team. ARM isn't measured."
+      "tests": "JVM and most interpreted stacks are ruled out by 20 MB and 1 s; Rust or C++ fit the team. ARM isn't measured.",
+      "scope": "partial"
     },
     "14-volunteer-rota": {
-      "kinds": ["not-performance"],
+      "kinds": [
+        "not-performance"
+      ],
       "covered": "Nothing decisive.",
-      "tests": "A mainstream, easily hired stack, or an off-the-shelf rota product, beats anything niche; data protection matters."
+      "tests": "A mainstream, easily hired stack, or an off-the-shelf rota product, beats anything niche; data protection matters.",
+      "scope": "out"
     },
     "15-matchmaking": {
-      "kinds": ["gap"],
+      "kinds": [
+        "gap"
+      ],
       "covered": "Nothing on WebSockets or long-lived connections.",
-      "tests": "Node can hold 50,000 sockets across a few processes; Elixir is a reasonable alternative but a team change. A good answer says what to load-test."
+      "tests": "Node can hold 50,000 sockets across a few processes; Elixir is a reasonable alternative but a team change. A good answer says what to load-test.",
+      "scope": "partial"
     },
     "16-friend-recommendations": {
-      "kinds": ["gap"],
+      "kinds": [
+        "gap"
+      ],
       "covered": "No graph database data yet.",
-      "tests": "Whether the agent weighs Postgres recursive queries and precomputation against adding a graph database, and says the language matters little."
+      "tests": "Whether the agent weighs Postgres recursive queries and precomputation against adding a graph database, and says the language matters little.",
+      "scope": "out"
+    },
+    "17-membership-site": {
+      "kinds": [
+        "no-stack",
+        "not-performance"
+      ],
+      "scope": "out",
+      "covered": "Nothing decisive: small load; agent proficiency and facts come in phase 7.",
+      "tests": "A mainstream stack an agent maintains reliably and a buyer could take over, or an existing membership product; not an interesting stack."
+    },
+    "18-volunteer-matching": {
+      "kinds": [
+        "no-stack",
+        "not-performance"
+      ],
+      "scope": "out",
+      "covered": "Nothing decisive.",
+      "tests": "The handover rule set by the trustees is treated as hard; health data raises data protection."
+    },
+    "19-client-booking-payments": {
+      "kinds": [
+        "no-stack",
+        "not-performance"
+      ],
+      "scope": "out",
+      "covered": "Nothing decisive.",
+      "tests": "Whether the agent first asks if a hosted booking and payments service would do, and keeps anything built small and handover-friendly."
+    },
+    "20-chat-start": {
+      "kinds": [
+        "mismatch"
+      ],
+      "scope": "partial",
+      "group": "chat",
+      "covered": "I/O-wait concurrency: Laravel on PHP-FPM 591 req/s per CPU against 20,000+ for Go, Rust and Bun. WebSockets after phase 5; Laravel Reverb not measured.",
+      "tests": "At the start, with concurrency ranked first, the mismatch is flagged with numbers; a good answer weighs the founder's Laravel skill and Laravel Reverb against a stack built for many connections."
+    },
+    "21-chat-scale": {
+      "kinds": [
+        "mismatch",
+        "stay"
+      ],
+      "scope": "partial",
+      "group": "chat",
+      "covered": "As 20; WebSocket memory per connection after phase 5.",
+      "tests": "Two years in, the same mismatch leads to scaling Reverb or a separate realtime service, not rewriting the application; a Go realtime service is a reasonable option for the two Go engineers."
+    },
+    "22-storefront-cost": {
+      "kinds": [
+        "mismatch",
+        "stay"
+      ],
+      "scope": "in",
+      "covered": "I/O wait: gunicorn sync against gevent and gthread, and against async stacks.",
+      "tests": "The in-stack variant (async or gevent workers, scaling on concurrency rather than CPU) fixes it; a Go rewrite is not needed."
+    },
+    "23-imaging-throughput": {
+      "kinds": [
+        "mismatch"
+      ],
+      "scope": "partial",
+      "covered": "CPU workload; libvips and model inference are not measured.",
+      "tests": "The time is in libvips and the model, not Ruby; parallelism and worker scaling fix it. Agent maintenance makes a switch cheap, but nothing measured requires it."
+    },
+    "24-tracking-human": {
+      "kinds": [
+        "maintainer"
+      ],
+      "scope": "in",
+      "group": "tracking",
+      "covered": "Memory and throughput at 1 CPU / 512 MB: Spring Boot 130 MB idle and 6 s start-up; Go, Rust, .NET far lower.",
+      "tests": "A human Java team: Java fits if tuned for 512 MB (Spring with care, or a lighter Java framework); a new language only if the limit rules Java out."
+    },
+    "25-tracking-review": {
+      "kinds": [
+        "maintainer"
+      ],
+      "scope": "in",
+      "group": "tracking",
+      "covered": "As 24.",
+      "tests": "With Java reviewers, code they can follow still counts: Java, or a simple language they can learn to review, such as Go; the advice should shift from 24."
+    },
+    "26-tracking-agent": {
+      "kinds": [
+        "maintainer"
+      ],
+      "scope": "in",
+      "group": "tracking",
+      "covered": "As 24.",
+      "tests": "With nobody reading the code, the team's Java matters least; a lean stack that fits 512 MB easily and that agents write reliably fits best, with simple operations for IT."
+    },
+    "27-booking-rush-steady": {
+      "kinds": [
+        "declined-flag",
+        "stay"
+      ],
+      "scope": "in",
+      "group": "booking-rush",
+      "covered": "I/O wait: gunicorn sync against gevent and gthread.",
+      "tests": "The declined decision still holds at 40 requests a second; a good answer adds the feature without re-arguing the workers."
+    },
+    "28-booking-rush-surge": {
+      "kinds": [
+        "declined-flag",
+        "rule-out"
+      ],
+      "scope": "in",
+      "group": "booking-rush",
+      "covered": "As 27.",
+      "tests": "At 600 requests a second with 200 to 600 ms waits, 17 sync workers cannot cope: the declined flag has become critical and must be raised, citing the earlier decision, with gevent or async as the in-stack fix."
+    },
+    "29-mobile-framework": {
+      "kinds": [
+        "not-performance"
+      ],
+      "scope": "out",
+      "covered": "Nothing: lang-bench measures servers, not mobile frameworks.",
+      "tests": "The tool has no data here and should say so; the agent's own answer (React Native for a React team) stands."
     }
+  },
+  "scopes": {
+    "in": "What decides the scenario is measured by lang-bench today.",
+    "partial": "Part of it is measured, or will be once a planned task exists.",
+    "out": "lang-bench doesn't measure what decides it; a good tool says so."
   }
 }
