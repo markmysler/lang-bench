@@ -276,6 +276,21 @@ func TestUnhealthyServerIsReportedAndOthersCarryOn(t *testing.T) {
 	}
 }
 
+func TestLoadWithoutResultsIsAnError(t *testing.T) {
+	// A server that died before the workload: the load generator prints no slices.
+	f := newFake(t)
+	f.slice = "Error: dns error: failed to lookup address information"
+	emit, _ := collect()
+	res, err := newRunner(f).Run(context.Background(), config("go-gin"), emit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := res.Servers[0].Workloads[0]
+	if !strings.Contains(w.Error, "no results") || !strings.Contains(w.Error, "dns error") {
+		t.Fatalf("workload error = %q", w.Error)
+	}
+}
+
 func TestBatchesAreTagged(t *testing.T) {
 	f := newFake(t)
 	c := config("go-gin", "python-fastapi", "rust-axum")

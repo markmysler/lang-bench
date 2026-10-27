@@ -20,14 +20,14 @@ export function Compare({ result }: { result: Result }) {
   const bars = (value: (w: WorkloadResult) => number): Bar[] =>
     result.servers.map((s) => {
       const w = find(s, picked);
-      const failed = s.error ?? w?.error;
+      const failed = w?.error ?? s.error;
       return {
         id: s.server.id,
         label: s.server.id,
         badge: badge(s.server.language),
         color: color(s.server.id),
         value: w ? value(w) : 0,
-        note: !w ? `not measured${failed ? `: ${failed}` : ''}` : undefined,
+        note: !w || w.error ? `not measured${failed ? `: ${failed}` : ''}` : undefined,
       };
     });
 
@@ -182,12 +182,12 @@ export function Compare({ result }: { result: Result }) {
           <tbody>
             {result.servers.map((s) => {
               const w = find(s, picked);
-              if (!w) {
+              if (!w || w.error) {
                 return (
                   <tr key={s.server.id}>
                     <td>{s.server.id}</td>
                     <td colSpan={12} style={{ textAlign: 'left' }}>
-                      not measured{s.error ? `: ${s.error}` : ''}
+                      not measured{(w?.error ?? s.error) ? `: ${w?.error ?? s.error}` : ''}
                     </td>
                   </tr>
                 );

@@ -16,5 +16,7 @@ COPY --from=jre /opt/java/openjdk /opt/java/openjdk
 COPY --from=build /src/target/app.jar /app.jar
 EXPOSE 8080
 # Container ergonomics size the JVM from the container's CPU and memory limits. The heap may use
-# 75% of the memory limit, as in production (the default is 25%).
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app.jar"]
+# 60% of the memory limit (the default is 25%): a common production value for small containers,
+# leaving room for metaspace, code cache and thread stacks. At 75% java-spring-vt was killed for
+# running out of memory at 512 MB under the I/O workload (seen with virtual threads).
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=60", "-jar", "/app.jar"]

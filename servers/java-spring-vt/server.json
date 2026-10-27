@@ -6,5 +6,5 @@
   "frameworkVersion": "4.1.2",
   "runtime": "HotSpot JVM 25 (JIT)",
   "concurrency": "Virtual thread per request (Tomcat on virtual threads)",
-  "tuning": "spring.threads.virtual.enabled=true (unbounded virtual threads, carriers = CPUs); HikariCP pool of DB_POOL connections; -XX:MaxRAMPercentage=75"
+  "tuning": "spring.threads.virtual.enabled=true (unbounded virtual threads, carriers = CPUs); HikariCP pool of DB_POOL connections; -XX:MaxRAMPercentage=60"
 }

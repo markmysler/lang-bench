@@ -2,7 +2,7 @@
 
 - **Server:** Spring MVC on embedded Tomcat (Spring Boot), run as an executable jar on the
   HotSpot JVM (Temurin JRE) in `debian:trixie-slim`. JIT only: no CDS, AOT or native image. The
-  heap may use 75% of the container's memory (`-XX:MaxRAMPercentage=75`); everything else is the
+  heap may use 60% of the container's memory (`-XX:MaxRAMPercentage=60`; at 75% java-spring-vt ran out of memory at 512 MB under the I/O workload); everything else is the
   JVM's container ergonomics, which size GC and compiler threads from the container's CPU limit.
 - **Concurrency:** one Tomcat worker thread (a platform thread) per in-flight request, with
   Tomcat's defaults: up to 200 threads. This is the classic Spring MVC model. `java-spring-vt` is

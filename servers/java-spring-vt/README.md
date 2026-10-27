@@ -5,7 +5,7 @@ Both exist so the two Java threading models can be compared on identical code.
 
 - **Server:** Spring MVC on embedded Tomcat (Spring Boot), run as an executable jar on the
   HotSpot JVM (Temurin JRE) in `debian:trixie-slim`. JIT only: no CDS, AOT or native image. The
-  heap may use 75% of the container's memory (`-XX:MaxRAMPercentage=75`); everything else is the
+  heap may use 60% of the container's memory (`-XX:MaxRAMPercentage=60`; at 75% java-spring-vt ran out of memory at 512 MB under the I/O workload); everything else is the
   JVM's container ergonomics, which size GC and compiler threads from the container's CPU limit.
 - **Concurrency:** one virtual thread per request. Tomcat hands each request to a new virtual
   thread instead of its pool of 200 platform threads; the JVM runs virtual threads on a pool of

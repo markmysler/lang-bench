@@ -489,14 +489,14 @@ func (r *run) load(s *server, w workload.Workload) WorkloadResult {
 	defer r.Engine.Remove(context.WithoutCancel(r.ctx), id)
 
 	var measured []oha.Slice
+	var lastMessage string // the last thing the load generator said that was not a slice
 	idx := 0
 	logsErr := r.Engine.Logs(r.ctx, id, func(l docker.Line) {
-		if l.Stderr {
-			r.send(Event{Type: EventLog, Server: s.def.ID, Message: l.Text})
-			return
-		}
 		sl, err := oha.ParseSlice([]byte(l.Text))
-		if err != nil {
+		if l.Stderr || err != nil {
+			if l.Text != "" {
+				lastMessage = l.Text
+			}
 			r.send(Event{Type: EventLog, Server: s.def.ID, Message: l.Text})
 			return
 		}
@@ -531,6 +531,12 @@ func (r *run) load(s *server, w workload.Workload) WorkloadResult {
 	}
 	if code, err := r.Engine.Wait(r.ctx, id); err == nil && code != 0 && wr.Error == "" {
 		wr.Error = fmt.Sprintf("load generator exited with code %d", code)
+	}
+	if len(measured) == 0 && wr.Error == "" {
+		wr.Error = "no results from the load generator"
+		if lastMessage != "" {
+			wr.Error += ": " + lastMessage
+		}
 	}
 
 	wr.Summary = oha.Merge(measured)
