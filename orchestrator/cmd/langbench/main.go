@@ -3,7 +3,8 @@
 //	langbench serve              serve the dashboard and API on :7070
 //	langbench build [target...]  build images: server ids, postgres, loadgen, or all
 //	langbench run settings.json  run headless and save the result
-//	langbench conform id...      check servers against docs/SPEC.md
+//	langbench conform id...      start servers and check them against docs/SPEC.md
+//	langbench check url          check a server that is already running
 //
 // It expects the repository at $LANGBENCH_ROOT (default /work) and the Docker socket at
 // /var/run/docker.sock, as docker-compose.yml sets up.
@@ -28,6 +29,7 @@ import (
 	"github.com/markmysler/lang-bench/orchestrator/internal/api"
 	"github.com/markmysler/lang-bench/orchestrator/internal/build"
 	"github.com/markmysler/lang-bench/orchestrator/internal/catalog"
+	"github.com/markmysler/lang-bench/orchestrator/internal/conform"
 	"github.com/markmysler/lang-bench/orchestrator/internal/docker"
 	"github.com/markmysler/lang-bench/orchestrator/internal/runner"
 	"github.com/markmysler/lang-bench/orchestrator/internal/store"
@@ -74,6 +76,8 @@ func main() {
 		err = a.runCmd(ctx, args[1:])
 	case "conform":
 		err = a.conformCmd(ctx, args[1:])
+	case "check":
+		err = checkCmd(ctx, args[1:])
 	default:
 		err = fmt.Errorf("unknown command %q: use serve, build, run or conform", args[0])
 	}
@@ -250,6 +254,22 @@ func (a *app) conformCmd(ctx context.Context, ids []string) error {
 	if failed > 0 {
 		return fmt.Errorf("%d of %d servers do not conform", failed, len(ids))
 	}
+	return nil
+}
+
+// checkCmd checks a server that is already running, without starting or stopping anything.
+func checkCmd(ctx context.Context, urls []string) error {
+	if len(urls) != 1 {
+		return fmt.Errorf("usage: langbench check http://host:8080")
+	}
+	failures := conform.Check(ctx, strings.TrimSuffix(urls[0], "/"), &http.Client{Timeout: 10 * time.Second})
+	for _, f := range failures {
+		log.Printf("FAIL %s", f)
+	}
+	if len(failures) > 0 {
+		return fmt.Errorf("%d checks failed", len(failures))
+	}
+	log.Printf("ok   %s", urls[0])
 	return nil
 }
 
