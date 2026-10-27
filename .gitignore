@@ -1,0 +1,18 @@
+# Build output
+node_modules/
+dist/
+target/
+build/
+*.class
+__pycache__/
+.venv/
+
+# Benchmark results are kept locally; publish chosen runs with the export command
+results/*
+!results/.gitkeep
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
