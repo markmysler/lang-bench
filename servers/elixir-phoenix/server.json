@@ -1,0 +1,10 @@
+{
+  "id": "elixir-phoenix",
+  "language": "Elixir",
+  "languageVersion": "1.20.4",
+  "framework": "Phoenix",
+  "frameworkVersion": "1.8.16",
+  "runtime": "BEAM (Erlang/OTP 29, JIT)",
+  "concurrency": "BEAM process per request, preemptively scheduled on CPUS schedulers",
+  "tuning": "BEAM schedulers +S CPUS:CPUS; Bandit; Ecto pool of DB_POOL connections"
+}

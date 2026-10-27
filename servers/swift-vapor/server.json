@@ -1,0 +1,10 @@
+{
+  "id": "swift-vapor",
+  "language": "Swift",
+  "languageVersion": "6.4.1",
+  "framework": "Vapor",
+  "frameworkVersion": "4.122.3",
+  "runtime": "Native binary (static Swift stdlib)",
+  "concurrency": "SwiftNIO event loops, one thread per CPU, with async/await handlers",
+  "tuning": "MultiThreadedEventLoopGroup of CPUS threads; Fluent Postgres pool of max(1, floor(DB_POOL / CPUS)) connections per event loop"
+}

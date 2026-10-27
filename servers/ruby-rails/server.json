@@ -1,0 +1,10 @@
+{
+  "id": "ruby-rails",
+  "language": "Ruby",
+  "languageVersion": "4.0.9",
+  "framework": "Rails",
+  "frameworkVersion": "8.1.4",
+  "runtime": "CRuby 4.0 (YJIT)",
+  "concurrency": "Puma: CPUS worker processes with 3 threads each; one thread per process runs Ruby at a time (GVL)",
+  "tuning": "Puma workers = CPUS, 3 threads each, preload_app; YJIT on; ActiveRecord pool of 3 per worker (DB_POOL unused)"
+}

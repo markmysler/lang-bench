@@ -1,0 +1,10 @@
+{
+  "id": "dart-shelf",
+  "language": "Dart",
+  "languageVersion": "3.13.7",
+  "framework": "Shelf",
+  "frameworkVersion": "1.4.3",
+  "runtime": "Dart AOT (dart compile exe)",
+  "concurrency": "Single-threaded event loop per isolate; CPUS isolates sharing port 8080",
+  "tuning": "CPUS isolates each call shelf_io.serve with shared: true; postgres Pool of max(1, floor(DB_POOL / CPUS)) connections per isolate"
+}

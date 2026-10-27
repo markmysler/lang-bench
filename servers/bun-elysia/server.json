@@ -1,0 +1,10 @@
+{
+  "id": "bun-elysia",
+  "language": "TypeScript",
+  "languageVersion": "1.4.4",
+  "framework": "Elysia",
+  "frameworkVersion": "1.4.30",
+  "runtime": "Bun 1.4.4 (JavaScriptCore JIT)",
+  "concurrency": "Single-threaded event loop per process; CPUS processes sharing the port with reusePort",
+  "tuning": "A launcher starts CPUS Bun processes, each listening with reusePort: true; Bun SQL pool of max(1, floor(DB_POOL / CPUS)) connections per process"
+}

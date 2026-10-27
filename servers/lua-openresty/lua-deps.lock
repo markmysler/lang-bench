@@ -1,0 +1,5 @@
+# Lua libraries installed into OpenResty's site/lualib, pinned by version and SHA-256 of the
+# release tarball. The Dockerfile downloads each one and checks it before installing.
+# pgmoon's SCRAM-SHA-256 login uses lua-resty-openssl, which OpenResty already bundles.
+# name              version  sha256                                                            url
+pgmoon              1.18.0   1d11cde905533a76911808c0930470638fba10415f2ac4fe15c3edfd55edae55  https://github.com/leafo/pgmoon/archive/refs/tags/v1.18.0.tar.gz

@@ -1,0 +1,14 @@
+{
+  "name": "lang-bench-node-fastify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": "24.22.1"
+  },
+  "dependencies": {
+    "fastify": "5.12.7",
+    "pg": "8.23.1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "lang-bench-bun-elysia",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "elysia": "1.4.30"
+  }
+}

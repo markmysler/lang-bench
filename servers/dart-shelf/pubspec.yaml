@@ -1,0 +1,11 @@
+name: server
+description: Dart + Shelf server for lang-bench.
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  postgres: ^3.0.0
+  shelf: ^1.4.0
+  shelf_router: ^1.1.0

@@ -1,0 +1,10 @@
+{
+  "id": "rust-actix",
+  "language": "Rust",
+  "languageVersion": "1.99.1",
+  "framework": "Actix Web",
+  "frameworkVersion": "4.18.1",
+  "runtime": "Native binary",
+  "concurrency": "Async tasks on CPUS Actix workers, each a thread with its own single-threaded Tokio runtime",
+  "tuning": "Actix workers = CPUS; sqlx pool of max(1, floor(DB_POOL / CPUS)) connections per worker"
+}

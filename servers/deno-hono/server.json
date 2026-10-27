@@ -1,0 +1,10 @@
+{
+  "id": "deno-hono",
+  "language": "TypeScript",
+  "languageVersion": "2.9.8",
+  "framework": "Hono",
+  "frameworkVersion": "4.13.14",
+  "runtime": "Deno 2.9.8 (V8 JIT)",
+  "concurrency": "Single-threaded event loop per worker; CPUS workers via deno serve --parallel",
+  "tuning": "deno serve --parallel with DENO_JOBS = CPUS workers sharing port 8080; postgres.js pool of max(1, floor(DB_POOL / CPUS)) connections per worker"
+}

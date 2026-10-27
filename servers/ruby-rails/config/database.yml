@@ -1,0 +1,12 @@
+# ActiveRecord connects on the first query, so the server starts without a database.
+# The pool has one connection per Puma thread (3), the size Rails recommends; DB_POOL is not used
+# (see README.md). Prepared statements are on, the PostgreSQL adapter's default.
+production:
+  adapter: postgresql
+  host: <%= ENV["DB_HOST"] %>
+  port: <%= ENV.fetch("DB_PORT", 5432) %>
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_PASSWORD"] %>
+  database: <%= ENV["DB_NAME"] %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 3) %>
+  prepared_statements: true

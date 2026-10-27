@@ -1,0 +1,17 @@
+.{
+    .name = .server,
+    .version = "0.0.0",
+    .fingerprint = 0x5a6dd5f6d6b935ff,
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .zap = .{
+            .url = "git+https://github.com/zigzap/zap?ref=v0.11.0#66c5dc42c781bbb8a9100afda3c7e69ee96eddf3",
+            .hash = "zap-0.10.6-GoeB8xCEJABLgoiZjWZMMT5TsoZ5OO2EZe6j24RTUYEH",
+        },
+        .pg = .{
+            .url = "git+https://github.com/karlseguin/pg.zig#98287d4378e8626d2348e0672cd470f8c6cf1b95",
+            .hash = "pg-0.0.0-Wp_7gQ-EBgBkO9bj-QJu4IWEw3X0WBnJOWhC39grqTw0",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}

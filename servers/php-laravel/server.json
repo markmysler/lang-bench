@@ -1,0 +1,10 @@
+{
+  "id": "php-laravel",
+  "language": "PHP",
+  "languageVersion": "8.5.12",
+  "framework": "Laravel",
+  "frameworkVersion": "13.39.0",
+  "runtime": "PHP-FPM + nginx (OPcache, no JIT)",
+  "concurrency": "One request at a time per PHP-FPM child process; 8 × CPUS children behind nginx",
+  "tuning": "PHP-FPM pm = static with pm.max_children = 8 × CPUS; nginx worker_processes = CPUS; one database connection per request, opened by the child (DB_POOL unused)"
+}
