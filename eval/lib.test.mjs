@@ -63,6 +63,8 @@ test('a Windows path becomes its WSL path', () => {
 });
 
 const result = {
+  id: 'r-1',
+  startedAt: '2026-10-27T16:27:46Z',
   host: { cpuModel: 'CPU X', cpus: 22 },
   config: { preset: '1cpu-512mb', warmupSlices: 5, measureSlices: 15 },
   servers: [
@@ -82,7 +84,7 @@ const result = {
 
 test('measurements become one table per workload, skipping failures', () => {
   const md = measurementsTable(result);
-  assert.match(md, /CPU X/);
+  assert.match(md, /CPU X under Docker \(run r-1, 2026-10-27\)/);
   assert.match(md, /1 CPU, 512 MB/);
   assert.match(md, /\| go-gin \| Go \| Gin \| 33,000 \| 1.50 \| 4.25 \| 98% \| 9 MB \|/);
   assert.doesNotMatch(md, /\| go-gin[^\n]*\| 1 \|/); // the failed io workload

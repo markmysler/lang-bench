@@ -92,7 +92,8 @@ export function measurementsTable(r) {
   const [cpus, mem] = /^(\d+)cpu-(\d+)(mb|gb)$/.exec(r.config.preset)?.slice(1) ?? [];
   const size = r.config.preset.endsWith('gb') ? `${mem} GB` : `${mem} MB`;
   const out = [
-    `Measured by lang-bench on ${r.host.cpuModel ?? 'unknown CPU'} under Docker. Every server ran alone in`,
+    `Measured by lang-bench on ${r.host.cpuModel ?? 'unknown CPU'} under Docker (run ${r.id}, ${r.startedAt?.slice(0, 10)}).`,
+    'Every server ran alone in',
     `a container with ${cpus} CPU, ${size}, tuned for production; load came from a separate container with`,
     `its own cores. ${r.config.warmupSlices} s warm-up, then ${r.config.measureSlices} s measured. Throughput is per container,`,
     'so on N cores expect up to about N times as much for servers that use all their cores.',
