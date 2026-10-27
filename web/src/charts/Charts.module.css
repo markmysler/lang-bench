@@ -1,6 +1,7 @@
 .chart {
   position: relative;
   min-width: 0;
+  width: 100%;
 }
 
 .head {

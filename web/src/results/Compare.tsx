@@ -77,10 +77,11 @@ export function Compare({ result }: { result: Result }) {
       </p>
       {result.plan.mode !== 'sequential' && (
         <p className={css.warning} style={{ margin: 0 }}>
-          Servers in the same batch ran at the same time on separate cores. They still shared memory
-          bandwidth, caches
-          {picked === 'db' || picked === 'queries' ? ' and Postgres' : ''}. For the strictest
-          comparison, run with “At most at once” set to 1.
+          Servers in the same batch ran at the same time on separate cores. They still shared{' '}
+          {picked === 'db' || picked === 'queries'
+            ? 'memory bandwidth, caches and Postgres'
+            : 'memory bandwidth and caches'}
+          . For the strictest comparison, run with “At most at once” set to 1.
         </p>
       )}
       <div className={css.grid}>

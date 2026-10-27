@@ -111,8 +111,9 @@ export function LineChart({
       )}
       <svg
         className={css.plot}
-        width={width}
-        height={height}
+        // A percentage width never pushes the layout wider; the viewBox keeps one unit per pixel.
+        style={{ width: '100%', height }}
+        viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={`${title}, ${xLabel} on the horizontal axis`}
         onPointerMove={onMove}
