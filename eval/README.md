@@ -7,20 +7,34 @@ Does lang-bench help coding agents choose better? See [docs/DESIGN.md](../docs/D
 - `scenarios/`: project briefs, each set in one team and ending with the team's request.
 - `index.json`: what each scenario tests. Only analysis reads it; agents never see it.
 - `prompts/`: what the agent under test, the reference judge and the grader are asked.
+- `repos/<scenario>/`: a mock repository for the scenario and a `TASK.md` that asks for work
+  without asking which technology to use. The constraints are in the repository's documents.
 - `judgements/`: reference answers from a separate judge agent that never sees lang-bench.
-- `runs/<name>/`: one condition's answers, grades and summary.
+- `measurements.md`: lang-bench's reference measurements, for checking agents' claims.
+- `runs/<name>/`: one condition's answers or work, grades, claim checks and summary.
+
+## Two ways of asking
+
+- **Asked** (`answer`): the agent is asked which technology to use and to weigh alternatives.
+- **Implicit** (`act`): the agent is given a task in a mock repository with file tools only, and
+  nobody mentions a choice. Agents mostly go wrong here: they reach for a default without noticing
+  the constraint. The grader judges the stack the agent actually set up.
 
 ## Running it
 
 ```sh
-node eval/run.mjs judge --require-api-key              # reference judgements, once
-node eval/run.mjs answer <run> --require-api-key       # the agent under test answers
-node eval/run.mjs grade <run> --require-api-key        # a judge grades the answers
+node eval/run.mjs judge --require-api-key                       # reference judgements, once
+node eval/run.mjs answer <run> [--model sonnet] --require-api-key
+node eval/run.mjs act <run> [--model sonnet] --require-api-key
+node eval/run.mjs grade <run> --require-api-key                 # against the judgements
+node eval/run.mjs check <run> --require-api-key                 # claims against measurements.md
 node eval/run.mjs summary <run>
+node eval/run.mjs measurements results/<run>.json               # rebuild measurements.md
 ```
 
-Each prompt goes to a fresh Claude Code, headless, in an empty temporary folder (inside WSL on
-Windows), so it sees nothing of this repository. Calls are billed to `ANTHROPIC_API_KEY` or
+Each call goes to a fresh Claude Code, headless, in a temporary folder (inside WSL on Windows), so
+it sees nothing of this repository. `--model` changes only the agent under test; judges and graders
+always use Claude Code's default model, so grades stay comparable. Calls are billed to `ANTHROPIC_API_KEY` or
 `CLAUDE_API_KEY`; on Windows a saved user variable is read directly. `--require-api-key` refuses
 to fall back to the signed-in account. A key that isn't scoped to a workspace also needs
 `CLAUDE_WORKSPACE_ID`. Every reply records its cost, model and duration.

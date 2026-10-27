@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { extractJSON, fill, parseScenario, parseTeams, replyText, summarise } from './lib.mjs';
+import {
+  checkTotals,
+  describeAct,
+  extractJSON,
+  fill,
+  measurementsTable,
+  parseScenario,
+  parseTeams,
+  replyText,
+  summarise,
+  toWsl,
+} from './lib.mjs';
 
 const TEAMS = `# Teams
 
@@ -44,6 +55,58 @@ test('JSON is pulled out of a reply with prose or a code fence around it', () =>
 test('the reply text comes from the CLI JSON, or is the raw output', () => {
   assert.equal(replyText('{"type":"result","result":"hello"}'), 'hello');
   assert.equal(replyText('plain text'), 'plain text');
+});
+
+test('a Windows path becomes its WSL path', () => {
+  assert.equal(toWsl('C:\\code\\lang-bench\\eval\\agent.sh'), '/mnt/c/code/lang-bench/eval/agent.sh');
+  assert.equal(toWsl('/home/x/eval'), '/home/x/eval');
+});
+
+const result = {
+  host: { cpuModel: 'CPU X', cpus: 22 },
+  config: { preset: '1cpu-512mb', warmupSlices: 5, measureSlices: 15 },
+  servers: [
+    {
+      server: { id: 'go-gin', language: 'Go', framework: 'Gin' },
+      startupMs: 550,
+      idleMemoryBytes: 5 << 20,
+      image: { sizeBytes: 90 << 20 },
+      workloads: [
+        { workload: { name: 'json', param: 0, connections: 64 }, summary: { rps: 33000, latency: { p50: 1.5, p99: 4.25 } }, cpu: { mean: 98 }, memory: { peak: 9 << 20 } },
+        { workload: { name: 'io', param: 10, connections: 256 }, summary: { rps: 1 }, error: 'no results', cpu: { mean: 0 }, memory: { peak: 0 } },
+      ],
+    },
+    { server: { id: 'dead', language: 'X', framework: 'Y' }, error: 'killed: out of memory', workloads: null },
+  ],
+};
+
+test('measurements become one table per workload, skipping failures', () => {
+  const md = measurementsTable(result);
+  assert.match(md, /CPU X/);
+  assert.match(md, /1 CPU, 512 MB/);
+  assert.match(md, /\| go-gin \| Go \| Gin \| 33,000 \| 1.50 \| 4.25 \| 98% \| 9 MB \|/);
+  assert.doesNotMatch(md, /\| go-gin[^\n]*\| 1 \|/); // the failed io workload
+  assert.match(md, /\| go-gin \| 550 ms \| 5 MB \| 90 MB \|/);
+  assert.match(md, /dead: killed: out of memory/);
+});
+
+test('an act bundle is described with its message and the files it changed', () => {
+  const text = describeAct({
+    claude: { result: 'I built it in Rust.' },
+    changed: ['A  Cargo.toml', 'A  src/main.rs'],
+    files: { 'Cargo.toml': '[package]\nname = "api"', 'src/main.rs': 'fn main() {}' },
+  });
+  assert.match(text, /I built it in Rust\./);
+  assert.match(text, /A {2}Cargo\.toml/);
+  assert.match(text, /### Cargo\.toml\n```\n\[package\]/);
+});
+
+test('claim checks are totalled', () => {
+  const totals = checkTotals([
+    { claims: [{ verdict: 'consistent' }, { verdict: 'off' }] },
+    { claims: [{ verdict: 'not_covered' }, { verdict: 'consistent' }] },
+  ]);
+  assert.deepEqual(totals, { claims: 4, consistent: 2, off: 1, not_covered: 1 });
 });
 
 test('summary counts choices, rewrites and averages scores', () => {
