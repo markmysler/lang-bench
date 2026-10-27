@@ -1,6 +1,6 @@
 # Design: lang-bench as a decision tool for coding agents
 
-Status: proposed, for review. Nothing here is built yet; [ARCHITECTURE.md](ARCHITECTURE.md)
+Status: accepted, with the decisions at the end. Nothing here is built yet; [ARCHITECTURE.md](ARCHITECTURE.md)
 describes what exists today.
 
 ## Why
@@ -24,7 +24,7 @@ when a technology choice is actually open.
    ecosystem, the deployment target and how reliably agents write the stack all count, and
    usually count more.
 3. **Proven by evaluation.** The tool is worth shipping only if agents that use it make better
-   choices than agents that don't, on scenarios judged by people. That is measured before the
+   choices than agents that don't, on scenarios judged independently of the tool. That is measured before the
    tool grows, and again after each phase.
 
 And one scoping decision:
@@ -145,7 +145,7 @@ Conformance becomes an interpreter of these test cases: status, media type, JSON
 body, field ranges, "differs across requests" (for randomness) and "not before N ms" (for waits).
 The six current endpoints are rewritten as the first task, `core`, and must pass exactly as they
 do now before anything else changes. Load mixes need the load generator to send more than one
-request shape, which oha does not do on its own; see open questions.
+request shape, which oha does not do on its own; see decision 1.
 
 A task earns its place by what it reveals that changes decisions. Candidates, in rough order:
 
@@ -314,23 +314,32 @@ The skill is the agent-facing manual. It says:
 
 ## Evaluation
 
-**Scenarios.** 15 short project briefs, each with a description of the existing code base (or
-none), requirements and constraints. A panel of people decides, for each, which choices are
-acceptable and which are disqualified, and why. They should include:
+**Teams.** Imaginary teams spanning the people who ask agents for help: from someone with no
+technical knowledge, through hobbyists, small teams and agencies, to enterprises and scientific
+groups. Each has a size, a stack it already knows (or none), its skills, how it deploys, and what
+it cares about.
 
-- cases where the constraint rules out the obvious choice (I/O-heavy on gunicorn sync, cold
+**Scenarios.** About 15 project briefs, each set in one team. They include:
+
+- cases where a constraint rules out the obvious choice (I/O-heavy on gunicorn sync, cold
   starts on the JVM, 256 MB on the edge);
 - cases where the team's existing stack is right and the tool should say so;
 - cases where the evidence doesn't cover the question and the tool should say that.
 
-**Method.** The same agent and model answer each scenario with and without the tool. People grade
-the answers without knowing which is which.
+**Reference judgements.** For each scenario, a separate judge agent that never sees the tool or
+lang-bench's data writes which choices are acceptable, which are ruled out, and why. You
+spot-check them. Keeping the judge apart means the evaluation doesn't measure agreement with the
+tool's own author.
+
+**Method.** The same agent and model answer each scenario with and without the tool. A judge agent
+grades each answer against the reference judgement and a fixed rubric, without knowing which
+condition produced it; you spot-check the grades.
 
 **Success.**
 
-- Fewer disqualified choices with the tool.
-- No more needless rewrites: in "stay with the existing stack" scenarios the tool does not
-  push the agent elsewhere.
+- Fewer ruled-out choices with the tool.
+- No needless rewrites: in "stay with the existing stack" scenarios the tool does not push the
+  agent elsewhere.
 - Rationales cite the constraint and the evidence.
 - Gaps are stated, not papered over.
 
@@ -340,9 +349,9 @@ Results are kept in `eval/` and the evaluation reruns after every phase that cha
 
 Each phase is a branch and a pull request, merged when CI is green and the exit criteria hold.
 
-**Phase 3: evaluation first.** Scenario briefs and expected judgements in `eval/`; a script that
-runs an agent on them without the tool and records its answers for grading. *Exit:* a baseline
-graded by people.
+**Phase 3: evaluation first.** Teams, scenarios and reference judgements in `eval/`; a runner
+that gives an agent each scenario and records its answer; a blind grader. *Exit:* a graded
+baseline without the tool, spot-checked by you.
 
 **Phase 4: query layer, MCP and skill over today's data.** Result schema 2 with reference ratios;
 a `reference/` dataset of full-length runs of the 25 servers; `assess`, `explain`,
@@ -354,8 +363,8 @@ base images pinned across all 25 servers. *Exit:* every reference server passes 
 a deliberately unfair server fails it.
 
 **Phase 6: declarative tasks and databases.** Task and database components; conformance as an
-interpreter; `core` rewritten as a task with identical results; one more database (chosen in this
-phase) and one more task to prove the mechanism. *Exit:* `core` results match before and after;
+interpreter; `core` rewritten as a task with identical results; MongoDB as the second database, and
+one more task to prove the mechanism. Neo4j follows as the first graph database. *Exit:* `core` results match before and after;
 the new task and database run end to end.
 
 **Phase 7: guides an agent can follow.** The extending half of the skill, and `langbench add`
@@ -363,20 +372,27 @@ scaffolding. *Exit:* an agent with no help adds a stack we don't have, gets it `
 uses it in a `run_shortlist`.
 
 **Phase 8: facts and proficiency.** The facts format and research guide; the proficiency
-harness. *Exit:* the evaluation improves again on scenarios where ecosystem or proficiency
+harness, run on demand, three independent attempts per stack. *Exit:* the evaluation improves again on scenarios where ecosystem or proficiency
 decide.
 
-## Open questions
+## Decisions
 
-1. **Mixed request loads.** oha sends one URL. Tasks with mixes (reads and writes) need a load
-   generator that does more: oha with several runs side by side, another tool, or our own. To
-   decide in phase 6, with the same care as the original choice of oha.
-2. **How `assess` turns numbers into disqualifiers.** Fixed thresholds against the stated
-   requirements are transparent but brittle; margins and confidence need to be designed with the
-   evaluation, not guessed.
-3. **Reference hardware.** Where the `reference/` dataset is made, and how often it is renewed.
-4. **Which second database.** MySQL is the most common next choice; SQLite tests something
-   different (in process, no network); MongoDB tests a different kind. Decided in phase 6 by the
-   evaluation's gaps.
-5. **Proficiency cost.** One stack takes an agent many minutes and many tokens; the number of
-   attempts per stack, and who pays, is decided in phase 8.
+Settled on 27 October 2026, from the open questions of the first draft.
+
+1. **Mixed request loads: our own load generator.** A Go load generator in the orchestrator, with
+   weighted request mixes, an exact HDR latency histogram and live results without one-second
+   slices. Before it replaces oha it must match oha on today's single-URL workloads. Built in
+   phase 6.
+2. **Disqualifying: the requirement plus a safety margin.** `assess` rules a candidate out only
+   when its measured value misses the stated requirement even with headroom (1.5× to start),
+   and always shows the numbers. The margin is tuned with the evaluation.
+3. **Reference hardware: the maintainer's machine for now.** An Intel Core Ultra 9 185H with 22
+   CPUs under Docker Desktop. Every run records the hardware; the dataset is renewed when servers
+   change. A dedicated machine can come later.
+4. **Databases: MongoDB next, then Neo4j.** A document database first, then a graph database,
+   rather than a second relational one.
+5. **Proficiency: on demand, three attempts.** Run only when asked, one stack at a time, with
+   three independent attempts so the result is a pass rate. Runs use the user's own agent account
+   and record the agent and model.
+6. **Judging: a separate agent, spot-checked.** Reference judgements and grades come from judge
+   agents kept apart from the tool; the maintainer spot-checks them.
